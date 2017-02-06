@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 scp arew:/home/freyabison/track.areteh.co/db/tracks.db ./
-rm -r ./out*
+rm -r ./out* test/
 
 go run dump.go
 
-mb-util out.mbtiles test --image_format=png
+#easy_install mbutil
+#mb-util out.mbtiles test --image_format=png
+
+
+#http://gis.stackexchange.com/questions/3712/create-vector-tiles-for-polymaps
+#http://gis.stackexchange.com/questions/65735/geojson-in-leaflet
+
+
+#https://github.com/klokantech/vector-tiles-sample
+
+
+#mb-util --image_format=png out.mbtiles test/web
