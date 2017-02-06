@@ -6,9 +6,12 @@
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	
-<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
-<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+	<script src="./node_modules/leaflet.vectorgrid/dist/Leaflet.VectorGrid.bundled.js"></script>
+
+
 <style>
 
 html, body,  #map {
@@ -25,19 +28,118 @@ html, body,  #map {
 
 
 
-var map = L.map('map',{maxZoom:20}).setView([35.10418,-106.62987], 12); 
-var tiles = L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+var map = L.map('map',{maxZoom:20}).setView([38.6270,-90.1994], 12);
+
+var url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
+//var url = 'https://{s}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v6/{z}/{x}/{y}.vector.pbf?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw';
+
+var vectorTileOptions = {
+    rendererFactory: L.canvas.tile,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
+    vectorTileLayerStyles: {
+        'poi_label': function(properties, zoom) {
+            return {
+                weight: 2,
+                color: 'red',
+                opacity: 1,
+                fillColor: 'yellow',
+                fill: true,
+                radius: 6,
+                fillOpacity: 0.7
+            }
+        },
+        water: [],
+        country_label: [],
+        marine_label: [],
+        state_label: [],
+        place_label: [],
+        waterway_label: [],
+        landuse: [],
+        landuse_overlay: [],
+        road: [],
+        waterway: [],
+        aeroway: [],
+        tunnel: [],
+        bridge: [],
+        barrier_line: [],
+        building: [],
+        road_label: [],
+        housenum_label: [],
+    },
+    interactive: true,	// Make sure that this VectorGrid fires mouse/pointer events
+    getFeatureId: function(f) {
+        return f.properties.osm_id;
+    }
+};
+L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+var highlight;
+var clearHighlight = function() {
+    if (highlight) {
+        pbfLayer.resetFeatureStyle(highlight);
+    }
+    highlight = null;
+};
+var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions)
+    .on('click', function(e) {	// The .on method attaches an event handler
+        L.popup()
+            .setContent(e.layer.properties.name || e.layer.properties.type)
+            .setLatLng(e.latlng)
+            .openOn(map);
+        clearHighlight();
+        highlight = e.layer.properties.osm_id;
+        pbfLayer.setFeatureStyle(highlight, {
+            weight: 2,
+            color: 'red',
+            opacity: 1,
+            fillColor: 'red',
+            fill: true,
+            radius: 6,
+            fillOpacity: 1
+        })
+        L.DomEvent.stop(e);
+    })
+    .addTo(map);
+
+//
+//var tiles = L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+//
+//var url = 'https://{s}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v6/{z}/{x}/{y}.vector.pbf';
+//var vectorTileOptions = {
+//    vectorTileLayerStyles: {
+//
+//        water: {
+//            weight: 0,
+//            fillColor: '#9bc2c4',
+//            fillOpacity: 1,
+//            fill: true
+//        },
+//
+//        admin: function(properties, zoom) {
+//            var level = properties.admin_level;
+//            var weight = 1;
+//            if (level == 2) {weight = 4;}
+//            return {
+//                weight: weight,
+//                color: '#cf52d3',
+//                dashArray: '2, 6',
+//                fillOpacity: 0
+//            }
+//        },
+//
+//        road: []
+//    }
+//};
+//
+//var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map);
 
 
-
-
-
-		
-		var mbTiles = new L.tileLayer('http://localhost:8080/tiles/{z}/{x}/{y}', {
-		    tms: true,
-		    attribution: 'Tiles Courtesy of <a href="http://twitter.com/pcrickard" target="_blank">Paul Crickard</a>',
-		    opacity: 0.7
-		}).addTo(map);
+//
+//
+//		var mbTiles = new L.tileLayer('http://localhost:8080/tiles/{z}/{x}/{y}', {
+//		    tms: true,
+//		    attribution: 'Tiles Courtesy of <a href="http://twitter.com/pcrickard" target="_blank">Paul Crickard</a>',
+//		    opacity: 0.7
+//		}).addTo(map);
 		
 
 

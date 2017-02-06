@@ -4,6 +4,7 @@ rm -r ./out* test/
 
 go run dump.go
 
+cp out.mbtiles ./TileServer/tiles.mbtiles
 #easy_install mbutil
 #mb-util out.mbtiles test --image_format=png
 
@@ -16,3 +17,5 @@ go run dump.go
 
 
 #mb-util --image_format=png out.mbtiles test/web
+
+#tippecanoe-decode out.mbtiles |more
