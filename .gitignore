@@ -65,5 +65,8 @@ bower_components/*
 /ass/berlin2
 
 out.json
-out.mbtiles
+*.mbtiles
+*.mbtiles-journal
 test/
+
+
