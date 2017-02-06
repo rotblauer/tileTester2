@@ -1,7 +1,7 @@
-var initialLat = 40.7831;
-var initialLng = -73.9712;
+var initialLat = 38.62;
+var initialLng = -90.19;
 
-var map = L.map('map').setView([initialLat, initialLng], 16);
+var map = L.map('map').setView([initialLat, initialLng], 12);
 //
 L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
@@ -9,7 +9,7 @@ L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
     // maxZoom: 19
 }).addTo(map);
 
-L.tileLayer('http://localhost:8000/test/{z}/{x}/{y}.png', {
+L.tileLayer('http://localhost:8080/test/{z}/{x}/{y}.png', {
     // maxZoom: 19,
     // opacity: 0.8
 }).addTo(map);
