@@ -9,7 +9,7 @@ L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
     // maxZoom: 19
 }).addTo(map);
 
-L.tileLayer('http://localhost:5000/{z}/{x}/{y}.png', {
+L.tileLayer('../test/{z}/{x}/{y}.png', {
     // maxZoom: 19,
     // opacity: 0.8
 }).addTo(map);

@@ -3,3 +3,5 @@ scp arew:/home/freyabison/track.areteh.co/db/tracks.db ./
 rm -r ./out*
 
 go run dump.go
+
+mb-util out.mbtiles test --image_format=png
