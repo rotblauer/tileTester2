@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Leaflet & Go: MBTiles Example</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	
+<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+<style>
+
+html, body,  #map {
+        width : 100%;
+        height : 100%;
+     		   }
+
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+	<script>
+
+
+
+var map = L.map('map',{maxZoom:20}).setView([35.10418,-106.62987], 12); 
+var tiles = L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+
+
+
+
+		
+		var mbTiles = new L.tileLayer('http://localhost:8080/tiles/{z}/{x}/{y}', {
+		    tms: true,
+		    attribution: 'Tiles Courtesy of <a href="http://twitter.com/pcrickard" target="_blank">Paul Crickard</a>',
+		    opacity: 0.7
+		}).addTo(map);
+		
+
+
+
+	</script>
+</body>
+</html>

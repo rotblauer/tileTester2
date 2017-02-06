@@ -9,10 +9,10 @@ L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
     // maxZoom: 19
 }).addTo(map);
 
-// L.tileLayer('/test/{z}/{x}/{y}.png', {
-//     // maxZoom: 19,
-//     // opacity: 0.8
-// }).addTo(map);
+L.tileLayer('http://localhost:8000/test/{z}/{x}/{y}.png', {
+    // maxZoom: 19,
+    // opacity: 0.8
+}).addTo(map);
 
 // $.getJSON("../out.json",function(data){
 //     // add GeoJSON layer to the map once the file is loaded
