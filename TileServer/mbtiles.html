@@ -35,12 +35,15 @@ var map = L.map('map',{maxZoom:20}).setView([38.6270,-90.1994], 12);
 
 var url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 //var url = 'https://{s}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v6/{z}/{x}/{y}.vector.pbf?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw';
+console.log("hhh it");
 
 var vectorTileOptions = {
     rendererFactory: L.canvas.tile,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
     vectorTileLayerStyles: {
-        'Feature': function(properties, zoom) {
+        
+        'catTrack': function(properties, zoom) {
+            console.log("made it");
             return {
                 weight: 2,
                 color: 'red',
@@ -48,36 +51,11 @@ var vectorTileOptions = {
                 fillColor: 'yellow',
                 fill: true,
                 radius: 6,
-                fillOpacity: 0.7
+                fillOpacity: 0.7,
+				type: "Point"
             }
         },
-        'Point': function(properties, zoom) {
-            return {
-                weight: 2,
-                color: 'red',
-                opacity: 1,
-                fillColor: 'yellow',
-                fill: true,
-                radius: 6,
-                fillOpacity: 0.7
-            }
-        },
-        'geometry': function(properties, zoom) {
-            return {
-                weight: 2,
-                color: 'red',
-                opacity: 1,
-                fillColor: 'yellow',
-                fill: true,
-                radius: 6,
-                fillOpacity: 0.7
-            }
-        },
-        name: [],
-        geometry: [],
-        features: [],
-        out: [],
-        Elevation: [],
+
         water: [],
         country_label: [],
         marine_label: [],
@@ -109,27 +87,27 @@ var clearHighlight = function() {
     }
     highlight = null;
 };
-var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions)
-    .on('click', function(e) {	// The .on method attaches an event handler
-        L.popup()
-            .setContent(e.layer.properties.name || e.layer.properties.type)
-            .setLatLng(e.latlng)
-            .openOn(map);
-        clearHighlight();
-        highlight = e.layer.properties.name;
-        pbfLayer.setFeatureStyle(highlight, {
-            weight: 2,
-            color: 'red',
-            opacity: 1,
-            fillColor: 'red',
-            fill: true,
-            radius: 6,
-            fillOpacity: 1
-        })
-        L.DomEvent.stop(e);
-    })
-    .addTo(map);
+var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map);
 
+
+//.on('click', function(e) {	// The .on method attaches an event handler
+//    L.popup()
+//        .setContent(e.layer.properties.name || e.layer.properties.type)
+//        .setLatLng(e.latlng)
+//        .openOn(map);
+//    clearHighlight();
+//    highlight = e.layer.properties.name;
+//    pbfLayer.setFeatureStyle(highlight, {
+//        weight: 2,
+//        color: 'red',
+//        opacity: 1,
+//        fillColor: 'red',
+//        fill: true,
+//        radius: 6,
+//        fillOpacity: 1
+//    })
+//    L.DomEvent.stop(e);
+//})
 //
 //var tiles = L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 //

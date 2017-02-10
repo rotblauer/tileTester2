@@ -76,7 +76,7 @@ func dumpBolty(boltDb string, out string) {
 	//https://www.mapbox.com/blog/vector-density/
 	//-z19 -d11 -g3
 	//"--no-tile-size-limit"
-	tippmycanoe := exec.Command("tippecanoe","-ag","--drop-rate","0","--maximum-zoom","50","-g","2", "-o", out+".mbtiles")
+	tippmycanoe := exec.Command("tippecanoe","-ag","--drop-rate","0","--maximum-zoom","50","-g","2","-n","catTrack", "-o", out+".mbtiles")
 	tippmycanoeIn, _ := tippmycanoe.StdinPipe()
 
 	err = getDB().View(func(tx *bolt.Tx) error {
@@ -90,7 +90,7 @@ func dumpBolty(boltDb string, out string) {
 			// convert to a feature
 			p := geojson.NewPoint(geojson.Coordinate{geojson.Coord(trackPointCurrent.Lng),geojson.Coord(trackPointCurrent.Lat)})
 			props := structs.Map(trackPointCurrent) // dats a lazy one
-			f1 := geojson.NewFeature(p, props, trackPointCurrent.Name)
+			f1 := geojson.NewFeature(p, props,1)
 
 
 			fc.AddFeatures(f1)
@@ -109,8 +109,8 @@ func dumpBolty(boltDb string, out string) {
 	data, err := json.Marshal(fc)
 	if err != nil {
 	}
-	//tippmycanoe.Stdout = os.Stdout
-	//tippmycanoe.Stderr = os.Stderr
+	tippmycanoe.Stdout = os.Stdout
+	tippmycanoe.Stderr = os.Stderr
 
 	err = tippmycanoe.Start()
 	if err != nil {

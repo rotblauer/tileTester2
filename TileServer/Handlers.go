@@ -43,12 +43,16 @@ func Tiles(w http.ResponseWriter, r *http.Request) {
 		var tile_data []byte
 		rows.Scan(&zoom_level, &tile_column, &tile_row, &tile_data) //tile_data blob)
 		//fmt.Println(string(tile_data))
+		//des suckers are gzipped sneaky buggers
 		var tile,erro = vector_tile.DecodeGzipped(tile_data)
 		if erro!=nil{
 			fmt.Println(erro.Error())
 		}
-		fmt.Println(tile.GetLayers())
-		w.Write(tile_data)
+
+		//fmt.Println(tile.GetLayers())
+		fmt.Println(tile.Layers[0].Name)
+		var unzi,_ =vector_tile.Encode(tile)
+		w.Write(unzi)
 	}
 
 	db.Close()
