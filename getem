@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+
+if [[ $1 -eq "i" ]]; then
+
+	rsync -avz --progress freya:~/track.areteh.co/db/tracks.db ./
+
+else
+
+	scp arew:/home/freyabison/track.areteh.co/db/tracks.db ./
+
+fi
+
 rm -r ./out* test/
 
 go run dump.go
