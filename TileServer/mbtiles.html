@@ -34,8 +34,6 @@ html, body,  #map {
 var map = L.map('map',{maxZoom:20}).setView([38.6270,-90.1994], 12);
 
 var url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
-//var url = 'https://{s}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v6/{z}/{x}/{y}.vector.pbf?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw';
-console.log("hhh it");
 
 var vectorTileOptions = {
     rendererFactory: L.canvas.tile,
@@ -50,48 +48,34 @@ var vectorTileOptions = {
             if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "blue";
             if (properties.Name === "Big Mamma") color2 = "green";
 //			console.log(properties.Name);
+//          console.log(properties);
+
 
             return {
-                weight: 2,
+                weight: 2 ,
                 color: color2,
                 opacity: .2,
-
                 fillColor: 'yellow',
                 fill: true,
-                radius: 6,
+                radius: 3,
                 fillOpacity: .4,
+				fillWeight: 1,
 				type: "Point"
             }
         },
 
         water: [],
-        country_label: [],
-        marine_label: [],
-        state_label: [],
-        place_label: [],
-        waterway_label: [],
-        landuse: [],
-        landuse_overlay: [],
-        road: [],
-        waterway: [],
-        aeroway: [],
-        tunnel: [],
-        bridge: [],
-        barrier_line: [],
-        building: [],
-        road_label: [],
-        housenum_label: [],
+//		... any other layers
     },
     interactive: true,	// Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name;
     }
 };
-//L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 var mb_light1 = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 L.tileLayer(mb_light1, {
-    maxZoom: 19
+    maxZoom: 22
 }).addTo(map);
 
 var highlight;
@@ -101,7 +85,7 @@ var clearHighlight = function() {
     }
     highlight = null;
 };
-var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map);
+var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map); // It would be nice if this could handle the zipper data instead of unxip on sever
 
 
 //.on('click', function(e) {	// The .on method attaches an event handler
@@ -123,47 +107,6 @@ var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map);
 //    L.DomEvent.stop(e);
 //})
 //
-//var tiles = L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-//
-//var url = 'https://{s}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v6/{z}/{x}/{y}.vector.pbf';
-//var vectorTileOptions = {
-//    vectorTileLayerStyles: {
-//
-//        water: {
-//            weight: 0,
-//            fillColor: '#9bc2c4',
-//            fillOpacity: 1,
-//            fill: true
-//        },
-//
-//        admin: function(properties, zoom) {
-//            var level = properties.admin_level;
-//            var weight = 1;
-//            if (level == 2) {weight = 4;}
-//            return {
-//                weight: weight,
-//                color: '#cf52d3',
-//                dashArray: '2, 6',
-//                fillOpacity: 0
-//            }
-//        },
-//
-//        road: []
-//    }
-//};
-//
-//var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map);
-
-
-//
-//
-//		var mbTiles = new L.tileLayer('http://localhost:8080/tiles/{z}/{x}/{y}', {
-//		    tms: true,
-//		    attribution: 'Tiles Courtesy of <a href="http://twitter.com/pcrickard" target="_blank">Paul Crickard</a>',
-//		    opacity: 0.7
-//		}).addTo(map);
-		
-
 
 
 	</script>
