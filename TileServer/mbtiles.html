@@ -40,7 +40,7 @@ var vectorTileOptions = {
     rendererFactory: L.canvas.tile,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
     vectorTileLayerStyles: {
-        'poi_label': function(properties, zoom) {
+        'Feature': function(properties, zoom) {
             return {
                 weight: 2,
                 color: 'red',
@@ -51,6 +51,33 @@ var vectorTileOptions = {
                 fillOpacity: 0.7
             }
         },
+        'Point': function(properties, zoom) {
+            return {
+                weight: 2,
+                color: 'red',
+                opacity: 1,
+                fillColor: 'yellow',
+                fill: true,
+                radius: 6,
+                fillOpacity: 0.7
+            }
+        },
+        'geometry': function(properties, zoom) {
+            return {
+                weight: 2,
+                color: 'red',
+                opacity: 1,
+                fillColor: 'yellow',
+                fill: true,
+                radius: 6,
+                fillOpacity: 0.7
+            }
+        },
+        name: [],
+        geometry: [],
+        features: [],
+        out: [],
+        Elevation: [],
         water: [],
         country_label: [],
         marine_label: [],
@@ -71,7 +98,7 @@ var vectorTileOptions = {
     },
     interactive: true,	// Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
-        return f.properties.osm_id;
+        return f.properties.name;
     }
 };
 L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -89,7 +116,7 @@ var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions)
             .setLatLng(e.latlng)
             .openOn(map);
         clearHighlight();
-        highlight = e.layer.properties.osm_id;
+        highlight = e.layer.properties.name;
         pbfLayer.setFeatureStyle(highlight, {
             weight: 2,
             color: 'red',
