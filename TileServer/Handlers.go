@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/paulmach/go.vector_tile"
+	// "github.com/paulmach/go.vector_tile"
 	//"strconv"
 	"strconv"
 )
@@ -15,6 +15,8 @@ import (
 func Tiles(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/x-protobuf")
+	w.Header().Set("Content-Encoding", "gzip") // set response header for encoding (browsers may do the ungzipping)
+	// https://github.com/SpatialServer/Leaflet.MapboxVectorTile/issues/29
 	vars := mux.Vars(r)
 	//dbname := vars["db"]
 	z := vars["z"]
@@ -52,16 +54,17 @@ func Tiles(w http.ResponseWriter, r *http.Request) {
 		var tile_data []byte
 		rows.Scan(&zoom_level, &tile_column, &tile_row, &tile_data) //tile_data blob)
 
-		var tile, erro = vector_tile.DecodeGzipped(tile_data)
-		if erro != nil {
-			fmt.Println(erro.Error())
-		}
-		var unzi, _ = vector_tile.Encode(tile)
-		//fmt.Println("serving")
-		//fmt.Println(len(unzi))
-		//fmt.Println("bytes")
+		// var tile, erro = vector_tile.DecodeGzipped(tile_data)
+		// if erro != nil {
+		// 	fmt.Println(erro.Error())
+		// }
+		// var unzi, _ = vector_tile.Encode(tile)
+		// //fmt.Println("serving")
+		// //fmt.Println(len(unzi))
+		// //fmt.Println("bytes")
 
-		w.Write(unzi)
+		// w.Write(unzi)
+		w.Write(tile_data)
 		//}
 	}
 
