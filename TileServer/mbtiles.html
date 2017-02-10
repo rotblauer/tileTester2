@@ -43,15 +43,23 @@ var vectorTileOptions = {
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
-            console.log("made it");
+//            console.log("made it");
+
+			color2 ="yellow"
+            if (properties.Name === "Big Papa" || properties.Name === "ia") color2 = "red";
+            if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "blue";
+            if (properties.Name === "Big Mamma") color2 = "green";
+//			console.log(properties.Name);
+
             return {
                 weight: 2,
-                color: 'red',
-                opacity: 1,
+                color: color2,
+                opacity: .2,
+
                 fillColor: 'yellow',
                 fill: true,
                 radius: 6,
-                fillOpacity: 0.7,
+                fillOpacity: .4,
 				type: "Point"
             }
         },
@@ -79,7 +87,13 @@ var vectorTileOptions = {
         return f.properties.name;
     }
 };
-L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+//L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+var mb_light1 = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
+L.tileLayer(mb_light1, {
+    maxZoom: 19
+}).addTo(map);
+
 var highlight;
 var clearHighlight = function() {
     if (highlight) {

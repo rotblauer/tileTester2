@@ -74,7 +74,9 @@ func Tiles(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(erro.Error())
 		}
 
-		//fmt.Println(tile.GetLayers())
+		fmt.Println(tile.GetLayers()[0].Features)
+		//fmt.Println(tile.GetLayers()[0].Values)
+
 		fmt.Println(zoom_level)
 		fmt.Println(tile_column)
 		fmt.Println(tile_row)
