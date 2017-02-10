@@ -23,14 +23,19 @@ html, body,  #map {
   margin: 0;
      		   }
 
+ button {
+   z-index: 10000;
+   }
+
 </style>
 </head>
 <body>
+<button id="gostl" style="position: fixed; top: 10px; right: 10px;">STL</button>
+<button id="gober" style="position: fixed; top: 40px; right: 10px;">BER</button>
+<button id="gowww" style="position: fixed; top: 70px; right: 10px;">WWW</button>
 <div id="map"></div>
 
 	<script>
-
-
 
 var map = L.map('map',{maxZoom:20}).setView([38.6270,-90.1994], 12);
 
@@ -108,6 +113,16 @@ var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map); // It w
 //    L.DomEvent.stop(e);
 //})
 //
+
+   document.getElementById("gostl").onclick = function () {
+map.setView([38.627,-90.1994],12);
+       }
+   document.getElementById("gober").onclick = function () {
+       map.setView([52.484777, 13.445776], 12);
+       }
+   document.getElementById("gowww").onclick = function () {
+       map.setView([43.582793, -45.353025], 3);
+       }
 
 
 	</script>
