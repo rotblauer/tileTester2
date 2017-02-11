@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-if [[ $1 -eq "i" ]]; then
+if [[ $1 == "i" ]]; then
 
 	rsync -avz --progress freya:~/track.areteh.co/db/tracks.db ./
 

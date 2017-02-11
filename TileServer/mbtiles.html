@@ -14,7 +14,6 @@
 	<script src="./node_modules/leaflet.vectorgrid/dist/Leaflet.VectorGrid.bundled.js"></script>
 
 
-
 <style>
 
 html, body,  #map {
@@ -53,15 +52,22 @@ var vectorTileOptions = {
             if (properties.Name === "Big Papa" || properties.Name === "ia") color2 = "red";
             if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "blue";
             if (properties.Name === "Big Mamma") color2 = "green";
-//			console.log(properties.Name);
+//			console.log(properties.tippecanoe_feature_density);
 //          console.log(properties);
+
+
+
+
 
 
             return {
                 weight: 2 ,
                 color: color2,
                 opacity: .2,
-                fillColor: 'yellow',
+
+                fillColor: 'rgb('+properties.tippecanoe_feature_density*100+',255, 0)',
+//                fillColor: rgb(255, 255, 0),
+
                 fill: true,
                 radius: 3,
                 fillOpacity: .4,

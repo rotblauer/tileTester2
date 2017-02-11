@@ -53,19 +53,7 @@ func Tiles(w http.ResponseWriter, r *http.Request) {
 		var tile_row int32
 		var tile_data []byte
 		rows.Scan(&zoom_level, &tile_column, &tile_row, &tile_data) //tile_data blob)
-
-		// var tile, erro = vector_tile.DecodeGzipped(tile_data)
-		// if erro != nil {
-		// 	fmt.Println(erro.Error())
-		// }
-		// var unzi, _ = vector_tile.Encode(tile)
-		// //fmt.Println("serving")
-		// //fmt.Println(len(unzi))
-		// //fmt.Println("bytes")
-
-		// w.Write(unzi)
 		w.Write(tile_data)
-		//}
 	}
 
 	db.Close()
