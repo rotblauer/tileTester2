@@ -48,10 +48,13 @@ var vectorTileOptions = {
         'catTrack': function(properties, zoom) {
 //            console.log("made it");
 
-			color2 ="yellow"
+			color2 ="purple"
             if (properties.Name === "Big Papa" || properties.Name === "ia") color2 = "red";
             if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "blue";
             if (properties.Name === "Big Mamma") color2 = "green";
+            if (properties.Name === "Kayleigh's iPhone") color2 = "yellow";
+
+
 //			console.log(properties.tippecanoe_feature_density);
 //          console.log(properties);
 
@@ -65,7 +68,7 @@ var vectorTileOptions = {
                 color: color2,
                 opacity: .2,
 
-                fillColor: 'rgb('+properties.tippecanoe_feature_density*100+',255, 0)',
+                fillColor: 'black',
 //                fillColor: rgb(255, 255, 0),
 
                 fill: true,
