@@ -17,6 +17,6 @@ var routes = Routes{
 		"Tiles",
 		"GET",
 		"/{db}/{z}/{x}/{y}",
-		Tiles,
+		TilesBolty,
 	},
 }
