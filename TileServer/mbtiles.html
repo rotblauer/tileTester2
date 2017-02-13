@@ -38,7 +38,7 @@ html, body,  #map {
 
 var map = L.map('map',{maxZoom:20}).setView([38.6270,-90.1994], 12);
 
-var url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
+var url = 'http://waldo.rotblauer.com:8080/tiles/{z}/{x}/{y}';
 
 var vectorTileOptions = {
     rendererFactory: L.canvas.tile,
