@@ -9,9 +9,9 @@ else
 
 	scp arew:/home/freyabison/track.areteh.co/db/tracks.db ./
 
+    rm -r ./out* test/
 fi
 
-rm -r ./out* test/
 
 go run dump.go
 

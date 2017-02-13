@@ -49,10 +49,10 @@ var vectorTileOptions = {
 //            console.log("made it");
 
 			color2 ="purple"
-            if (properties.Name === "Big Papa" || properties.Name === "ia") color2 = "red";
-            if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "blue";
-            if (properties.Name === "Big Mamma") color2 = "green";
-            if (properties.Name === "Kayleigh's iPhone") color2 = "yellow";
+            if (properties.Name === "Big Papa" || properties.Name === "ia") color2 = "rgb(255,0,0)"; //red";
+            if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "rgb(0,0,255)"; //blue";
+            if (properties.Name === "Big Mamma") color2 = "rgb(105, 198, 97)"; //green";
+            if (properties.Name === "Kayleigh's iPhone") color2 = "rgb(244, 217, 66)";
 
 
 //			console.log(properties.tippecanoe_feature_density);
@@ -64,17 +64,17 @@ var vectorTileOptions = {
 
 
             return {
-                weight: 2 ,
+                weight: 1 ,
                 color: color2,
-                opacity: .2,
+                opacity: .05,
 
-                fillColor: 'black',
+                fillColor: color2,
 //                fillColor: rgb(255, 255, 0),
 
                 fill: true,
                 radius: 3,
-                fillOpacity: .4,
-				fillWeight: 1,
+                fillOpacity: .1,
+				fillWeight: 0.5,
 				type: "Point"
             }
         },
