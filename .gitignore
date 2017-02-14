@@ -69,4 +69,5 @@ out.json
 *.mbtiles-journal
 test/
 
+*.linux
 
