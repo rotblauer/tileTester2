@@ -16,6 +16,7 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/kpawlik/geojson"
+	"github.com/rotblauer/tileTester2/undump"
 )
 
 var (
@@ -57,7 +58,7 @@ func initBoltDB(boltDb string) error {
 	// return GetDB()
 }
 
-func dumpBolty(boltDb string, out string) {
+func dumpBolty(boltDb string, out string) error {
 
 	initBoltDB(boltDb)
 	file, err := os.Create(out + ".json")
@@ -124,6 +125,7 @@ func dumpBolty(boltDb string, out string) {
 		fmt.Println("could not write to "+out, err)
 
 	}
+	return tippmycanoe.Wait()
 }
 
 func main() {
@@ -132,10 +134,20 @@ func main() {
 
 	var boltDb string
 	var out string
+	var boldDBOut string
 
 	flag.StringVar(&boltDb, "in", path.Join("./", "tracks.db"), "specify the input bolt db holding trackpoints")
 	flag.StringVar(&out, "out", "out", "base name of the output")
+	flag.StringVar(&boldDBOut, "boltout", "tippedcanoetrack.db", "output bold db holding tippecanoe-ified trackpoints, which is a vector tiled db for /z/x/y")
 	fmt.Println("Dumping " + boltDb + " to " + out + ".json/.mbtile")
 	flag.Parse()
-	dumpBolty(boltDb, out)
+	e := dumpBolty(boltDb, out)
+	if e != nil {
+		fmt.Println("error dumping orignial bolty", e)
+	}
+
+	fmt.Println("Now taking .mbtiles file and putting it back into a bolt db: ", boldDBOut)
+
+	undump.MbtilesToBolt(out+".mbtiles", boldDBOut)
+
 }

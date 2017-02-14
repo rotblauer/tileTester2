@@ -1,4 +1,4 @@
-package main
+package undump
 
 import (
 	"database/sql"
@@ -95,7 +95,8 @@ func checkCount(rows *sql.Rows) (count int) {
 	return count
 }
 
-func mbtilesToBolt(mbtilesPath string, boltPath string) {
+// MbtilesToBolt dumps .mbtiles tile (using sqlite3) into a specified bolt.db
+func MbtilesToBolt(mbtilesPath string, boltPath string) {
 
 	dumpInitBoltDB(boltPath)
 
@@ -140,5 +141,5 @@ func main() {
 	flag.StringVar(&mbTilesPath, "tiles", path.Join("./", "tiles.mbtiles"), ".mbtiles file to read from")
 	flag.Parse()
 	fmt.Println("Reading ", mbTilesPath, " back into ", boltDb)
-	mbtilesToBolt(mbTilesPath, boltDb)
+	MbtilesToBolt(mbTilesPath, boltDb)
 }
