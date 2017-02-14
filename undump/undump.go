@@ -54,6 +54,11 @@ func i32tob(v int32) []byte {
 
 func insertToBolt(zoom_level int32, tile_column int32, tile_row int32, tile_data []byte) error {
 
+	if tile_data == nil {
+		fmt.Println("tile_data is nil")
+		return nil
+	}
+
 	e := getDB().Update(func(tx *bolt.Tx) error {
 		// bucket:mbTracks -> bucket:z
 		zb, ze := tx.CreateBucketIfNotExists(i32tob(zoom_level))
@@ -72,6 +77,7 @@ func insertToBolt(zoom_level int32, tile_column int32, tile_row int32, tile_data
 		if pe != nil {
 			fmt.Println("yk putter", pe)
 		}
+
 		return pe
 	})
 

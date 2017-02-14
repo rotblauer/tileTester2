@@ -102,19 +102,12 @@ func i32tob(v int32) []byte {
 	return b
 }
 
-// http://stackoverflow.com/questions/17539001/converting-int32-to-byte-array-in-go
-const BYTES_IN_INT32 = 8
-
-func unsafeCaseInt32ToBytes(val int32) []byte {
-	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&val)), Len: BYTES_IN_INT32, Cap: BYTES_IN_INT32}
-	return *(*[]byte)(unsafe.Pointer(&hdr))
-}
-
 func TilesBolty(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/x-protobuf")
 	w.Header().Set("Content-Encoding", "gzip") // set response header for encoding (browsers may do the ungzipping)
 	// https://github.com/SpatialServer/Leaflet.MapboxVectorTile/issues/29
+
 	vars := mux.Vars(r)
 	//dbname := vars["db"]
 	z := vars["z"]
@@ -126,38 +119,50 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 	if e1 != nil {
 		fmt.Println(e1.Error())
 	}
-	rowNum, e2 := strconv.ParseUint(y, 10, 32)
-	if e2 != nil {
-		fmt.Println(e1.Error())
-	}
 
-	// // dafaq
-	// colNum, e13 := strconv.ParseUint(x, 10, 32)
-	// if e13 != nil {
-	// 	fmt.Println(e13.Error())
-	// }
-
-	var qrow = (1 << zoomLevel) - 1 - rowNum
-	qrows := fmt.Sprint(qrow)
-
-	colNum, e13 := strconv.ParseUint(qrows, 10, 32)
+	// dafaq
+	colNum, e13 := strconv.ParseUint(x, 10, 32)
 	if e13 != nil {
 		fmt.Println(e13.Error())
 	}
 
-	fmt.Println("z:", z, "x:", x, "y:", y, "|", "cz:", zoomLevel, "cx:", colNum, "cy:", colNum)
+	rowNum, e2 := strconv.ParseUint(y, 10, 32)
+	if e2 != nil {
+		fmt.Println(e1.Error())
+	}
+	var qrow = (1 << zoomLevel) - 1 - rowNum
+
+	fmt.Println("z:", z, "x:", x, "y:", y, "|", "cz:", zoomLevel, "cx:", colNum, "cy:", qrow)
 
 	// TODO: unsafe pointer, nil memory address #dafuc
 	// or w/o errors get tileData == nil
 	e := GetDB().View(func(tx *bolt.Tx) error {
-		bz := tx.Bucket(unsafeCaseInt32ToBytes(int32(zoomLevel)))
-		bx := bz.Bucket(unsafeCaseInt32ToBytes(int32(colNum)))
-		tileData := bx.Get(unsafeCaseInt32ToBytes(int32(rowNum)))
+
+		bz := tx.Bucket(i32tob(int32(zoomLevel)))
+		if bz == nil { // these are the cases the map is requesting a tile that we haven't made :paw_prints: in yet
+			fmt.Println("E: bucket by zoom empty", bz)
+			w.Write(nil)
+			return nil
+		}
+		bx := bz.Bucket(i32tob(int32(colNum)))
+		if bx == nil {
+			fmt.Println("E: bucket by col empty", bx)
+			w.Write(nil)
+			return nil
+		}
+
+		n := i32tob(int32(qrow))
+		fmt.Println("rowNum = ", rowNum, " *qrow = ", qrow)
+
+		tileData := bx.Get(n)
+
 		if tileData == nil {
 			fmt.Println("td war nil", z, x, y)
-		} else {
-			w.Write(tileData)
+			w.Write(nil)
+			return nil
 		}
+
+		w.Write(tileData)
 		return nil
 	})
 	if e != nil {
