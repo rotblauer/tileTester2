@@ -1,21 +1,61 @@
 #!/usr/bin/env bash
 
+# # The Overview
+# server tracks.db(bolt) -> local tippecanoe -> local out.mbtiles (+ out.json) -> local tippedcanoetrack.db(bolt) -> server punktlich.rotblauer.com/
 
+# update tracks from API bolt.db on Freya to local
+echo "** Syncing remote tracks.db --> local..."
+echo ""
 if [[ $1 == "i" ]]; then
-
 	rsync -avz --progress freya:~/track.areteh.co/db/tracks.db ./
-
 else
-
 	scp arew:/home/freyabison/track.areteh.co/db/tracks.db ./
-
-    rm -r ./out* test/
+  rm -r ./out* test/
 fi
 
 
+# # Specifics
+# ^ tracks.db is bolt database for API that receives incoming tracks from mobile cat trackering devices. catmobileTracks ios.
+#    those points are stored as struct trackPoint.TrackPoints.
+
+
+# tldr
+# dump.go runs tracks.db(bolty) through `$ tippecanoe` which builds sensible vector mbtiles
+# that .mbtiles file is then transferred back to a bolt.db file and sent back up to serve.
+#
+# !tldr
+# v tippecanoe is a C++ cli program that organizes and builds points to vector mbtiles. it does a lot of logic about how to show a lot of points cleverly. there are options.
+#    data generated is in .mbtiles format and .json. .mbtiles is readable by a sqlite3 interface, and tile data is gzipped.
+#
+# last step of dump.go is undump/undump.go, which reads the .mbtiles/sqlite3 data back into a bolt.db
+# that .db (named tippedcanoetrack.db by default) is then synced to the punktlich.rotblauer.com domain as tester.db
+#
+# punktlich runs a tile server (by default on port :8081?think).
+# after running ./getem, you'll need to ssh freya and ./punktlich.rotblauer.com/kickstart for the changes to take effect
+echo "** Running dump.go..."
+echo ""
 go run dump.go
 
-cp out.mbtiles ./TileServer/tiles.mbtiles
+# sync newly created/update bolty db back to punktlich, finally
+echo "** Syncing fresh bolt.db back to punktlich.rotblauer.com..."
+echo ""
+if [[ $1 == "i" ]]; then
+    # sync boltified mbtiles to punktlich
+    rsync -avz --progress ./tippedcanoetrack.db freya:~/punktlich.rotblauer.com/tester.db
+fi
+
+# And update locally too for development.
+echo "Copying fresh tippedcanoetrack.db -> TileServer/tester.db..."
+cp tippedcanoetrack.db ./TileServer/tester.db
+
+# Develop
+# cd TileServer && ./TileServer
+
+# Deploy
+# env GOOS=linux go build -o TileServer.linux && rsync -avz --progress TileServer.linux freya:~/punktlich.rotblauer.com/
+# ssh freya && ./punktlich.rotblauer.com/kickstart
+
+# ------------------------------------------
 #easy_install mbutil
 #mb-util out.mbtiles test --image_format=png
 
