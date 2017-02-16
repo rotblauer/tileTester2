@@ -7,7 +7,7 @@
 echo "** Syncing remote tracks.db --> local..."
 echo ""
 
-rsync -avz --progress freya:~/track.areteh.co/db/tracks.db ./
+rsync -avzLh --progress freya:~/track.areteh.co/db/tracks.db ./
 
 
 
@@ -36,7 +36,7 @@ go run dump.go
 # sync newly created/update bolty db back to punktlich, finally
 echo "** Syncing fresh bolt.db back to punktlich.rotblauer.com..."
 echo ""
-rsync -avz --progress ./tippedcanoetrack.db freya:~/punktlich.rotblauer.com/tester.db
+rsync -avzLh --progress ./tippedcanoetrack.db freya:~/punktlich.rotblauer.com/tester.db
 
 # And update locally too for development.
 echo "Copying fresh tippedcanoetrack.db -> TileServer/tester.db..."
