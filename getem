@@ -6,12 +6,9 @@
 # update tracks from API bolt.db on Freya to local
 echo "** Syncing remote tracks.db --> local..."
 echo ""
-if [[ $1 == "i" ]]; then
-	rsync -avz --progress freya:~/track.areteh.co/db/tracks.db ./
-else
-	scp arew:/home/freyabison/track.areteh.co/db/tracks.db ./
-  rm -r ./out* test/
-fi
+
+rsync -avz --progress freya:~/track.areteh.co/db/tracks.db ./
+
 
 
 # # Specifics
@@ -39,10 +36,7 @@ go run dump.go
 # sync newly created/update bolty db back to punktlich, finally
 echo "** Syncing fresh bolt.db back to punktlich.rotblauer.com..."
 echo ""
-if [[ $1 == "i" ]]; then
-    # sync boltified mbtiles to punktlich
-    rsync -avz --progress ./tippedcanoetrack.db freya:~/punktlich.rotblauer.com/tester.db
-fi
+rsync -avz --progress ./tippedcanoetrack.db freya:~/punktlich.rotblauer.com/tester.db
 
 # And update locally too for development.
 echo "Copying fresh tippedcanoetrack.db -> TileServer/tester.db..."
