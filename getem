@@ -29,6 +29,10 @@ rsync -avzLh --progress freya:~/track.areteh.co/db/tracks.db ./
 #
 # punktlich runs a tile server (by default on port :8081?think).
 # after running ./getem, you'll need to ssh freya and ./punktlich.rotblauer.com/kickstart for the changes to take effect
+
+# Clear out old out.json/mbtiles. Was getting 'tippecanoe: create metadata table: table metadata already exists'
+rm ./out*
+
 echo "** Running dump.go..."
 echo ""
 go run dump.go
