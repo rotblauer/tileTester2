@@ -68,3 +68,10 @@ cp tippedcanoetrack.db ./TileServer/tester.db
 #mb-util --image_format=png out.mbtiles test/web
 
 #tippecanoe-decode out.mbtiles |more
+#!/usr/bin/env bash
+
+ssh freya <<\EOI
+cd punktlich.rotblauer.com
+./kickstart
+exit
+EOI
