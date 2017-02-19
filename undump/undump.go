@@ -121,15 +121,41 @@ func MbtilesToBolt(mbtilesPath string, boltPath string) {
 
 	}
 
-	for rows.Next() {
+	e := getDB().Update(func(tx *bolt.Tx) error {
+		var e error
+		for rows.Next() {
 
-		var zoom_level int32
-		var tile_column int32
-		var tile_row int32
-		var tile_data []byte
-		rows.Scan(&zoom_level, &tile_column, &tile_row, &tile_data) //tile_data blob)
-		insertToBolt(zoom_level, tile_column, tile_row, tile_data)
-		bar.Increment()
+			var zoom_level int32
+			var tile_column int32
+			var tile_row int32
+			var tile_data []byte
+
+			rows.Scan(&zoom_level, &tile_column, &tile_row, &tile_data) //tile_data blob)
+			// insertToBolt(zoom_level, tile_column, tile_row, tile_data)
+
+			// bucket:mbTracks -> bucket:z
+			zb, ze := tx.CreateBucketIfNotExists(i32tob(zoom_level))
+			if ze != nil {
+				fmt.Println("zoom bucket creator", ze)
+			}
+
+			// bucket:z -> bucket:x
+			xb, xe := zb.CreateBucketIfNotExists(i32tob(tile_column))
+			if xe != nil {
+				fmt.Println("x bucket creator", xe)
+			}
+
+			// bucket:x key:y = val:tile
+			e := xb.Put(i32tob(tile_row), tile_data)
+			if e != nil {
+				fmt.Println("yk putter", e)
+			}
+			bar.Increment()
+		}
+		return e
+	})
+	if e != nil {
+		fmt.Println(" error with boltizer", e)
 	}
 	bar.Finish()
 }
