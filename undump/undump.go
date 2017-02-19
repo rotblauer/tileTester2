@@ -30,19 +30,21 @@ func dumpInitBoltDB(boltDb string) error {
 
 	if err != nil {
 		fmt.Println("Could not initialize Bolt database. ", err)
-	} else {
-		fmt.Println("Bolt db is initialized at ", boltDb)
-		db.Update(func(tx *bolt.Tx) error {
-			// "tracks" -- this is the default bucket, keyed on time.UnixNano
-			_, e := tx.CreateBucketIfNotExists([]byte(undumpTrackKey))
-			if e != nil {
-				return e
-			} else {
-				fmt.Println("Ensured existance of bucket ", undumpTrackKey)
-			}
-			return e
-		})
 	}
+	// this bucket isn't even doing anything
+	// else {
+	// 	fmt.Println("Bolt db is initialized at ", boltDb)
+	// 	db.Update(func(tx *bolt.Tx) error {
+	// 		// "tracks" -- this is the default bucket, keyed on time.UnixNano
+	// 		_, e := tx.CreateBucketIfNotExists([]byte(undumpTrackKey))
+	// 		if e != nil {
+	// 			return e
+	// 		} else {
+	// 			fmt.Println("Ensured existance of bucket ", undumpTrackKey)
+	// 		}
+	// 		return e
+	// 	})
+	// }
 	return err
 }
 

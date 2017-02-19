@@ -82,6 +82,10 @@ func dumpBolty(boltDb string, out string) error {
 	err = getDB().View(func(tx *bolt.Tx) error {
 		var err error
 		b := tx.Bucket([]byte(trackKey))
+
+		stats := b.Stats()
+		fmt.Println("Tippeing ", stats.KeyN, " total tracked points.")
+
 		b.ForEach(func(trackPointKey, trackPointVal []byte) error {
 
 			var trackPointCurrent trackPoint.TrackPoint
