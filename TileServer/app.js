@@ -86,28 +86,34 @@ var clearHighlight = function() {
     }
     highlight = null;
 };
-var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map); // It would be nice if this could handle the zipper data instead of unxip on sever
+var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
 
+.on('click', function(e) {	// The .on method attaches an event handler
+   L.popup()
+        .setContent(( e.layer.properties.Name || e.layer.properties.Type )
+                    + "<br/> "
+                    + "Speed: " + e.layer.properties.Speed + "m/s" + "<br/>"
+                    + "Heading: " + e.layer.properties.Heading + "deg" + "<br/>"
+                    + "Elevation: " + e.layer.properties.Elevation + "m " + "<br/>"
+                    + "Accuracy: +/-" + e.layer.properties.Accuracy + "m" + "<br/>"
+                    + e.layer.properties.Time
+                   )
+       .setLatLng(e.latlng)
+       .openOn(map);
+   clearHighlight();
+   highlight = e.layer.properties.Name;
+   pbfLayer.setFeatureStyle(highlight, {
+       weight: 2,
+       color: 'red',
+       opacity: 1,
+       fillColor: 'red',
+       fill: true,
+       radius: 6,
+       fillOpacity: 1
+   })
+   L.DomEvent.stop(e);
+});
 
-//.on('click', function(e) {	// The .on method attaches an event handler
-//    L.popup()
-//        .setContent(e.layer.properties.name || e.layer.properties.type)
-//        .setLatLng(e.latlng)
-//        .openOn(map);
-//    clearHighlight();
-//    highlight = e.layer.properties.name;
-//    pbfLayer.setFeatureStyle(highlight, {
-//        weight: 2,
-//        color: 'red',
-//        opacity: 1,
-//        fillColor: 'red',
-//        fill: true,
-//        radius: 6,
-//        fillOpacity: 1
-//    })
-//    L.DomEvent.stop(e);
-//})
-//
 
 document.getElementById("gostl").onclick = function() {
     map.setView([38.627, -90.1994], 12);

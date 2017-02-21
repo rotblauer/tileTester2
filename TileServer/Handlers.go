@@ -1,21 +1,16 @@
 package main
 
 import (
-	"net/http"
-
-	"fmt"
-
-	"github.com/gorilla/mux"
-	// "github.com/paulmach/go.vector_tile"
-	//"strconv"
 	"encoding/binary"
 	"github.com/boltdb/bolt"
+	"github.com/gorilla/mux"
+	"log"
+	"net/http"
 	"strconv"
 )
 
 var (
-	db             *bolt.DB
-	undumpTrackKey = "mbtracks"
+	db *bolt.DB
 )
 
 // GetDB is db getter.
@@ -30,19 +25,9 @@ func InitBoltDB(boltDb string) error {
 	db, err = bolt.Open(boltDb, 0666, nil)
 
 	if err != nil {
-		fmt.Println("Could not initialize Bolt database. ", err)
+		log.Println("Could not initialize Bolt database. ", err)
 	} else {
-		fmt.Println("Bolt db is initialized at ", boltDb)
-		db.Update(func(tx *bolt.Tx) error {
-			// "tracks" -- this is the default bucket, keyed on time.UnixNano
-			_, e := tx.CreateBucketIfNotExists([]byte(undumpTrackKey))
-			if e != nil {
-				return e
-			} else {
-				fmt.Println("Ensured existance of bucket ", undumpTrackKey)
-			}
-			return e
-		})
+		log.Println("Bolt db is initialized at ", boltDb)
 	}
 	return err
 }
@@ -68,55 +53,49 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 	//dafuc
 	zoomLevel, e1 := strconv.ParseUint(z, 10, 32)
 	if e1 != nil {
-		fmt.Println(e1.Error())
+		log.Println(e1.Error())
 	}
 
 	// dafaq
 	colNum, e13 := strconv.ParseUint(x, 10, 32)
 	if e13 != nil {
-		fmt.Println(e13.Error())
+		log.Println(e13.Error())
 	}
 
 	rowNum, e2 := strconv.ParseUint(y, 10, 32)
 	if e2 != nil {
-		fmt.Println(e1.Error())
+		log.Println(e1.Error())
 	}
 	var qrow = (1 << zoomLevel) - 1 - rowNum
 
-	fmt.Println("z:", z, "x:", x, "y:", y, "|", "cz:", zoomLevel, "cx:", colNum, "cy:", qrow)
-
-	// TODO: unsafe pointer, nil memory address #dafuc
-	// or w/o errors get tileData == nil
+	// tile data bytes for response
+	var tileData []byte
 	e := GetDB().View(func(tx *bolt.Tx) error {
 
 		bz := tx.Bucket(i32tob(int32(zoomLevel)))
 		if bz == nil { // these are the cases the map is requesting a tile that we haven't made :paw_prints: in yet
-			fmt.Println("E: bucket by zoom empty", bz)
+			log.Println("E: bucket by zoom empty")
 			w.Write(nil)
 			return nil
 		}
 		bx := bz.Bucket(i32tob(int32(colNum)))
 		if bx == nil {
-			fmt.Println("E: bucket by col empty", bx)
+			log.Println("E: bucket by col empty")
 			w.Write(nil)
 			return nil
 		}
 
 		n := i32tob(int32(qrow))
-		fmt.Println("rowNum = ", rowNum, " *qrow = ", qrow)
-
-		tileData := bx.Get(n)
-
-		if tileData == nil {
-			fmt.Println("td war nil", z, x, y)
-			w.Write(nil)
-			return nil
-		}
-
-		w.Write(tileData)
+		tileData = bx.Get(n)
 		return nil
 	})
 	if e != nil {
-		fmt.Println("getboltdb", e)
+		log.Println("getboltdb", e)
 	}
+
+	if tileData == nil {
+		log.Println("td war nil", z, x, y)
+		w.Write(nil)
+	}
+	w.Write(tileData)
 }

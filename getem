@@ -9,8 +9,6 @@ echo ""
 
 rsync -avzLh --progress freya:~/track.areteh.co/db/tracks.db ./
 
-
-
 # # Specifics
 # ^ tracks.db is bolt database for API that receives incoming tracks from mobile cat trackering devices. catmobileTracks ios.
 #    those points are stored as struct trackPoint.TrackPoints.
@@ -51,8 +49,14 @@ cp tippedcanoetrack.db ./TileServer/tester.db
 # cd TileServer && ./TileServer
 
 # Deploy
-# env GOOS=linux go build -o TileServer.linux && rsync -avz --progress TileServer.linux freya:~/punktlich.rotblauer.com/
+#
+# __the tile server
+# env GOOS=linux go build -o TileServer.linux && rsync -avzLh --progress TileServer.linux freya:~/punktlich.rotblauer.com/
 # ssh freya && ./punktlich.rotblauer.com/kickstart
+#
+# __the front end
+# cd TileServer && rsync -avzLh --progress index.js app.js freya:~/punktlich.rotblauer.com/
+
 
 # ------------------------------------------
 #easy_install mbutil
