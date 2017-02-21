@@ -1,139 +1,45 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-	<title>Leaflet & Go: MBTiles Example</title>
-	<meta charset="utf-8" />
+    <title>Punktlich</title>
+    <meta charset="utf-8" />
 
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
-	<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
-<!--     <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script> -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+    <!--     <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script> -->
     <script src="./node_modules/whatwg-fetch/fetch.js"></script>
-	<script src="./node_modules/leaflet.vectorgrid/dist/Leaflet.VectorGrid.bundled.js"></script>
+    <script src="./node_modules/leaflet.vectorgrid/dist/Leaflet.VectorGrid.bundled.js"></script>
 
 
-<style>
-
-html, body,  #map {
-        width : 100%;
-        height : 100%;
-  margin: 0;
-     		   }
-
- button {
-   z-index: 10000;
-   }
-
-</style>
+    <style>
+        html,
+        body,
+        #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+        
+        button {
+            z-index: 10000;
+        }
+    </style>
 </head>
+
 <body>
-<button id="gostl" style="position: fixed; top: 10px; right: 10px;">STL</button>
-<button id="gober" style="position: fixed; top: 40px; right: 10px;">BER</button>
-<button id="gowww" style="position: fixed; top: 70px; right: 10px;">WWW</button>
-<div id="map"></div>
+    <button id="gostl" style="position: fixed; top: 10px; right: 10px;">STL</button>
+    <button id="gober" style="position: fixed; top: 40px; right: 10px;">BER</button>
+    <button id="gowww" style="position: fixed; top: 70px; right: 10px;">WWW</button>
 
-	<script>
+    <div id="map"></div>
 
-var map = L.map('map',{maxZoom:20}).setView([38.6270,-90.1994], 12);
+    <script src="/app.js">
+    </script>
 
-var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
-
-var vectorTileOptions = {
-    rendererFactory: L.canvas.tile,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
-    vectorTileLayerStyles: {
-
-        'catTrack': function(properties, zoom) {
-//            console.log("made it");
-
-			color2 ="purple"
-            if (properties.Name === "Big Papa" || properties.Name === "ia") color2 = "rgb(255,0,0)"; //red";
-            if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "rgb(0,0,255)"; //blue";
-            if (properties.Name === "Big Mamma") color2 = "rgb(105, 198, 97)"; //green";
-            if (properties.Name === "Kayleigh's iPhone") color2 = "rgb(244, 217, 66)";
-
-
-//			console.log(properties.tippecanoe_feature_density);
-//          console.log(properties);
-
-
-
-
-
-
-            return {
-                weight: 1 ,
-                color: color2,
-                opacity: .05,
-
-                fillColor: color2,
-//                fillColor: rgb(255, 255, 0),
-
-                fill: true,
-                radius: 3,
-                fillOpacity: .1,
-				fillWeight: 0.5,
-				type: "Point"
-            }
-        },
-
-        water: [],
-//		... any other layers
-    },
-    interactive: true,	// Make sure that this VectorGrid fires mouse/pointer events
-    getFeatureId: function(f) {
-        return f.properties.name;
-    }
-};
-
-var mb_light1 = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
-L.tileLayer(mb_light1, {
-    maxZoom: 22
-}).addTo(map);
-
-var highlight;
-var clearHighlight = function() {
-    if (highlight) {
-        pbfLayer.resetFeatureStyle(highlight);
-    }
-    highlight = null;
-};
-var pbfLayer = L.vectorGrid.protobuf(url, vectorTileOptions).addTo(map); // It would be nice if this could handle the zipper data instead of unxip on sever
-
-
-//.on('click', function(e) {	// The .on method attaches an event handler
-//    L.popup()
-//        .setContent(e.layer.properties.name || e.layer.properties.type)
-//        .setLatLng(e.latlng)
-//        .openOn(map);
-//    clearHighlight();
-//    highlight = e.layer.properties.name;
-//    pbfLayer.setFeatureStyle(highlight, {
-//        weight: 2,
-//        color: 'red',
-//        opacity: 1,
-//        fillColor: 'red',
-//        fill: true,
-//        radius: 6,
-//        fillOpacity: 1
-//    })
-//    L.DomEvent.stop(e);
-//})
-//
-
-   document.getElementById("gostl").onclick = function () {
-map.setView([38.627,-90.1994],12);
-       }
-   document.getElementById("gober").onclick = function () {
-       map.setView([52.484777, 13.445776], 12);
-       }
-   document.getElementById("gowww").onclick = function () {
-       map.setView([43.582793, -45.353025], 3);
-       }
-
-
-	</script>
 </body>
+
 </html>
