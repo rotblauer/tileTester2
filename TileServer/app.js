@@ -46,7 +46,7 @@ var vectorTileOptions = {
             // tippecanoe_feature_density: 0
 
             var maxNormalPossibleSpeed = 15; // m/s, no rockets allowed
-
+            var monsterInt =2;
             return {
                 stroke: false,
                 // weight: 1,
@@ -56,7 +56,8 @@ var vectorTileOptions = {
                 fill: true,
                 // lighten it the fast you go
                 fillColor: shadeRGBColor(color2, ( ( properties.Speed / maxNormalPossibleSpeed ) % 1.0 ) / 2),
-                fillOpacity: 0.1,
+                fillOpacity: 0.10 +properties.tippecanoe_feature_density/monsterInt, //most are zero in high zoomer, but actually range 0-255
+
                 // fillWeight: 0.5,
 
                 // radius: 3,
