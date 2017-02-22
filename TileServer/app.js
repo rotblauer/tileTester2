@@ -46,7 +46,7 @@ var vectorTileOptions = {
             // tippecanoe_feature_density: 0
 
             var maxNormalPossibleSpeed = 15; // m/s, no rockets allowed
-            var monsterInt =2;
+            var monsterInt =2.01;
             return {
                 stroke: false,
                 // weight: 1,
