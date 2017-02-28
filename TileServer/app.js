@@ -33,12 +33,12 @@ var vectorTileOptions1 = {
 
 
             var maxNormalPossibleSpeed = 15; // m/s, no rockets allowed
-
+            var monsterInt =2.01;
             return {
                 stroke: false,
                 fill: true,
                 fillColor: shadeRGBColor(color2, ( ( properties.Speed / maxNormalPossibleSpeed ) % 1.0 ) / 2),
-                fillOpacity: 0.1,
+                fillOpacity: 0.10 +properties.tippecanoe_feature_density/monsterInt, //most are zero in high zoomer, but actually range 0-255
                 radius: radiusFromSpeed(properties.Speed),
                 type: "Point"
             };
