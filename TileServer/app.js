@@ -1,5 +1,5 @@
 var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
-url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
+// url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 
 var map = L.map('map', {
     maxZoom: 20
@@ -18,7 +18,7 @@ function radiusFromSpeed(speed) {
     return Math.abs( 3 - ( Math.log(speed+0.01) / 2) );
 }
 
-var vectorTileOptions1 = {
+var speedTileOptions = {
     rendererFactory: L.canvas.tile,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
     vectorTileLayerStyles: {
@@ -49,16 +49,59 @@ var vectorTileOptions1 = {
         return f.properties.name;
     }
 };
-var vectorTileOptions2 = {
+
+var now = new Date().getTime();
+// var pastReferenceTime = Date.parse( now - 1000*60*60*24*7 ); // second, min, hour, day, week
+var oneDay = 1000*60*60*24;
+
+// var maxDateDiff = now - oneWeek; // diff in millis
+
+var recencyScale = function (props, color) {
+    var dateString = props.Time;
+    var density = props.tippecanoe_feature_density;
+    if (density === 0) { density += 1; }
+    var then = new Date(dateString).getTime();
+    var diff = now - then;
+
+    // opacity
+    // day, 3 days, week, fortnight, month, sixmonth, year
+    // 1,   0.8     0.6   0.4        0.2    0.1       0.05
+    // radius
+    // day, 3 days, week, fortnight, month, sixmonth, year
+    // 2    3       4      5         6      7         9
+    var opacity=0.05;
+    var radius=20;
+    var shade=0.8;
+
+    if (diff <= oneDay) { opacity = 0.9; radius = 2; shade = -0.5; }
+    else if (diff <= oneDay*3) { opacity = 0.8; radius = 2; shade = -0.2; }
+    else if (diff <= oneDay*7) { opacity = 0.6; radius = 3; shade = -0.1 ; }
+    else if (diff <= oneDay*14) { opacity = 0.3; radius = 5; shade = 0.2; }
+    else if (diff <= oneDay*30) { opacity = 0.15; radius = 10; shade = 0.5; }
+    else if (diff <= oneDay*150) { opacity = 0.09; radius = 15; shade = 0.7; }
+
+    return {
+        opacity: opacity, //opacity / 3,
+        radius: 2,
+        color: shadeRGBColor(color, shade)
+    };
+};
+
+function onEachFeatureF(feature, layer) {
+    console.log("oneach", feature, layer);
+}
+
+var recencyTileOptions = {
     rendererFactory: L.canvas.tile,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
 
+
             var color2 = "rgb(241, 66, 244)"; // purple
             if (properties.Name === "Big Papa" || properties.Name === "ia") color2 = "rgb(200,0,0)"; //red";
-            if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "rgb(0,200,200)"; //blue";
+            if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "rgb(0,0,200)"; //blue";
             if (properties.Name === "Big Mamma") color2 = "rgb(0, 200, 0)"; //green";
             if (properties.Name === "Kayleigh's iPhone") color2 = "rgb(200, 200, 0)"; //yellow
 
@@ -68,9 +111,9 @@ var vectorTileOptions2 = {
             return {
                 stroke: false,
                 fill: true,
-                fillColor: shadeRGBColor(color2, ( ( properties.Speed / maxNormalPossibleSpeed ) % 1.0 ) / 2),
-                fillOpacity: 0.05,
-                radius: radiusFromSpeed(properties.Speed),
+                fillColor: recencyScale(properties, color2).color,
+                fillOpacity: recencyScale(properties, color2).opacity,
+                radius: recencyScale(properties, color2).radius,
                 type: "Point"
             };
         }
@@ -78,7 +121,8 @@ var vectorTileOptions2 = {
     interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name;
-    }
+    },
+    onEachFeature: onEachFeatureF
 };
 
 
@@ -129,7 +173,7 @@ var drawLayer = function drawLayer (opts) {
             L.DomEvent.stop(e);
         });
 };
-drawLayer(vectorTileOptions1);
+drawLayer(speedTileOptions);
 
 
 document.getElementById("gostl").onclick = function() {
@@ -141,9 +185,31 @@ document.getElementById("gober").onclick = function() {
 document.getElementById("gowww").onclick = function() {
     map.setView([43.582793, -45.353025], 3);
 };
-document.getElementById("stuff").onclick = function() {
-    drawLayer(vectorTileOptions2);
+document.getElementById("time-layer").onclick = function() {
+    drawLayer(recencyTileOptions);
 };
+document.getElementById("speed-layer").onclick = function() {
+    drawLayer(speedTileOptions);
+};
+
+
+// map.on('move', function() {
+    // Construct an empty list to fill with onscreen markers.
+    // var inBounds = [],
+    //     // Get the map bounds - the top-left and bottom-right locations.
+    //     bounds = map.getBounds();
+    // // For each marker, consider whether it is currently visible by comparing
+    // // with the current map bounds.
+    // pbfLayer.eachLayer(function(marker) {
+    //     if (bounds.contains(marker.getLatLng())) {
+    //         // inBounds.push(marker.options.title);
+    //         inBounds.push(marker.properties.Speed);
+    //     }
+    // });
+    // // Display a list of markers.
+    // document.getElementById('coordinates').innerHTML = inBounds.join('\n');
+// });
+
 // console.log(properties);
 // Object
 // Accuracy: 10
