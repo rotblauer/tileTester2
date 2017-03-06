@@ -13,8 +13,16 @@
     <!--     <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script> -->
     <script src="./node_modules/whatwg-fetch/fetch.js"></script>
     <script src="./node_modules/leaflet.vectorgrid/dist/Leaflet.VectorGrid.bundled.js"></script>
-    <script src="./d3-scale/d3-scale.min.js"></script>
+    <script src="./node_modules/underscore/underscore.js"></script>
 
+    <script src="https://d3js.org/d3-array.v1.min.js"></script>
+<script src="https://d3js.org/d3-collection.v1.min.js"></script>
+<script src="https://d3js.org/d3-color.v1.min.js"></script>
+<script src="https://d3js.org/d3-format.v1.min.js"></script>
+<script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+<script src="https://d3js.org/d3-time.v1.min.js"></script>
+<script src="https://d3js.org/d3-time-format.v2.min.js"></script>
+<script src="https://d3js.org/d3-scale.v1.min.js"></script>
 
     <style>
         html,
@@ -24,14 +32,15 @@
             height: 100%;
             margin: 0;
         }
-        
+
         button {
             z-index: 10000;
         }
-     #coordinates {
+     #feature-count {
        position: fixed;
-       top: 10px;
-       left: 10px;
+       right: 10px;
+       top: 170px;
+       z-index: 1000;
        }
     </style>
 </head>
@@ -43,9 +52,9 @@
     <button id="time-layer" style="position: fixed; top: 100px; right: 10px;">Time Layer</button>
     <button id="speed-layer" style="position: fixed; top: 130px; right: 10px;">Speed Layer (default)</button>
 
-    <div id="coordinates">
-      
-    </div>
+    <p id="feature-count">
+      htlloow
+    </p>
 
     <div id="map"></div>
 

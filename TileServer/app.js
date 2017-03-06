@@ -1,44 +1,65 @@
+// color defaults
+var colors = {
+    "Big Papa": "rgb(200,0,0)",
+    "RyePhone": "rgb(0,0,200)",
+    "jl": "rgb(0,0,200)",
+    "Big Mamma": "rgb(0,200,0)",
+    "Kayleigh's iPhone": "rgb(200,200,0)"
+};
+
 var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
-// url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
+url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 
 var map = L.map('map', {
-    maxZoom: 20
+    maxZoom: 20,
+    noWrap: true
 }).setView([38.6270, -90.1994], 12);
 
 
 // http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
 function shadeRGBColor(color, percent) {
-    var f=color.split(","),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=parseInt(f[0].slice(4)),G=parseInt(f[1]),B=parseInt(f[2]);
-    return "rgb("+(Math.round((t-R)*p)+R)+","+(Math.round((t-G)*p)+G)+","+(Math.round((t-B)*p)+B)+")";
+    var f = color.split(","),
+        t = percent < 0 ? 0 : 255,
+        p = percent < 0 ? percent * -1 : percent,
+        R = parseInt(f[0].slice(4)),
+        G = parseInt(f[1]),
+        B = parseInt(f[2]);
+    return "rgb(" + (Math.round((t - R) * p) + R) + "," + (Math.round((t - G) * p) + G) + "," + (Math.round((t - B) * p) + B) + ")";
 }
 
 function radiusFromSpeed(speed) {
-    if (typeof(speed) === "undefined") { return 3; }
-    if (speed < 0) { speed = 0; }
-    return Math.abs( 3 - ( Math.log(speed+0.01) / 2) );
+    if (typeof(speed) === "undefined") {
+        return 3;
+    }
+    if (speed < 0) {
+        speed = 0;
+    }
+    return Math.abs(3 - (Math.log(speed + 0.01) / 2));
+}
+
+count = 0;
+
+function onEachFeature(feature) {
+    console.log("counting", count);
+    count++;
 }
 
 var speedTileOptions = {
     rendererFactory: L.canvas.tile,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
+    // attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
 
-            var color2 = "rgb(241, 66, 244)"; // purple
-            if (properties.Name === "Big Papa" || properties.Name === "ia") color2 = "rgb(200,0,0)"; //red";
-            if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "rgb(0,0,200)"; //blue";
-            if (properties.Name === "Big Mamma") color2 = "rgb(0, 200, 0)"; //green";
-            if (properties.Name === "Kayleigh's iPhone") color2 = "rgb(200, 200, 0)"; //yellow
-
+            var color2 = colors[properties.Name] || "rgb(241,66,244)";
 
             var maxNormalPossibleSpeed = 15; // m/s, no rockets allowed
-            var monsterInt =2.01;
+            var monsterInt = 2.01;
             return {
                 stroke: false,
                 fill: true,
-                fillColor: shadeRGBColor(color2, ( ( properties.Speed / maxNormalPossibleSpeed ) % 1.0 ) / 2),
-                fillOpacity: 0.10 +properties.tippecanoe_feature_density/monsterInt, //most are zero in high zoomer, but actually range 0-255
+                fillColor: shadeRGBColor(color2, ((properties.Speed / maxNormalPossibleSpeed) % 1.0) / 2),
+                fillOpacity: 0.10 + properties.tippecanoe_feature_density / monsterInt, //most are zero in high zoomer, but actually range 0-255
                 radius: radiusFromSpeed(properties.Speed),
                 type: "Point"
             };
@@ -47,82 +68,43 @@ var speedTileOptions = {
     interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name;
-    }
+    },
+    onEachFeature: onEachFeature
 };
 
 var now = new Date().getTime();
-// var pastReferenceTime = Date.parse( now - 1000*60*60*24*7 ); // second, min, hour, day, week
-var oneDay = 1000*60*60*24;
-
-// var maxDateDiff = now - oneWeek; // diff in millis
-
-var recencyScale = function (props, color) {
-    var dateString = props.Time;
-    var density = props.tippecanoe_feature_density;
-    if (density === 0) { density += 1; }
-    var then = new Date(dateString).getTime();
-    var diff = now - then;
-
-    // opacity
-    // day, 3 days, week, fortnight, month, sixmonth, year
-    // 1,   0.8     0.6   0.4        0.2    0.1       0.05
-    // radius
-    // day, 3 days, week, fortnight, month, sixmonth, year
-    // 2    3       4      5         6      7         9
-    var opacity=0.05;
-    var radius=20;
-    var shade=0.8;
-
-    if (diff <= oneDay) { opacity = 0.9; radius = 2; shade = -0.5; }
-    else if (diff <= oneDay*3) { opacity = 0.8; radius = 2; shade = -0.2; }
-    else if (diff <= oneDay*7) { opacity = 0.6; radius = 3; shade = -0.1 ; }
-    else if (diff <= oneDay*14) { opacity = 0.3; radius = 5; shade = 0.2; }
-    else if (diff <= oneDay*30) { opacity = 0.15; radius = 10; shade = 0.5; }
-    else if (diff <= oneDay*150) { opacity = 0.09; radius = 15; shade = 0.7; }
-
-    return {
-        opacity: opacity, //opacity / 3,
-        radius: 2,
-        color: shadeRGBColor(color, shade)
-    };
-};
-
-function onEachFeatureF(feature, layer) {
-    console.log("oneach", feature, layer);
-}
+var oldest = new Date("2010-05-04T09:15:12Z").getTime();
 
 var recencyTileOptions = {
     rendererFactory: L.canvas.tile,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
 
-
-            var color2 = "rgb(241, 66, 244)"; // purple
-            if (properties.Name === "Big Papa" || properties.Name === "ia") color2 = "rgb(200,0,0)"; //red";
-            if (properties.Name === "RyePhone" || properties.Name === "jl") color2 = "rgb(0,0,200)"; //blue";
-            if (properties.Name === "Big Mamma") color2 = "rgb(0, 200, 0)"; //green";
-            if (properties.Name === "Kayleigh's iPhone") color2 = "rgb(200, 200, 0)"; //yellow
-
-
-            var maxNormalPossibleSpeed = 15; // m/s, no rockets allowed
+            var color2 = colors[properties.Name] || "rgb(241,66,244)";
+            var time = new Date(properties.Time).getTime();
 
             return {
                 stroke: false,
                 fill: true,
-                fillColor: recencyScale(properties, color2).color,
-                fillOpacity: recencyScale(properties, color2).opacity,
-                radius: recencyScale(properties, color2).radius,
+                fillColor: d3.scaleLog().base(2)
+                    .domain([oldest, now])
+                    .range(["white", color2])(time),
+                fillOpacity: d3.scaleLinear()
+                    .domain([oldest, now])
+                    .range([0, 1])(time),
+                radius: 2,
+                // radius: d3.scaleLog()
+                //     .domain([oldest, now])
+                //     .range([20, 1])(time),
                 type: "Point"
             };
         }
     },
     interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
-        return f.properties.name;
-    },
-    onEachFeature: onEachFeatureF
+        return f.properties.name + f.properties.Time;
+    }
 };
 
 
@@ -140,23 +122,26 @@ var clearHighlight = function() {
 };
 
 var pbfLayer;
+var drawnFeatures = [];
 
-var drawLayer = function drawLayer (opts) {
+var drawLayer = function drawLayer(opts) {
     if (typeof pbfLayer !== "undefined") {
         map.removeLayer(pbfLayer);
     }
 
-    pbfLayer = L.vectorGrid.protobuf(url, opts).addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
-        .on('click', function(e) {	// The .on method attaches an event handler
+    var v = L.vectorGrid;
+    pbfLayer = v.protobuf(url, opts).addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
+        .on('click', function(e) { // The .on method attaches an event handler
             L.popup()
-                .setContent(( e.layer.properties.Name || e.layer.properties.Type )
-                            + "<br/> "
-                            + "Speed: " + e.layer.properties.Speed + "m/s" + "<br/>"
-                            + "Heading: " + e.layer.properties.Heading + "deg" + "<br/>"
-                            + "Elevation: " + e.layer.properties.Elevation + "m " + "<br/>"
-                            + "Accuracy: +/-" + e.layer.properties.Accuracy + "m" + "<br/>"
-                            + e.layer.properties.Time
-                           )
+                .setContent((e.layer.properties.Name || e.layer.properties.Type) +
+                    "<br/> " +
+                    "Speed: " + e.layer.properties.Speed + "m/s" + "<br/>" +
+                    "Heading: " + e.layer.properties.Heading + "deg" + "<br/>" +
+                    "Elevation: " + e.layer.properties.Elevation + "m " + "<br/>" +
+                    "Accuracy: +/-" + e.layer.properties.Accuracy + "m" + "<br/>" +
+                    "tfd: " + e.layer.properties.tippecanoe_feature_density + "<br />" +
+                    e.layer.properties.Time
+                )
                 .setLatLng(e.latlng)
                 .openOn(map);
             clearHighlight();
@@ -171,10 +156,71 @@ var drawLayer = function drawLayer (opts) {
                 fillOpacity: 1
             });
             L.DomEvent.stop(e);
+        })
+        .on('load', function (e) {
+            console.log('load', e);
         });
+
+    // pbfLayer.on("load", function() {
+    //     drawnFeatures = [];
+    //     var props = [];
+    //     map.eachLayer(function(layer) {
+    //         // do something with the layer
+    //         if (layer._url === url) {
+    //             // console.log("layer", layer);
+    //             for (var tile in layer._vectorTiles) {
+    //                 var xyz = tile.split(":");
+    //                 var Z = +xyz[2];
+    //                 if (layer._vectorTiles.hasOwnProperty(tile) && Z === map.getZoom()) {
+    //                     props.push(tile);
+    //                     var t = layer._vectorTiles[tile];
+    //                     // console.log(tile, t);
+    //                     collectFeatureProperties(t);
+    //                 }
+    //             }
+    //         }
+    //     });
+    //     console.log("drawnFeatures", drawnFeatures, drawnFeatures.length);
+    //     var i = _.uniq(drawnFeatures);
+    //     console.log("i", i, i.length,
+    //                 _.min(i, function (o) {
+    //                     return new Date(o.Time);
+    //                 }).Time,
+    //                 _.max(i, function (o) {
+    //                     return new Date(o.Time);
+    //                 }).Time);
+    // });
+
+    document.getElementById("feature-count").innerHTML = "count: " + count;
+    // var d = map.addControl( new L.Control.ListMarkers({layer: pbfLayer}) );
+    // console.log("d",d);
+    // console.log(pbfLayer.getLayers());
+
+
 };
 drawLayer(speedTileOptions);
 
+function collectFeatureProperties(tile) {
+    // console.log("countertile --> ", tile);
+    for (var t in tile) {
+        if (tile.hasOwnProperty(t)) {
+            // console.log("tile", tile);
+            // var dls = tile._drawnLayers;
+            // drawnFeatures = drawnFeatures.concat(_.keys(dls));
+            var dls = tile._features;
+            for (var d in dls) {
+                if (dls.hasOwnProperty(d)) {
+                    var dd = dls[d];
+                    // drawnFeatures.push(dd); //_drawnLayers
+                    drawnFeatures.push(dd.feature.properties); // _features
+
+                    // var p = dd.properties;
+                    // drawnFeatures.push(p);
+                }
+            }
+        }
+    }
+}
 
 document.getElementById("gostl").onclick = function() {
     map.setView([38.627, -90.1994], 12);
@@ -194,20 +240,20 @@ document.getElementById("speed-layer").onclick = function() {
 
 
 // map.on('move', function() {
-    // Construct an empty list to fill with onscreen markers.
-    // var inBounds = [],
-    //     // Get the map bounds - the top-left and bottom-right locations.
-    //     bounds = map.getBounds();
-    // // For each marker, consider whether it is currently visible by comparing
-    // // with the current map bounds.
-    // pbfLayer.eachLayer(function(marker) {
-    //     if (bounds.contains(marker.getLatLng())) {
-    //         // inBounds.push(marker.options.title);
-    //         inBounds.push(marker.properties.Speed);
-    //     }
-    // });
-    // // Display a list of markers.
-    // document.getElementById('coordinates').innerHTML = inBounds.join('\n');
+// Construct an empty list to fill with onscreen markers.
+// var inBounds = [],
+//     // Get the map bounds - the top-left and bottom-right locations.
+//     bounds = map.getBounds();
+// // For each marker, consider whether it is currently visible by comparing
+// // with the current map bounds.
+// pbfLayer.eachLayer(function(marker) {
+//     if (bounds.contains(marker.getLatLng())) {
+//         // inBounds.push(marker.options.title);
+//         inBounds.push(marker.properties.Speed);
+//     }
+// });
+// // Display a list of markers.
+// document.getElementById('coordinates').innerHTML = inBounds.join('\n');
 // });
 
 // console.log(properties);
