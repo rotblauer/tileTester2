@@ -76,7 +76,7 @@ func dumpBolty(boltDb string, out string) error {
 	//https://www.mapbox.com/blog/vector-density/
 	//-z19 -d11 -g3
 	//"--no-tile-size-limit"
-	tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "--drop-rate", "0", "--maximum-zoom", "50", "-g", "1", "-n", "catTrack", "-o", out+".mbtiles")
+	tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "-pf", "--drop-rate", "0", "--maximum-zoom", "50", "-g", ".25", "-n", "catTrack", "-o", out+".mbtiles")
 	// tippmycanoe := exec.Command("tippecanoe", "-ag", "--full-detail", "20", "--low-detail", "14", "--minimum-detail", "8", "--maximum-tile-bytes", "1000000", "--maximum-zoom", "22", "-g", "1", "-n", "catTrack", "-o", out+".mbtiles")
 	tippmycanoeIn, _ := tippmycanoe.StdinPipe()
 

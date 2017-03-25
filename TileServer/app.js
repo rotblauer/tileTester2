@@ -54,12 +54,11 @@ var speedTileOptions = {
             var color2 = colors[properties.Name] || "rgb(241,66,244)";
 
             var maxNormalPossibleSpeed = 15; // m/s, no rockets allowed
-            var monsterInt = 2.01;
             return {
                 stroke: false,
                 fill: true,
                 fillColor: shadeRGBColor(color2, ((properties.Speed / maxNormalPossibleSpeed) % 1.0) / 2),
-                fillOpacity: 0.10 + properties.tippecanoe_feature_density / monsterInt, //most are zero in high zoomer, but actually range 0-255
+                fillOpacity: 0.10,
                 radius: radiusFromSpeed(properties.Speed),
                 type: "Point"
             };
@@ -71,6 +70,33 @@ var speedTileOptions = {
     },
     onEachFeature: onEachFeature
 };
+
+
+var densityTileOptions = {
+    rendererFactory: L.canvas.tile,
+    vectorTileLayerStyles: {
+
+        'catTrack': function(properties, zoom) {
+
+            var color2 = colors[properties.Name] || "rgb(241,66,244)";
+
+            return {
+                stroke: false,
+                fill: true,
+                fillColor: color2,
+                fillOpacity: 0.10 ,
+                    radius: 2+Math.log(1+properties.tippecanoe_feature_density/10 ),
+                    type: "Point"
+            };
+        }
+    },
+    interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    getFeatureId: function(f) {
+        return f.properties.name;
+    },
+    onEachFeature: onEachFeature
+};
+
 
 var now = new Date().getTime();
 var oldest = new Date("2010-05-04T09:15:12Z").getTime();
@@ -236,6 +262,9 @@ document.getElementById("time-layer").onclick = function() {
 };
 document.getElementById("speed-layer").onclick = function() {
     drawLayer(speedTileOptions);
+};
+document.getElementById("density-layer").onclick = function() {
+    drawLayer(densityTileOptions);
 };
 
 
