@@ -71,3 +71,4 @@ test/
 
 *.linux
 
+node_modules/*
