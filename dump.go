@@ -136,6 +136,7 @@ func dumpBolty(boltDb string, out string) error {
 func main() {
 
 	//#brew install tippecanoe
+	fmt.Println("Now taking .mbtiles file and putting it back into a bolt db:")
 
 	var boltDb string
 	var out string
