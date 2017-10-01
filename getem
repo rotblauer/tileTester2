@@ -36,10 +36,14 @@ echo "** Running dump.go..."
 echo ""
 go run dump.go
 
+# Gzip it for uploading
+echo "gzipping tippedcanoetrack.db -> tippedcanoetrack.db.gz for uploading..."
+gzip --best --keep --verbose ./tippedcanoetrack.db
+
 # sync newly created/update bolty db back to punktlich, finally
 echo "** Syncing fresh bolt.db back to punktlich.rotblauer.com..."
 echo ""
-rsync -avzLh --progress ./tippedcanoetrack.db freya:~/punktlich.rotblauer.com/tester.db
+rsync -avzLh --progress ./tippedcanoetrack.db.gz freya:~/punktlich.rotblauer.com/tippedcanoetrack.db.gz #/tester.db
 
 # And update locally too for development.
 echo "Copying fresh tippedcanoetrack.db -> TileServer/tester.db..."
@@ -77,6 +81,8 @@ cp tippedcanoetrack.db ./TileServer/tester.db
 
 ssh freya <<\EOI
 cd punktlich.rotblauer.com
+gzip --decompress ./tippedcanoetrack.db.gz
+mv ./tippedcanoetrack.db ./tester.db
 ./kickstart
 exit
 EOI
