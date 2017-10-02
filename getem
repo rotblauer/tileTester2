@@ -31,7 +31,7 @@ rsync -avzLh --progress freya:~/track.areteh.co/db/tracks.db ./
 # Clear out old out.json/mbtiles. Was getting 'tippecanoe: create metadata table: table metadata already exists'
 rm ./out*
 rm ./tippedcanoetrack.db # in case there's some smudgeying due to CTRL-Cing during a gettingem or something. tabulara rastafaria n all dat
-
+rm ./tippedcanoetrack.db.gz #ibid, plus gzip always asks to replace
 echo "** Running dump.go..."
 echo ""
 go run dump.go
