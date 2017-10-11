@@ -8,7 +8,7 @@ var colors = {
 };
 
 var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
-url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
+// url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 
 var map = L.map('map', {
     maxZoom: 20,
@@ -193,40 +193,8 @@ var drawLayer = function drawLayer(opts) {
             console.log('load', e);
         });
 
-    // pbfLayer.on("load", function() {
-    //     drawnFeatures = [];
-    //     var props = [];
-    //     map.eachLayer(function(layer) {
-    //         // do something with the layer
-    //         if (layer._url === url) {
-    //             // console.log("layer", layer);
-    //             for (var tile in layer._vectorTiles) {
-    //                 var xyz = tile.split(":");
-    //                 var Z = +xyz[2];
-    //                 if (layer._vectorTiles.hasOwnProperty(tile) && Z === map.getZoom()) {
-    //                     props.push(tile);
-    //                     var t = layer._vectorTiles[tile];
-    //                     // console.log(tile, t);
-    //                     collectFeatureProperties(t);
-    //                 }
-    //             }
-    //         }
-    //     });
-    //     console.log("drawnFeatures", drawnFeatures, drawnFeatures.length);
-    //     var i = _.uniq(drawnFeatures);
-    //     console.log("i", i, i.length,
-    //                 _.min(i, function (o) {
-    //                     return new Date(o.Time);
-    //                 }).Time,
-    //                 _.max(i, function (o) {
-    //                     return new Date(o.Time);
-    //                 }).Time);
-    // });
 
     document.getElementById("feature-count").innerHTML = "count: " + count;
-    // var d = map.addControl( new L.Control.ListMarkers({layer: pbfLayer}) );
-    // console.log("d",d);
-    // console.log(pbfLayer.getLayers());
 
 
 };
@@ -272,37 +240,3 @@ document.getElementById("speed-layer").onclick = function() {
 document.getElementById("density-layer").onclick = function() {
     drawLayer(densityTileOptions);
 };
-
-
-// map.on('move', function() {
-// Construct an empty list to fill with onscreen markers.
-// var inBounds = [],
-//     // Get the map bounds - the top-left and bottom-right locations.
-//     bounds = map.getBounds();
-// // For each marker, consider whether it is currently visible by comparing
-// // with the current map bounds.
-// pbfLayer.eachLayer(function(marker) {
-//     if (bounds.contains(marker.getLatLng())) {
-//         // inBounds.push(marker.options.title);
-//         inBounds.push(marker.properties.Speed);
-//     }
-// });
-// // Display a list of markers.
-// document.getElementById('coordinates').innerHTML = inBounds.join('\n');
-// });
-
-// console.log(properties);
-// Object
-// Accuracy: 10
-// Elevation: 148.8997
-// Heading: 224.3618
-// HeartRate: 0
-// ID: 1485563993509000000
-// Lat: 38.61678
-// Lng: -90.26221
-// Name: "RyePhone"
-// Notes: ""
-// Speed: 11.78
-// Tilt: 0
-// Time: "2017-01-28T00:39:53.509Z"
-// tippecanoe_feature_density: 0
