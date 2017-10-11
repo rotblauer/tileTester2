@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/fatih/structs"
 	"github.com/kpawlik/geojson"
 	"github.com/rotblauer/tileTester2/undump"
 )
