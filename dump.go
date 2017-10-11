@@ -94,8 +94,13 @@ func dumpBolty(boltDb string, out string) error {
 
 			// convert to a feature
 			p := geojson.NewPoint(geojson.Coordinate{geojson.Coord(trackPointCurrent.Lng), geojson.Coord(trackPointCurrent.Lat)})
-			props := structs.Map(trackPointCurrent) // dats a lazy one
-			f1 := geojson.NewFeature(p, props, 1)
+			//currently need speed, name,time
+			trimmedProps := make(map[string]interface{})
+			trimmedProps["Speed"] = trackPointCurrent.Speed
+			trimmedProps["Name"] = trackPointCurrent.Name
+			trimmedProps["Time"] = trackPointCurrent.Time
+			trimmedProps["Elevation"] = trackPointCurrent.Elevation
+			f1 := geojson.NewFeature(p, trimmedProps, 1)
 
 			fc.AddFeatures(f1)
 

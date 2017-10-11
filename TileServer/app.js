@@ -27,6 +27,13 @@ function shadeRGBColor(color, percent) {
     return "rgb(" + (Math.round((t - R) * p) + R) + "," + (Math.round((t - G) * p) + G) + "," + (Math.round((t - B) * p) + B) + ")";
 }
 
+function densityColor(density){
+    var r = Math.floor(density*2),
+        g = Math.floor(255-density),
+        b = 0;
+    return  "rgb(" + r + "," + g + "," + b + ")";
+}
+
 function radiusFromSpeed(speed) {
     if (typeof(speed) === "undefined") {
         return 3;
@@ -79,13 +86,12 @@ var densityTileOptions = {
         'catTrack': function(properties, zoom) {
 
             var color2 = colors[properties.Name] || "rgb(241,66,244)";
-
             return {
                 stroke: false,
                 fill: true,
-                fillColor: color2,
+                fillColor: densityColor(properties.tippecanoe_feature_density),
                 fillOpacity: 0.10 ,
-                    radius: 2+Math.log(1+properties.tippecanoe_feature_density/10 ),
+                    radius: 2,
                     type: "Point"
             };
         }
@@ -162,9 +168,9 @@ var drawLayer = function drawLayer(opts) {
                 .setContent((e.layer.properties.Name || e.layer.properties.Type) +
                     "<br/> " +
                     "Speed: " + e.layer.properties.Speed + "m/s" + "<br/>" +
-                    "Heading: " + e.layer.properties.Heading + "deg" + "<br/>" +
+                    // "Heading: " + e.layer.properties.Heading + "deg" + "<br/>" +
                     "Elevation: " + e.layer.properties.Elevation + "m " + "<br/>" +
-                    "Accuracy: +/-" + e.layer.properties.Accuracy + "m" + "<br/>" +
+                    // "Accuracy: +/-" + e.layer.properties.Accuracy + "m" + "<br/>" +
                     "tfd: " + e.layer.properties.tippecanoe_feature_density + "<br />" +
                     e.layer.properties.Time
                 )
