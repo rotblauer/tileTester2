@@ -72,3 +72,4 @@ test/
 *.linux
 
 node_modules/*
+tippedcanoetrack.db.gz
