@@ -1,7 +1,7 @@
 // color defaults
 var colors = {
     "Big Papa": "rgb(200,0,0)",
-    "Bigger Papa", "rgb(200,0,0)"
+    "Bigger Papa": "rgb(200,0,0)",
     "RyePhone": "rgb(0,0,200)",
     "jl": "rgb(0,0,200)",
     "Big Mamma": "rgb(0,200,0)",
@@ -9,7 +9,7 @@ var colors = {
 };
 
 var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
-// url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
+url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 
 var map = L.map('map', {
     maxZoom: 20,
@@ -193,11 +193,7 @@ var drawLayer = function drawLayer(opts) {
         .on('load', function (e) {
             console.log('load', e);
         });
-
-
     document.getElementById("feature-count").innerHTML = "count: " + count;
-
-
 };
 drawLayer(speedTileOptions);
 
@@ -227,9 +223,11 @@ document.getElementById("gostl").onclick = function() {
     map.setView([38.627, -90.1994], 12);
 };
 document.getElementById("gober").onclick = function() {
+    console.log("going ber");
     map.setView([52.484777, 13.445776], 12);
 };
 document.getElementById("gohak").onclick = function() {
+    console.log("going hak");
     map.setView([41.46, 140.44], 12);
 };
 document.getElementById("gowww").onclick = function() {
