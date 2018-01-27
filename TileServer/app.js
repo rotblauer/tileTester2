@@ -229,6 +229,9 @@ document.getElementById("gostl").onclick = function() {
 document.getElementById("gober").onclick = function() {
     map.setView([52.484777, 13.445776], 12);
 };
+document.getElementById("gohak").onclick = function() {
+    map.setView([41.46, 140.44], 12);
+};
 document.getElementById("gowww").onclick = function() {
     map.setView([43.582793, -45.353025], 3);
 };
