@@ -228,7 +228,7 @@ document.getElementById("gober").onclick = function() {
 };
 document.getElementById("gohak").onclick = function() {
     console.log("going hak");
-    map.setView([41.46, 140.44], 12);
+    map.setView([41.766667, 140.733333], 12);
 };
 document.getElementById("gowww").onclick = function() {
     map.setView([43.582793, -45.353025], 3);
