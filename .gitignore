@@ -73,3 +73,5 @@ test/
 
 node_modules/*
 tippedcanoetrack.db.gz
+
+/out_pngs

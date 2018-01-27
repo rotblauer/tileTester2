@@ -2,11 +2,8 @@
 var colors = {
     "Big Papa": "rgb(200,0,0)",
     "Bigger Papa": "rgb(200,0,0)",
-
     "RyePhone": "rgb(0,0,200)",
-    "Rye8": "rgb(0,0,200)",
     "jl": "rgb(0,0,200)",
-
     "Big Mamma": "rgb(0,200,0)",
     "Kayleigh's iPhone": "rgb(200,200,0)"
 };
