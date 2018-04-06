@@ -114,8 +114,8 @@ func dumpBolty(boltDb string, out string) error {
 		"-rf100000",
 		"--minimum-zoom", "3",
 		"--maximum-zoom", "20",
-		"-n=catTrack",
-		"-o=" + out + ".mbtiles",
+		"-n", "catTrack",
+		"-o", out + ".mbtiles",
 	}
 	fmt.Println(">", tippCmd, tippargs)
 	tippmycanoe := exec.Command("tippecanoe", tippargs...)
@@ -189,17 +189,20 @@ func dumpBolty(boltDb string, out string) error {
 		log.Println("what da dump", err)
 	}
 
-	data, err := json.Marshal(fc)
-	if err != nil {
-		log.Println("finish, err marshalling json geo data:", err)
+	if len(fc.Features) > 0 {
+		data, err := json.Marshal(fc)
+		if err != nil {
+			log.Println("finish, err marshalling json geo data:", err)
+		}
+		tippmycanoeIn.Write(data)
+
+		if _, err := file.Write(data); err != nil {
+			tippmycanoeIn.Close()
+			log.Fatal(err)
+		}
 	}
-	tippmycanoeIn.Write(data)
 	tippmycanoeIn.Close()
 
-	if _, err := file.Write(data); err != nil {
-		log.Fatal(err)
-	}
-	//
 	// if err2 := ioutil.WriteFile(out+".json", data, 0644); err2 != nil {
 	// 	log.Println("could not write to "+out, err)
 	// }
@@ -219,13 +222,13 @@ func main() {
 	flag.StringVar(&boldDBOut, "boltout", "tippedcanoetrack.db", "output bold db holding tippecanoe-ified trackpoints, which is a vector tiled db for /z/x/y")
 	flag.Parse()
 
-	fmt.Println("DUMPER: Migrating boltdb trackpoints -> geojson/+mbtiles, boltdb:", boltDb, "out:", out+".json/+.mbtiles")
+	fmt.Println("Dump: Migrating boltdb trackpoints -> geojson/+mbtiles, boltdb:", boltDb, "out:", out+".json/+.mbtiles")
 	e := dumpBolty(boltDb, out)
 	if e != nil {
 		fmt.Println("error dumping orignial bolty", e)
 	}
 
-	fmt.Println("DUMPER: Migrating .mbtiles file back into a bolt db: ", boldDBOut)
+	fmt.Println("Dump: Migrating .mbtiles file back into a bolt db: ", boldDBOut)
 
 	undump.MbtilesToBolt(out+".mbtiles", boldDBOut)
 

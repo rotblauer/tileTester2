@@ -36,16 +36,6 @@ echo "------------------------------------------"
 echo "Cleaning up old artifacts..."
 echo
 rm ./out*
-
-# for f in ./*; do
-#     if [[ "$f" =~ "out"* ]]; then
-#         if [[ -d "$f" ]]; then
-#             rm -rf "$f"
-#         else
-#             rm "$f"
-#         fi
-#     fi
-# done
 rm ./tippedcanoetrack.db # in case there's some smudgeying due to CTRL-Cing during a gettingem or something. tabulara rastafaria n all dat
 rm ./tippedcanoetrack.db.gz #ibid, plus gzip always asks to replace
 
