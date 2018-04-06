@@ -92,7 +92,7 @@ func dumpBolty(boltDb string, out string) error {
 	//
 	//WARNINGS:
 	//Highest supported zoom with detail 14 is 18
-	tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "--reorder", "--cluster-densest-as-needed", "-g", "0.1", "--full-detail", "14", "--minimum-detail", "12", "-rg", "--minimum-zoom", "3", "--maximum-zoom", "20", "-n", "catTrack", "-o", out+".mbtiles")
+	tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "--reorder", "--cluster-densest-as-needed", "-g", "0.1", "--full-detail", "14", "--minimum-detail", "12", "-rg", "-rf", "200000" "--minimum-zoom", "3", "--maximum-zoom", "20", "-n", "catTrack", "-o", out+".mbtiles")
 	// tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "-pf", "--drop-rate", "0", "--maximum-zoom", "50", "-g", "0.25", "-n", "catTrack", "-o", out+".mbtiles")
 	// tippmycanoe := exec.Command("tippecanoe", "-ag", "--full-detail", "20", "--low-detail", "14", "--minimum-detail", "8", "--maximum-tile-bytes", "1000000", "--maximum-zoom", "22", "-g", "1", "-n", "catTrack", "-o", out+".mbtiles")
 	tippmycanoeIn, _ := tippmycanoe.StdinPipe()
