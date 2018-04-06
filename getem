@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# exit if any error
+set -e
+
 # # The Overview
 # server tracks.db(bolt) -> local tippecanoe -> local out.mbtiles (+ out.json) -> local tippedcanoetrack.db(bolt) -> server punktlich.rotblauer.com/
 
