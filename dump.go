@@ -160,7 +160,6 @@ func dumpBolty(boltDb string, out string) error {
 			bar.Increment()
 			count++
 			if count%100000 == 0 {
-				bar.ShowBar = false
 				data, err := json.Marshal(fc)
 				if err != nil {
 					log.Println(count, "= count, err marshalling json geo data:", err)
@@ -176,7 +175,6 @@ func dumpBolty(boltDb string, out string) error {
 						}
 					}
 				}
-				bar.ShowBar = true
 			}
 			return nil
 
