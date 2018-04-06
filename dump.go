@@ -5,17 +5,19 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"path"
 
 	"github.com/boltdb/bolt"
 	"github.com/rotblauer/trackpoints/trackPoint"
 
-	"io/ioutil"
 	"os"
 	"os/exec"
 
 	"github.com/kpawlik/geojson"
 	"github.com/rotblauer/tileTester2/undump"
+
+	"github.com/cheggaaa/pb"
 )
 
 var (
@@ -60,11 +62,17 @@ func initBoltDB(boltDb string) error {
 func dumpBolty(boltDb string, out string) error {
 
 	initBoltDB(boltDb)
-	file, err := os.Create(out + ".json")
+	// If the file doesn't exist, create it, or append to the file
+	file, err := os.OpenFile(out+".json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// file, err := os.Create(out + ".json")
 	if err != nil {
-		fmt.Println("Can't create file.", err)
+		log.Fatalln("Can't create file.", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	//TODO split feature collections ala trackpointer Big Papa Mama namer
 
@@ -92,10 +100,19 @@ func dumpBolty(boltDb string, out string) error {
 	//
 	//WARNINGS:
 	//Highest supported zoom with detail 14 is 18
-	tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "--reorder", "--cluster-densest-as-needed", "-g", "0.1", "--full-detail", "14", "--minimum-detail", "12", "-rg", "-rf", "200000" "--minimum-zoom", "3", "--maximum-zoom", "20", "-n", "catTrack", "-o", out+".mbtiles")
+	tippmycanoe := exec.Command("tippecanoe", "-ag", "-M", "2000000", "-O", "400000", "--reorder", "--cluster-densest-as-needed", "-g", "0.1", "--full-detail", "14", "--minimum-detail", "12", "-rg", "-rf200000", "--minimum-zoom", "3", "--maximum-zoom", "20", "-n", "catTrack", "-o", out+".mbtiles")
 	// tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "-pf", "--drop-rate", "0", "--maximum-zoom", "50", "-g", "0.25", "-n", "catTrack", "-o", out+".mbtiles")
 	// tippmycanoe := exec.Command("tippecanoe", "-ag", "--full-detail", "20", "--low-detail", "14", "--minimum-detail", "8", "--maximum-tile-bytes", "1000000", "--maximum-zoom", "22", "-g", "1", "-n", "catTrack", "-o", out+".mbtiles")
+
 	tippmycanoeIn, _ := tippmycanoe.StdinPipe()
+	tippmycanoe.Stdout = os.Stdout
+	tippmycanoe.Stderr = os.Stderr
+
+	err = tippmycanoe.Start()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
+		os.Exit(1)
+	}
 
 	err = getDB().View(func(tx *bolt.Tx) error {
 		var err error
@@ -103,7 +120,9 @@ func dumpBolty(boltDb string, out string) error {
 
 		stats := b.Stats()
 		fmt.Println("Tippeing ", stats.KeyN, " total tracked points.")
+		bar := pb.StartNew(stats.KeyN)
 
+		count := 0
 		b.ForEach(func(trackPointKey, trackPointVal []byte) error {
 
 			var trackPointCurrent trackPoint.TrackPoint
@@ -120,45 +139,56 @@ func dumpBolty(boltDb string, out string) error {
 			f1 := geojson.NewFeature(p, trimmedProps, 1)
 
 			fc.AddFeatures(f1)
-
+			bar.Increment()
+			count++
+			if count%100000 == 0 {
+				data, err := json.Marshal(fc)
+				if err != nil {
+					log.Println(count, "= count, err marshalling json geo data:", err)
+					// continue
+				} else {
+					if _, e := tippmycanoeIn.Write(data); e != nil {
+						log.Println("err write tippe in data:", e)
+					} else {
+						if _, err := file.Write(data); err != nil {
+							log.Fatal(err)
+						} else {
+							fc = geojson.NewFeatureCollection([]*geojson.Feature{})
+						}
+					}
+				}
+			}
 			return nil
 
 		})
-
+		bar.Finish()
 		return err
 	})
 
 	if err != nil {
-		fmt.Println("what da dump", err)
+		log.Println("what da dump", err)
 	}
 
 	data, err := json.Marshal(fc)
 	if err != nil {
+		log.Println("finish, err marshalling json geo data:", err)
 	}
-	tippmycanoe.Stdout = os.Stdout
-	tippmycanoe.Stderr = os.Stderr
-
-	err = tippmycanoe.Start()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
-		os.Exit(1)
-	}
-
 	tippmycanoeIn.Write(data)
 	tippmycanoeIn.Close()
 
-	err2 := ioutil.WriteFile(out+".json", data, 0644)
-	if err2 != nil {
-		fmt.Println("could not write to "+out, err)
-
+	if _, err := file.Write(data); err != nil {
+		log.Fatal(err)
 	}
+	//
+	// if err2 := ioutil.WriteFile(out+".json", data, 0644); err2 != nil {
+	// 	log.Println("could not write to "+out, err)
+	// }
 	return tippmycanoe.Wait()
 }
 
 func main() {
 
-	//#brew install tippecanoe
-	fmt.Println("Now taking .mbtiles file and putting it back into a bolt db:")
+	//#brew install tippecanoe && brew upgrade tippecanoe
 
 	var boltDb string
 	var out string
@@ -167,8 +197,9 @@ func main() {
 	flag.StringVar(&boltDb, "in", path.Join("./", "tracks.db"), "specify the input bolt db holding trackpoints")
 	flag.StringVar(&out, "out", "out", "base name of the output")
 	flag.StringVar(&boldDBOut, "boltout", "tippedcanoetrack.db", "output bold db holding tippecanoe-ified trackpoints, which is a vector tiled db for /z/x/y")
-	fmt.Println("Dumping " + boltDb + " to " + out + ".json/.mbtile")
 	flag.Parse()
+
+	fmt.Println("Now shifting boltdb trackpoints -> geojson, boltdb:", boltDb, "out:", out+".json")
 	e := dumpBolty(boltDb, out)
 	if e != nil {
 		fmt.Println("error dumping orignial bolty", e)

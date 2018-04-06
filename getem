@@ -6,8 +6,9 @@
 # server tracks.db(bolt) -> local tippecanoe -> local out.mbtiles (+ out.json) -> local tippedcanoetrack.db(bolt) -> server punktlich.rotblauer.com/
 
 # update tracks from API bolt.db on Freya to local
-echo "** Syncing remote tracks.db --> local..."
-echo ""
+echo "------------------------------------------"
+echo "Syncing remote tracks.db --> local..."
+echo
 
 rsync -avzLh --progress freya:~/track.areteh.co/db/tracks.db ./
 
@@ -31,6 +32,9 @@ rsync -avzLh --progress freya:~/track.areteh.co/db/tracks.db ./
 # after running ./getem, you'll need to ssh freya and ./punktlich.rotblauer.com/kickstart for the changes to take effect
 
 # Clear out old out.json/mbtiles. Was getting 'tippecanoe: create metadata table: table metadata already exists'
+echo "------------------------------------------"
+echo "Cleaning up old artifacts..."
+echo
 rm ./out*
 
 # for f in ./*; do
@@ -48,21 +52,30 @@ rm ./tippedcanoetrack.db.gz #ibid, plus gzip always asks to replace
 # exit if any error
 set -e
 
-echo "** Running dump.go..."
-echo ""
-go run dump.go
+echo "------------------------------------------"
+echo "Running dump.go..."
+echo
+go build -o dumper dump.go
+./dumper
+# rm ./dump
+# go run dump.go
 
 # Gzip it for uploading
+echo "------------------------------------------"
 echo "gzipping tippedcanoetrack.db -> tippedcanoetrack.db.gz for uploading..."
+echo
 gzip --best --keep --verbose ./tippedcanoetrack.db
 
 # sync newly created/update bolty db back to punktlich, finally
+echo "------------------------------------------"
 echo "** Syncing fresh bolt.db back to punktlich.rotblauer.com..."
-echo ""
+echo
 rsync -avzLh --progress ./tippedcanoetrack.db.gz freya:~/punktlich.rotblauer.com/tippedcanoetrack.db.gz #/tester.db
 
 # And update locally too for development.
+echo "------------------------------------------"
 echo "Copying fresh tippedcanoetrack.db -> TileServer/tester.db..."
+echo
 cp tippedcanoetrack.db ./TileServer/tester.db
 
 # Develop
@@ -94,6 +107,9 @@ cp tippedcanoetrack.db ./TileServer/tester.db
 
 #tippecanoe-decode out.mbtiles |more
 #!/usr/bin/env bash
+echo "------------------------------------------"
+echo "Replacing old db with new db on Freya and kickstarting tile server..."
+echo
 
 ssh freya <<\EOI
 cd punktlich.rotblauer.com

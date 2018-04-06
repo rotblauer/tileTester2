@@ -127,7 +127,7 @@ var speedTileOptions = {
                 stroke: false,
                 fill: true,
                 fillColor: shadeRGBColor(color2, ((properties.Speed / maxNormalPossibleSpeed) % 1.0) / 2),
-                fillOpacity: 0.5,
+                fillOpacity: 0.1,
                 radius: radiusFromSpeed(properties.Speed),
                 type: "Point"
             };
