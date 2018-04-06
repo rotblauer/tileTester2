@@ -31,6 +31,7 @@ function putViewToUrl() {
 map = L.map('map', {
     maxZoom: 20,
     noWrap: true
+    // preferCanvas: true
 });
 map.on("moveend", putViewToUrl);
 map.on("load", putViewToUrl);
@@ -126,7 +127,7 @@ var speedTileOptions = {
                 stroke: false,
                 fill: true,
                 fillColor: shadeRGBColor(color2, ((properties.Speed / maxNormalPossibleSpeed) % 1.0) / 2),
-                fillOpacity: 0.10,
+                fillOpacity: 0.5,
                 radius: radiusFromSpeed(properties.Speed),
                 type: "Point"
             };
@@ -289,7 +290,7 @@ var drawLayer = function drawLayer(opts) {
         //     L.DomEvent.stop(e);
         // })
         .on('load', function (e) {
-            console.log('load', e);
+            // console.log('load', e);
         });
 };
 drawLayer(speedTileOptions);
