@@ -100,7 +100,25 @@ func dumpBolty(boltDb string, out string) error {
 	//
 	//WARNINGS:
 	//Highest supported zoom with detail 14 is 18
-	tippmycanoe := exec.Command("tippecanoe", "-ag", "-M", "2000000", "-O", "400000", "--reorder", "--cluster-densest-as-needed", "-g", "0.1", "--full-detail", "14", "--minimum-detail", "12", "-rg", "-rf200000", "--minimum-zoom", "3", "--maximum-zoom", "20", "-n", "catTrack", "-o", out+".mbtiles")
+	tippCmd := "tippecanoe"
+	tippargs := []string{
+		"-ag",
+		"-M", "1000000",
+		"-O", "200000",
+		"--reorder",
+		"--cluster-densest-as-needed",
+		"-g", "0.1",
+		"--full-detail", "14",
+		"--minimum-detail", "12",
+		"-rg",
+		"-rf100000",
+		"--minimum-zoom", "3",
+		"--maximum-zoom", "20",
+		"-n=catTrack",
+		"-o=" + out + ".mbtiles",
+	}
+	fmt.Println(">", tippCmd, tippargs)
+	tippmycanoe := exec.Command("tippecanoe", tippargs...)
 	// tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "-pf", "--drop-rate", "0", "--maximum-zoom", "50", "-g", "0.25", "-n", "catTrack", "-o", out+".mbtiles")
 	// tippmycanoe := exec.Command("tippecanoe", "-ag", "--full-detail", "20", "--low-detail", "14", "--minimum-detail", "8", "--maximum-tile-bytes", "1000000", "--maximum-zoom", "22", "-g", "1", "-n", "catTrack", "-o", out+".mbtiles")
 
@@ -142,6 +160,7 @@ func dumpBolty(boltDb string, out string) error {
 			bar.Increment()
 			count++
 			if count%100000 == 0 {
+				bar.ShowBar = false
 				data, err := json.Marshal(fc)
 				if err != nil {
 					log.Println(count, "= count, err marshalling json geo data:", err)
@@ -157,6 +176,7 @@ func dumpBolty(boltDb string, out string) error {
 						}
 					}
 				}
+				bar.ShowBar = true
 			}
 			return nil
 
@@ -199,13 +219,13 @@ func main() {
 	flag.StringVar(&boldDBOut, "boltout", "tippedcanoetrack.db", "output bold db holding tippecanoe-ified trackpoints, which is a vector tiled db for /z/x/y")
 	flag.Parse()
 
-	fmt.Println("Now shifting boltdb trackpoints -> geojson, boltdb:", boltDb, "out:", out+".json")
+	fmt.Println("DUMPER: Migrating boltdb trackpoints -> geojson/+mbtiles, boltdb:", boltDb, "out:", out+".json/+.mbtiles")
 	e := dumpBolty(boltDb, out)
 	if e != nil {
 		fmt.Println("error dumping orignial bolty", e)
 	}
 
-	fmt.Println("Now taking .mbtiles file and putting it back into a bolt db: ", boldDBOut)
+	fmt.Println("DUMPER: Migrating .mbtiles file back into a bolt db: ", boldDBOut)
 
 	undump.MbtilesToBolt(out+".mbtiles", boldDBOut)
 
