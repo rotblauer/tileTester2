@@ -84,7 +84,15 @@ func dumpBolty(boltDb string, out string) error {
 	//-z zoom or --maximum-zoom=zoom: Don't copy tiles from higher zoom levels than the specified zoom
 	//-g gamma or --gamma=_gamma_: Rate at which especially dense dots are dropped (default 0, for no effect). A gamma of 2 reduces the number of dots less than a pixel apart to the square root of their original number.
 	//-n name or --name=name: Set the tileset name
-	tippmycanoe := exec.Command("tippecanoe", "-ag", "--no-tile-size-limit", "--force-feature-limit", "-g", "0.5", "--maximum-zoom", "50", "-n", "catTrack", "-o", out+".mbtiles")
+	//-ao or --reorder: Reorder features to put ones with the same properties in sequence, to try to get them to coalesce. You probably want to use this if you use --coalesce.
+	//-aC or --cluster-densest-as-needed: If a tile is too large, try to reduce its size by increasing the minimum spacing between features, and leaving one placeholder feature from each group. The remaining feature will be given a "cluster": true attribute to indicate that it represents a cluster, a "point_count" attribute to indicate the number of features that were clustered into it, and a "sqrt_point_count" attribute to indicate the relative width of a feature to represent the cluster. If
+	//- the features being clustered are points, the representative feature will be located at the average of the original points' locations; otherwise, one of the original features will be left as the representative
+	//-M bytes or --maximum-tile-bytes=bytes: Use the specified number of bytes as the maximum compressed tile size instead of 500K.
+	//-O features or --maximum-tile-features=features: Use the specified number of features as the maximum in a tile instead of 200,000.
+	//
+	//WARNINGS:
+	//Highest supported zoom with detail 14 is 18
+	tippmycanoe := exec.Command("tippecanoe", "-ag", "--reorder", "--cluster-densest-as-needed", "-g", "0.2", "--full-detail", "14", "--minimum-zoom", "3", "--maximum-zoom", "20", "-n", "catTrack", "-o", out+".mbtiles")
 	// tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "-pf", "--drop-rate", "0", "--maximum-zoom", "50", "-g", "0.25", "-n", "catTrack", "-o", out+".mbtiles")
 	// tippmycanoe := exec.Command("tippecanoe", "-ag", "--full-detail", "20", "--low-detail", "14", "--minimum-detail", "8", "--maximum-tile-bytes", "1000000", "--maximum-zoom", "22", "-g", "1", "-n", "catTrack", "-o", out+".mbtiles")
 	tippmycanoeIn, _ := tippmycanoe.StdinPipe()
