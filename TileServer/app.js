@@ -12,7 +12,7 @@ var colors = {
 };
 
 var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
-url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
+// url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 
 var map = L.map('map', {
     maxZoom: 20,
@@ -75,7 +75,7 @@ var speedTileOptions = {
             };
         }
     },
-    interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name;
     },
@@ -100,7 +100,7 @@ var densityTileOptions = {
             };
         }
     },
-    interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name;
     },
@@ -110,6 +110,43 @@ var densityTileOptions = {
 
 var now = new Date().getTime();
 var oldest = new Date("2010-05-04T09:15:12Z").getTime();
+
+var oneDay = 1000*60*60*24;
+
+// var maxDateDiff = now - oneWeek; // diff in millis
+
+var recencyScale = function (props, color) {
+    var dateString = props.Time;
+    var density = props.tippecanoe_feature_density;
+    if (density === 0) { density += 1; }
+    var then = new Date(dateString).getTime();
+    var diff = now - then;
+
+    // opacity
+    // day, 3 days, week, fortnight, month, sixmonth, year
+    // 1,   0.8     0.6   0.4        0.2    0.1       0.05
+    // radius
+    // day, 3 days, week, fortnight, month, sixmonth, year
+    // 2    3       4      5         6      7         9
+    var opacity=0.05;
+    var radius=20;
+    var shade=0.8;
+
+    if (diff <= oneDay) { opacity = 0.9; radius = 2; shade = -0.5; }
+    else if (diff <= oneDay*3) { opacity = 0.8; radius = 2; shade = -0.2; }
+    else if (diff <= oneDay*7) { opacity = 0.6; radius = 3; shade = -0.1 ; }
+    else if (diff <= oneDay*14) { opacity = 0.3; radius = 5; shade = 0.2; }
+    else if (diff <= oneDay*30) { opacity = 0.15; radius = 10; shade = 0.5; }
+    else if (diff <= oneDay*150) { opacity = 0.09; radius = 15; shade = 0.7; }
+
+    return {
+        opacity: opacity, //opacity / 3,
+        radius: 2,
+        color: shadeRGBColor(color, shade)
+    };
+};
+
+
 
 var recencyTileOptions = {
     rendererFactory: L.canvas.tile,
@@ -123,21 +160,24 @@ var recencyTileOptions = {
             return {
                 stroke: false,
                 fill: true,
-                fillColor: d3.scaleLog().base(2)
-                    .domain([oldest, now])
-                    .range(["white", color2])(time),
-                fillOpacity: d3.scaleLinear()
-                    .domain([oldest, now])
-                    .range([0, 1])(time),
-                radius: 2,
+                // fillColor: d3.scaleLog().base(2)
+                //     .domain([oldest, now])
+                //     .range(["white", color2])(time),
+                // fillOpacity: d3.scaleLinear()
+                //     .domain([oldest, now])
+                //     .range([0, 1])(time),
+                // radius: 2,
                 // radius: d3.scaleLog()
                 //     .domain([oldest, now])
                 //     .range([20, 1])(time),
+                fillColor: recencyScale(properties, color2).color,
+                fillOpacity: recencyScale(properties, color2).opacity,
+                radius: recencyScale(properties, color2).radius,
                 type: "Point"
             };
         }
     },
-    interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name + f.properties.Time;
     }
@@ -167,32 +207,32 @@ var drawLayer = function drawLayer(opts) {
 
     var v = L.vectorGrid;
     pbfLayer = v.protobuf(url, opts).addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
-        .on('click', function(e) { // The .on method attaches an event handler
-            L.popup()
-                .setContent((e.layer.properties.Name || e.layer.properties.Type) +
-                    "<br/> " +
-                    "Speed: " + e.layer.properties.Speed + "m/s" + "<br/>" +
-                    // "Heading: " + e.layer.properties.Heading + "deg" + "<br/>" +
-                    "Elevation: " + e.layer.properties.Elevation + "m " + "<br/>" +
-                    // "Accuracy: +/-" + e.layer.properties.Accuracy + "m" + "<br/>" +
-                    "tfd: " + e.layer.properties.tippecanoe_feature_density + "<br />" +
-                    e.layer.properties.Time
-                )
-                .setLatLng(e.latlng)
-                .openOn(map);
-            clearHighlight();
-            highlight = e.layer.properties.Name;
-            pbfLayer.setFeatureStyle(highlight, {
-                weight: 2,
-                color: 'red',
-                opacity: 1,
-                fillColor: 'red',
-                fill: true,
-                radius: 6,
-                fillOpacity: 1
-            });
-            L.DomEvent.stop(e);
-        })
+        // .on('click', function(e) { // The .on method attaches an event handler
+        //     L.popup()
+        //         .setContent((e.layer.properties.Name || e.layer.properties.Type) +
+        //             "<br/> " +
+        //             "Speed: " + e.layer.properties.Speed + "m/s" + "<br/>" +
+        //             // "Heading: " + e.layer.properties.Heading + "deg" + "<br/>" +
+        //             "Elevation: " + e.layer.properties.Elevation + "m " + "<br/>" +
+        //             // "Accuracy: +/-" + e.layer.properties.Accuracy + "m" + "<br/>" +
+        //             "tfd: " + e.layer.properties.tippecanoe_feature_density + "<br />" +
+        //             e.layer.properties.Time
+        //         )
+        //         .setLatLng(e.latlng)
+        //         .openOn(map);
+        //     clearHighlight();
+        //     highlight = e.layer.properties.Name;
+        //     pbfLayer.setFeatureStyle(highlight, {
+        //         weight: 2,
+        //         color: 'red',
+        //         opacity: 1,
+        //         fillColor: 'red',
+        //         fill: true,
+        //         radius: 6,
+        //         fillOpacity: 1
+        //     });
+        //     L.DomEvent.stop(e);
+        // })
         .on('load', function (e) {
             console.log('load', e);
         });
