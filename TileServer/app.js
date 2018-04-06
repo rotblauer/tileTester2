@@ -12,14 +12,75 @@ var colors = {
 };
 
 var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
-url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
-
-var map = L.map('map', {
+// url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
+var defaultCenter = [38.6270, -90.1994];
+var defaultZoom = 12;
+var map;
+function buildViewUrl() {
+    var latlng = map.getCenter();
+    var lat = latlng.lat;
+    var lng = latlng.lng;
+    var z = map.getZoom();
+    var text = "http://punktlich.rotblauer.com?z=" + z + "&y=" + lng + "&x=" + lat;
+    return text;
+}
+function putViewToUrl() {
+    var t = buildViewUrl();
+    document.getElementById("url-location").innerHTML = t;
+}
+map = L.map('map', {
     maxZoom: 20,
     noWrap: true
-}).setView([38.6270, -90.1994], 12);
+});
+map.on("moveend", putViewToUrl);
+map.on("load", putViewToUrl);
+
+// // this code would print "hello world" if it was at http://localhost/index.php?var1=hello&var2=world
+// var var1 = $_GET('var1');
+// var var2 = $_GET('var2');
+// document.write(var1 + " " + var2);
+// // // get the src parameter and split it down to the search query string
+// var src = document.getElementById('example').src;
+// params = src.split('?');
+// var var1 = $_GET('var1','?'+params[1]);
+//  > http://www.onlineaspect.com/2009/06/10/reading-get-variables-with-javascript/
+function getQueryVariable(variable) {
+       var query = decodeURIComponent(window.location.search.substring(1));
+       var vars = query.split("&");
+       for (var i=0;i<vars.length;i++) {
+               var pair = vars[i].split("=");
+               if(pair[0] == variable){return pair[1];}
+       }
+       return(false);
+}
+
+function putUrlToView(event) {
+    console.log("putting view from url");
+    // use default is no query in url
+    var center = defaultCenter;
+    var zoom = defaultZoom;
+    var z = getQueryVariable("z");
+    var y = getQueryVariable("y");
+    var x = getQueryVariable("x");
+    if (z) {
+        zoom = +(z) // cast to float
+    }
+    if (y) {
+        center[1] = +(y)
+    }
+    if (x) {
+        center[0] = +(x)
+    }
+    console.log("putUrlToView", center, zoom);
+    map.setView(center, zoom);
+    putViewToUrl();
+}
+putUrlToView();
 
 
+
+// Drawing Helpers
+// ********************************************************************************************************************
 // http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
 function shadeRGBColor(color, percent) {
     var f = color.split(","),
@@ -48,11 +109,7 @@ function radiusFromSpeed(speed) {
     return Math.abs(3 - (Math.log(speed + 0.01) / 2));
 }
 
-count = 0;
-
 function onEachFeature(feature) {
-    console.log("counting", count);
-    count++;
 }
 
 var speedTileOptions = {
@@ -110,7 +167,6 @@ var densityTileOptions = {
 
 var now = new Date().getTime();
 var oldest = new Date("2010-05-04T09:15:12Z").getTime();
-
 var recencyTileOptions = {
     rendererFactory: L.canvas.tile,
     vectorTileLayerStyles: {
@@ -196,31 +252,30 @@ var drawLayer = function drawLayer(opts) {
         .on('load', function (e) {
             console.log('load', e);
         });
-    document.getElementById("feature-count").innerHTML = "count: " + count;
 };
 drawLayer(speedTileOptions);
 
-function collectFeatureProperties(tile) {
-    // console.log("countertile --> ", tile);
-    for (var t in tile) {
-        if (tile.hasOwnProperty(t)) {
-            // console.log("tile", tile);
-            // var dls = tile._drawnLayers;
-            // drawnFeatures = drawnFeatures.concat(_.keys(dls));
-            var dls = tile._features;
-            for (var d in dls) {
-                if (dls.hasOwnProperty(d)) {
-                    var dd = dls[d];
-                    // drawnFeatures.push(dd); //_drawnLayers
-                    drawnFeatures.push(dd.feature.properties); // _features
-
-                    // var p = dd.properties;
-                    // drawnFeatures.push(p);
-                }
-            }
-        }
-    }
-}
+// function collectFeatureProperties(tile) {
+//     // console.log("countertile --> ", tile);
+//     for (var t in tile) {
+//         if (tile.hasOwnProperty(t)) {
+//             // console.log("tile", tile);
+//             // var dls = tile._drawnLayers;
+//             // drawnFeatures = drawnFeatures.concat(_.keys(dls));
+//             var dls = tile._features;
+//             for (var d in dls) {
+//                 if (dls.hasOwnProperty(d)) {
+//                     var dd = dls[d];
+//                     // drawnFeatures.push(dd); //_drawnLayers
+//                     drawnFeatures.push(dd.feature.properties); // _features
+//
+//                     // var p = dd.properties;
+//                     // drawnFeatures.push(p);
+//                 }
+//             }
+//         }
+//     }
+// }
 
 document.getElementById("gostl").onclick = function() {
     map.setView([38.627, -90.1994], 12);
@@ -245,3 +300,6 @@ document.getElementById("speed-layer").onclick = function() {
 document.getElementById("density-layer").onclick = function() {
     drawLayer(densityTileOptions);
 };
+document.getElementById("url-location").onclick = function() {
+    window.location.href = encodeURI(buildViewUrl());
+}
