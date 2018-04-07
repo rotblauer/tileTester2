@@ -69,9 +69,6 @@ function radiusFromSpeed(speed) {
 function onEachFeature(feature) {
 }
 
-
-
-
 var mb_light1 = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 L.tileLayer(mb_light1, {
     maxZoom: 22
@@ -191,16 +188,6 @@ var recencyTileOptions = {
             return {
                 stroke: false,
                 fill: true,
-                // fillColor: d3.scaleLog().base(2)
-                //     .domain([oldest, now])
-                //     .range(["white", color2])(time),
-                // fillOpacity: d3.scaleLinear()
-                //     .domain([oldest, now])
-                //     .range([0, 1])(time),
-                // radius: 2,
-                // radius: d3.scaleLog()
-                //     .domain([oldest, now])
-                //     .range([20, 1])(time),
                 fillColor: recencyScale(properties, color2).color,
                 fillOpacity: recencyScale(properties, color2).opacity,
                 radius: recencyScale(properties, color2).radius,
@@ -221,32 +208,6 @@ var drawLayer = function drawLayer(opts) {
 
     var v = L.vectorGrid;
     pbfLayer = v.protobuf(url, opts).addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
-        // .on('click', function(e) { // The .on method attaches an event handler
-        //     L.popup()
-        //         .setContent((e.layer.properties.Name || e.layer.properties.Type) +
-        //             "<br/> " +
-        //             "Speed: " + e.layer.properties.Speed + "m/s" + "<br/>" +
-        //             // "Heading: " + e.layer.properties.Heading + "deg" + "<br/>" +
-        //             "Elevation: " + e.layer.properties.Elevation + "m " + "<br/>" +
-        //             // "Accuracy: +/-" + e.layer.properties.Accuracy + "m" + "<br/>" +
-        //             "tfd: " + e.layer.properties.tippecanoe_feature_density + "<br />" +
-        //             e.layer.properties.Time
-        //         )
-        //         .setLatLng(e.latlng)
-        //         .openOn(map);
-        //     clearHighlight();
-        //     highlight = e.layer.properties.Name;
-        //     pbfLayer.setFeatureStyle(highlight, {
-        //         weight: 2,
-        //         color: 'red',
-        //         opacity: 1,
-        //         fillColor: 'red',
-        //         fill: true,
-        //         radius: 6,
-        //         fillOpacity: 1
-        //     });
-        //     L.DomEvent.stop(e);
-        // })
         .on('load', function (e) {
             // console.log('load', e);
         });
@@ -262,16 +223,6 @@ function delegateDrawLayer(name) {
     }
 }
 
-
-// // this code would print "hello world" if it was at http://localhost/index.php?var1=hello&var2=world
-// var var1 = $_GET('var1');
-// var var2 = $_GET('var2');
-// document.write(var1 + " " + var2);
-// // // get the src parameter and split it down to the search query string
-// var src = document.getElementById('example').src;
-// params = src.split('?');
-// var var1 = $_GET('var1','?'+params[1]);
-//  > http://www.onlineaspect.com/2009/06/10/reading-get-variables-with-javascript/
 function getQueryVariable(variable) {
        var query = decodeURIComponent(window.location.search.substring(1));
        var vars = query.split("&");
@@ -311,32 +262,6 @@ function putUrlToView(event) {
     putViewToUrl();
 }
 putUrlToView();
-
-
-
-
-
-// function collectFeatureProperties(tile) {
-//     // console.log("countertile --> ", tile);
-//     for (var t in tile) {
-//         if (tile.hasOwnProperty(t)) {
-//             // console.log("tile", tile);
-//             // var dls = tile._drawnLayers;
-//             // drawnFeatures = drawnFeatures.concat(_.keys(dls));
-//             var dls = tile._features;
-//             for (var d in dls) {
-//                 if (dls.hasOwnProperty(d)) {
-//                     var dd = dls[d];
-//                     // drawnFeatures.push(dd); //_drawnLayers
-//                     drawnFeatures.push(dd.feature.properties); // _features
-//
-//                     // var p = dd.properties;
-//                     // drawnFeatures.push(p);
-//                 }
-//             }
-//         }
-//     }
-// }
 
 document.getElementById("gostl").onclick = function() {
     map.setView([38.627, -90.1994], 12);
