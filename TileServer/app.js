@@ -15,13 +15,14 @@ var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
 // url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 var defaultCenter = [38.6270, -90.1994];
 var defaultZoom = 12;
+var drawnLayer = "speed";
 var map;
 function buildViewUrl() {
     var latlng = map.getCenter();
     var lat = latlng.lat;
     var lng = latlng.lng;
     var z = map.getZoom();
-    var text = "http://punktlich.rotblauer.com?z=" + z + "&y=" + lng + "&x=" + lat;
+    var text = "http://punktlich.rotblauer.com?z=" + z + "&y=" + lng + "&x=" + lat + "&l=" + drawnLayer;
     return text;
 }
 function putViewToUrl() {
@@ -35,51 +36,6 @@ map = L.map('map', {
 });
 map.on("moveend", putViewToUrl);
 map.on("load", putViewToUrl);
-
-// // this code would print "hello world" if it was at http://localhost/index.php?var1=hello&var2=world
-// var var1 = $_GET('var1');
-// var var2 = $_GET('var2');
-// document.write(var1 + " " + var2);
-// // // get the src parameter and split it down to the search query string
-// var src = document.getElementById('example').src;
-// params = src.split('?');
-// var var1 = $_GET('var1','?'+params[1]);
-//  > http://www.onlineaspect.com/2009/06/10/reading-get-variables-with-javascript/
-function getQueryVariable(variable) {
-       var query = decodeURIComponent(window.location.search.substring(1));
-       var vars = query.split("&");
-       for (var i=0;i<vars.length;i++) {
-               var pair = vars[i].split("=");
-               if(pair[0] == variable){return pair[1];}
-       }
-       return(false);
-}
-
-function putUrlToView(event) {
-    console.log("putting view from url");
-    // use default is no query in url
-    var center = defaultCenter;
-    var zoom = defaultZoom;
-    var z = getQueryVariable("z");
-    var y = getQueryVariable("y");
-    var x = getQueryVariable("x");
-    if (z) {
-        zoom = +(z) // cast to float
-    }
-    if (y) {
-        center[1] = +(y)
-    }
-    if (x) {
-        center[0] = +(x)
-    }
-    console.log("putUrlToView", center, zoom);
-    map.setView(center, zoom);
-    putViewToUrl();
-}
-putUrlToView();
-
-
-
 // Drawing Helpers
 // ********************************************************************************************************************
 // http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
@@ -112,6 +68,25 @@ function radiusFromSpeed(speed) {
 
 function onEachFeature(feature) {
 }
+
+
+
+
+var mb_light1 = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
+L.tileLayer(mb_light1, {
+    maxZoom: 22
+}).addTo(map);
+
+var highlight;
+var clearHighlight = function() {
+    if (highlight) {
+        pbfLayer.resetFeatureStyle(highlight);
+    }
+    highlight = null;
+};
+
+var pbfLayer;
+var drawnFeatures = [];
 
 var speedTileOptions = {
     rendererFactory: L.canvas.tile,
@@ -239,23 +214,6 @@ var recencyTileOptions = {
     }
 };
 
-
-var mb_light1 = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
-L.tileLayer(mb_light1, {
-    maxZoom: 22
-}).addTo(map);
-
-var highlight;
-var clearHighlight = function() {
-    if (highlight) {
-        pbfLayer.resetFeatureStyle(highlight);
-    }
-    highlight = null;
-};
-
-var pbfLayer;
-var drawnFeatures = [];
-
 var drawLayer = function drawLayer(opts) {
     if (typeof pbfLayer !== "undefined") {
         map.removeLayer(pbfLayer);
@@ -293,7 +251,70 @@ var drawLayer = function drawLayer(opts) {
             // console.log('load', e);
         });
 };
-drawLayer(speedTileOptions);
+function delegateDrawLayer(name) {
+    drawnLayer = name
+    if (name === "speed") {
+        drawLayer(speedTileOptions)
+    } else if (name === "recent") {
+        drawLayer(recencyTileOptions)
+    } else if (name === "density") {
+        drawLayer(densityTileOptions)
+    }
+}
+
+
+// // this code would print "hello world" if it was at http://localhost/index.php?var1=hello&var2=world
+// var var1 = $_GET('var1');
+// var var2 = $_GET('var2');
+// document.write(var1 + " " + var2);
+// // // get the src parameter and split it down to the search query string
+// var src = document.getElementById('example').src;
+// params = src.split('?');
+// var var1 = $_GET('var1','?'+params[1]);
+//  > http://www.onlineaspect.com/2009/06/10/reading-get-variables-with-javascript/
+function getQueryVariable(variable) {
+       var query = decodeURIComponent(window.location.search.substring(1));
+       var vars = query.split("&");
+       for (var i=0;i<vars.length;i++) {
+               var pair = vars[i].split("=");
+               if(pair[0] == variable){return pair[1];}
+       }
+       return(false);
+}
+
+function putUrlToView(event) {
+    console.log("putting view from url");
+    // use default is no query in url
+    var center = defaultCenter;
+    var zoom = defaultZoom;
+    var z = getQueryVariable("z");
+    var y = getQueryVariable("y");
+    var x = getQueryVariable("x");
+    var layer = getQueryVariable("l");
+    if (z) {
+        zoom = +(z) // cast to float
+    }
+    if (y) {
+        center[1] = +(y)
+    }
+    if (x) {
+        center[0] = +(x)
+    }
+
+    console.log("putUrlToView", center, zoom);
+    map.setView(center,zoom);
+    if (layer) {
+        delegateDrawLayer(layer)
+    } else {
+        delegateDrawLayer(drawnLayer);
+    }
+    putViewToUrl();
+}
+putUrlToView();
+
+
+
+
 
 // function collectFeatureProperties(tile) {
 //     // console.log("countertile --> ", tile);
@@ -332,13 +353,16 @@ document.getElementById("gowww").onclick = function() {
     map.setView([43.582793, -45.353025], 3);
 };
 document.getElementById("time-layer").onclick = function() {
-    drawLayer(recencyTileOptions);
+    delegateDrawLayer("recent");
+    putViewToUrl(buildViewUrl());
 };
 document.getElementById("speed-layer").onclick = function() {
-    drawLayer(speedTileOptions);
+    delegateDrawLayer("speed");
+    putViewToUrl(buildViewUrl());
 };
 document.getElementById("density-layer").onclick = function() {
-    drawLayer(densityTileOptions);
+    delegateDrawLayer("density");
+    putViewToUrl(buildViewUrl());
 };
 document.getElementById("url-location").onclick = function() {
     window.location.href = encodeURI(buildViewUrl());
