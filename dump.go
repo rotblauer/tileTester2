@@ -17,7 +17,10 @@ import (
 	"github.com/kpawlik/geojson"
 	"github.com/rotblauer/tileTester2/undump"
 
+	"bufio"
+	"compress/gzip"
 	"github.com/cheggaaa/pb"
+	"strconv"
 )
 
 var (
@@ -59,19 +62,40 @@ func initBoltDB(boltDb string) error {
 	// return GetDB()
 }
 
+type F struct {
+	f  *os.File
+	gf *gzip.Writer
+	fw *bufio.Writer
+}
+
+func CreateGZ(s string) (f F) {
+
+	fi, err := os.OpenFile(s, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
+	if err != nil {
+		log.Printf("Error in Create\n")
+		panic(err)
+	}
+	gf := gzip.NewWriter(fi)
+	fw := bufio.NewWriter(gf)
+	f = F{fi, gf, fw}
+	return
+}
+
+func CloseGZ(f F) {
+	f.fw.Flush()
+	// Close the gzip first.
+	f.gf.Close()
+	f.f.Close()
+}
+
 func dumpBolty(boltDb string, out string) error {
 
 	initBoltDB(boltDb)
 	// If the file doesn't exist, create it, or append to the file
-	file, err := os.OpenFile(out+".json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	// file, err := os.Create(out + ".json")
-	if err != nil {
-		log.Fatalln("Can't create file.", err)
-	}
+	f := CreateGZ(out + "0.json.gz")
 	defer func() {
-		if err := file.Close(); err != nil {
-			log.Fatal(err)
-		}
+		CloseGZ(f)
+
 	}()
 
 	//TODO split feature collections ala trackpointer Big Papa Mama namer
@@ -126,7 +150,7 @@ func dumpBolty(boltDb string, out string) error {
 	tippmycanoe.Stdout = os.Stdout
 	tippmycanoe.Stderr = os.Stderr
 
-	err = tippmycanoe.Start()
+	err := tippmycanoe.Start()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
 		os.Exit(1)
@@ -139,8 +163,8 @@ func dumpBolty(boltDb string, out string) error {
 		stats := b.Stats()
 		fmt.Println("Tippeing ", stats.KeyN, " total tracked points.")
 		bar := pb.StartNew(stats.KeyN)
-
 		count := 0
+
 		b.ForEach(func(trackPointKey, trackPointVal []byte) error {
 
 			var trackPointCurrent trackPoint.TrackPoint
@@ -168,16 +192,13 @@ func dumpBolty(boltDb string, out string) error {
 					if _, e := tippmycanoeIn.Write(data); e != nil {
 						log.Println("err write tippe in data:", e)
 					} else {
-						if _, err := file.Write(data); err != nil {
-							log.Fatal(err)
-						} else {
-							fc = geojson.NewFeatureCollection([]*geojson.Feature{})
-						}
+						(f.fw).Write(data)
+						fc = geojson.NewFeatureCollection([]*geojson.Feature{})
+						f = CreateGZ(out + strconv.Itoa(count) + ".json.gz")
 					}
 				}
 			}
 			return nil
-
 		})
 		bar.Finish()
 		return err
@@ -193,17 +214,10 @@ func dumpBolty(boltDb string, out string) error {
 			log.Println("finish, err marshalling json geo data:", err)
 		}
 		tippmycanoeIn.Write(data)
-
-		if _, err := file.Write(data); err != nil {
-			tippmycanoeIn.Close()
-			log.Fatal(err)
-		}
+		(f.fw).Write(data)
 	}
 	tippmycanoeIn.Close()
 
-	// if err2 := ioutil.WriteFile(out+".json", data, 0644); err2 != nil {
-	// 	log.Println("could not write to "+out, err)
-	// }
 	return tippmycanoe.Wait()
 }
 
