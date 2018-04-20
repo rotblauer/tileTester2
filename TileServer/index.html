@@ -24,6 +24,11 @@
 <script src="https://d3js.org/d3-time-format.v2.min.js"></script>
 <script src="https://d3js.org/d3-scale.v1.min.js"></script>
 
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
     <style>
         html,
         body,
@@ -35,6 +40,9 @@
 
         button {
             z-index: 10000;
+        }
+        #lastknowns {
+          z-index: 10000;
         }
      #feature-count {
        position: fixed;
@@ -65,9 +73,9 @@
     <button id="speed-layer" style="position: fixed; top: 160px; right: 10px;">Speed Layer (default)</button>
     <button id="density-layer" style="position: fixed; top: 190px; right: 10px;">Density Layer</button>
 
-    <p id="feature-count">
-      htlloow
-    </p>
+    <div id="lastknowns" style="position: fixed; bottom: 10px; right: 10px;">
+      <small>Last known locations:</small>
+    </div>
 
     <p id="url-location">
 
