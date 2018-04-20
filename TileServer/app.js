@@ -13,6 +13,7 @@ var colors = {
 
 var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
 var lastKnownJSONurl = 'http://track.areteh.co:3001/lastknown';
+var metadataURL = 'http://track.areteh.co:3001/metadata';
 // url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 var defaultCenter = [38.6270, -90.1994];
 var defaultZoom = 12;
@@ -291,6 +292,21 @@ function putUrlToView(event) {
 }
 putUrlToView();
 
+function getmetadata() {
+    $.ajax({ 
+    type: 'GET',
+    url: metadataURL,
+    dataType: 'json', 
+    success: function(data) { 
+        console.log(data);
+        // {"KeyN":3441161,"LastUpdatedAt":"2018-04-20T11:05:28.194001962-07:00","LastUpdatedBy":"Bigger Papa","LastUpdatedPointsN":84}
+        // $("#metadata").text(data["KeyN"] + " points | " + data["LastUpdatedBy"] + " last pushed " + data["LastUpdatedPointsN"] + " points at " + data["LastUpdatedAt"]);
+        $("#metadata").text(JSON.stringify(data));
+    }
+    });
+}
+
+
 function getAndMakeButtonsForLastKnownCats() {
     $.ajax({ 
         type: 'GET',
@@ -305,7 +321,19 @@ function getAndMakeButtonsForLastKnownCats() {
                 i.data("long", val["long"]+"");
                 i.css("z-index", 10000);
                 $("#lastknowns").append(i);
-              });   
+
+                    $(document).on('click', '.lastknownlink', function(e){
+                            console.log("$this", $(this));
+                            var lat = $(this).data("lat");
+                            var lng = $(this).data("long");
+                            // console.log(lat, lng);
+                            map.setView([+lat, +lng], 13);
+                            // what you want to happen when mouseover and mouseout 
+                            // occurs on elements that match '.dosomething'
+                        });
+                    });
+
+                getmetadata();
         }
     });
     // fuck this fucking JSONP json cross origin SHIT.
@@ -326,29 +354,10 @@ function getAndMakeButtonsForLastKnownCats() {
     // });
     // console.log("items", items);
     // have to set from document because thye're dynamically created eleements and SO says so: https://stackoverflow.com/questions/203198/event-binding-on-dynamically-created-elements
-    $(document).on('click', '.lastknownlink', function(e){
-        console.log("$this", $(this));
-        var lat = $(this).data("lat");
-        var lng = $(this).data("long");
-        // console.log(lat, lng);
-        map.setView([+lat, +lng]);
-        // what you want to happen when mouseover and mouseout 
-        // occurs on elements that match '.dosomething'
-    });
+
 }
 getAndMakeButtonsForLastKnownCats();
 
-document.getElementById("gostl").onclick = function() {
-    map.setView([38.627, -90.1994], 12);
-};
-document.getElementById("gober").onclick = function() {
-    console.log("going ber");
-    map.setView([52.484777, 13.445776], 12);
-};
-document.getElementById("gohak").onclick = function() {
-    console.log("going hak");
-    map.setView([41.766667, 140.733333], 12);
-};
 document.getElementById("gowww").onclick = function() {
     map.setView([42.94033923363183, -103.35937500000001], 3);
 };

@@ -40,9 +40,8 @@
 
         button {
             z-index: 10000;
-        }
-        button.layer-button {
-          background-color: white;
+            background-color: white;
+            border: none;
         }
         #lastknowns {
           z-index: 10000;
@@ -54,34 +53,41 @@
        z-index: 1000;
        }
        #url-location {
-           z-index: 10000;
-           position: fixed;
-           top: 0px;
-           left: 50px;
+           /*z-index: 10000;*/
            color: white;
-           background: red;
-           font-weight: bold;
-           padding: 5px;
+           background: dimgray;
+           /*font-weight: bold;*/
+           padding: 5px 5px 5px 10px;
            font-family: helvetica;
+           font-size: small;
+           margin: 0;
+       }
+       #metadata {
+        background-color: rgb(70, 97, 152);
+        color: white;
+        padding: 5px 5px 5px 10px;
+        font-family: helvetica;
+        margin: 0;
+        font-size: small;
        }
     </style>
 </head>
 
 <body>
-    <button id="gostl" style="position: fixed; top: 10px; right: 10px;">STL</button>
-    <button id="gober" style="position: fixed; top: 40px; right: 10px;">BER</button>
-    <button id="gohak" style="position: fixed; top: 70px; right: 10px;">HAK</button>
-    <button id="gowww" style="position: fixed; top: 100px; right: 10px;">WWW</button>
-    <button id="recent-layer" class="layer-button" style="position: fixed; top: 130px; right: 10px;">Time Layer</button>
-    <button id="speed-layer" class="layer-button" style="position: fixed; top: 160px; right: 10px;">Speed Layer</button>
-    <button id="density-layer" class="layer-button" style="position: fixed; top: 190px; right: 10px;">Density Layer</button>
+    <button id="gowww" style="position: fixed; top: 100px; right: 10px;">Zoom: Globe</button>
+    <button id="recent-layer" class="layer-button" style="position: fixed; top: 130px; right: 10px;">Draw: recent</button>
+    <button id="speed-layer" class="layer-button" style="position: fixed; top: 160px; right: 10px;">Draw: speed</button>
+    <button id="density-layer" class="layer-button" style="position: fixed; top: 190px; right: 10px;">Draw: density</button>
 
     <div id="lastknowns" style="position: fixed; bottom: 10px; right: 10px;">
       <small>Last known locations:</small>
     </div>
-
+  
     <p id="url-location">
 
+    </p>
+    <p id="metadata">
+      
     </p>
 
     <div id="map"></div>
