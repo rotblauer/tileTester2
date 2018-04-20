@@ -202,6 +202,31 @@ var recencyTileOptions = {
     }
 };
 
+var recencyTileOptions = {
+    rendererFactory: L.canvas.tile,
+    vectorTileLayerStyles: {
+
+        'catTrack': function(properties, zoom) {
+
+            var color2 = colors[properties.Name] || "rgb(241,66,244)";
+            var time = new Date(properties.Time).getTime();
+
+            return {
+                stroke: false,
+                fill: true,
+                fillColor: recencyScale(properties, color2).color,
+                fillOpacity: recencyScale(properties, color2).opacity,
+                radius: recencyScale(properties, color2).radius,
+                type: "Point"
+            };
+        }
+    },
+    // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    getFeatureId: function(f) {
+        return f.properties.name + f.properties.Time;
+    }
+};
+
 var drawLayer = function drawLayer(opts) {
     if (typeof pbfLayer !== "undefined") {
         map.removeLayer(pbfLayer);
@@ -222,6 +247,8 @@ function delegateDrawLayer(name) {
     } else if (name === "density") {
         drawLayer(densityTileOptions)
     }
+    $('.layer-button').css("border", "none");
+    $('button#'+name+'-layer').css("border", "2px solid green");
 }
 
 function getQueryVariable(variable) {
@@ -304,7 +331,7 @@ function getAndMakeButtonsForLastKnownCats() {
         var lat = $(this).data("lat");
         var lng = $(this).data("long");
         // console.log(lat, lng);
-        map.setView([+lat, +lng], 13);
+        map.setView([+lat, +lng]);
         // what you want to happen when mouseover and mouseout 
         // occurs on elements that match '.dosomething'
     });
@@ -323,9 +350,9 @@ document.getElementById("gohak").onclick = function() {
     map.setView([41.766667, 140.733333], 12);
 };
 document.getElementById("gowww").onclick = function() {
-    map.setView([43.582793, -45.353025], 3);
+    map.setView([42.94033923363183, -103.35937500000001], 3);
 };
-document.getElementById("time-layer").onclick = function() {
+document.getElementById("recent-layer").onclick = function() {
     delegateDrawLayer("recent");
     putViewToUrl(buildViewUrl());
 };
