@@ -16,7 +16,23 @@ var lastKnownJSONurl = 'http://track.areteh.co:3001/lastknown';
 var metadataURL = 'http://track.areteh.co:3001/metadata';
 // url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 var defaultCenter = [38.6270, -90.1994];
-var defaultZoom = 12;
+var defaultZoom = 8;
+function getBrowsePosition() {
+    var got = localStorage.getItem("browsePosition");
+    console.log("got browse local", got);
+    if (got === null) {
+        return got;
+    }
+    if (got.length > 1) {
+        return got;
+    }
+    return null;
+}
+function setBrowsePosition(s) {
+    console.log("settingbrowse", s);
+    localStorage.setItem("browsePosition", s);
+}
+
 var drawnLayer = "speed";
 var map;
 function buildViewUrl() {
@@ -29,6 +45,7 @@ function buildViewUrl() {
 }
 function putViewToUrl() {
     var t = buildViewUrl();
+    setBrowsePosition(t);
     document.getElementById("url-location").innerHTML = t;
 }
 map = L.map('map', {
@@ -36,7 +53,9 @@ map = L.map('map', {
     noWrap: true
     // preferCanvas: true
 });
-map.on("moveend", putViewToUrl);
+map.on("moveend", function() {
+    putViewToUrl();
+});
 map.on("load", putViewToUrl);
 // Drawing Helpers
 // ********************************************************************************************************************
@@ -252,8 +271,15 @@ function delegateDrawLayer(name) {
     $('button#'+name+'-layer').css("border", "2px solid green");
 }
 
-function getQueryVariable(variable) {
-       var query = decodeURIComponent(window.location.search.substring(1));
+function getQueryVariable(variable, url) {
+        if (typeof url === "undefined" || url === null || window.location.href.indexOf("=") >= 0) {
+            url = window.location.search;
+        } else {
+            i = url.indexOf("?")
+            url = url.substring(i);
+        }
+       var query = decodeURIComponent(url.substring(1));
+       console.log("query/variable", query, variable);
        var vars = query.split("&");
        for (var i=0;i<vars.length;i++) {
                var pair = vars[i].split("=");
@@ -267,10 +293,11 @@ function putUrlToView(event) {
     // use default is no query in url
     var center = defaultCenter;
     var zoom = defaultZoom;
-    var z = getQueryVariable("z");
-    var y = getQueryVariable("y");
-    var x = getQueryVariable("x");
-    var layer = getQueryVariable("l");
+    var pos = getBrowsePosition();
+    var z = getQueryVariable("z", pos);
+    var y = getQueryVariable("y", pos);
+    var x = getQueryVariable("x", pos);
+    var layer = getQueryVariable("l", pos);
     if (z) {
         zoom = +(z) // cast to float
     }
@@ -291,7 +318,9 @@ function putUrlToView(event) {
     putViewToUrl();
 }
 putUrlToView();
-
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 function getmetadata() {
     $.ajax({ 
     type: 'GET',
@@ -300,8 +329,10 @@ function getmetadata() {
     success: function(data) { 
         console.log(data);
         // {"KeyN":3441161,"LastUpdatedAt":"2018-04-20T11:05:28.194001962-07:00","LastUpdatedBy":"Bigger Papa","LastUpdatedPointsN":84}
-        // $("#metadata").text(data["KeyN"] + " points | " + data["LastUpdatedBy"] + " last pushed " + data["LastUpdatedPointsN"] + " points at " + data["LastUpdatedAt"]);
-        $("#metadata").text(JSON.stringify(data));
+        // $("#metadata").text(data["KeyN"] + " points | " 
+        // $("#metadata").text(JSON.stringify(data));
+        $("#metadata").text(numberWithCommas(data["KeyN"]) + " points. " + data["LastUpdatedBy"] + 
+            " last pushed " + data["LastUpdatedPointsN"] + " points " + moment(data["LastUpdatedAt"]).fromNow());
     }
     });
 }
@@ -321,6 +352,24 @@ function getAndMakeButtonsForLastKnownCats() {
                 i.data("long", val["long"]+"");
                 i.css("z-index", 10000);
                 $("#lastknowns").append(i);
+
+                var mopts = {
+                    color: 'darkgreen',
+                    fillColor: '#228B22',
+                    fillOpacity: 0.5,
+                    radius: 100
+                }
+
+                // johnny
+                if (colors[val["name"]] === "rgb(0,0,200)") {
+                    // mopts["color"] = "#6495ED";
+                    mopts["fillColor"] = "rgb(65,105,225)";
+                } else if (colors[val["name"]] === "rgb(200,0,0)") {
+                    // mopts["color"] = "indianred";
+                    mopts["fillColor"] = "rgb(178,34,34)";
+                }
+                var circle = L.circle([+val["lat"], +val["long"]], mopts).addTo(map);
+                circle.bindPopup(JSON.stringify(val));
 
                     $(document).on('click', '.lastknownlink', function(e){
                             console.log("$this", $(this));
