@@ -28,8 +28,9 @@ function getBrowsePosition() {
     }
     return null;
 }
+// TODO: I might get called more than necessary.... debounce? refactor?
 function setBrowsePosition(s) {
-    console.log("settingbrowse", s);
+    // console.log("settingbrowse", s);
     localStorage.setItem("browsePosition", s);
 }
 
@@ -133,7 +134,15 @@ var speedTileOptions = {
     onEachFeature: onEachFeature
 };
 
-
+// Elevation: -0.00240357150323689
+// Name: "Bigger Papa"
+// Speed: 0.6299999952316284
+// Time: "2018-02-09T13:37:54.947Z"
+// clustered: true
+// point_count: 3
+// sqrt_point_count: 1.73
+// tippecanoe_feature_density: 8
+// 
 var densityTileOptions = {
     rendererFactory: L.canvas.tile,
     vectorTileLayerStyles: {
@@ -222,11 +231,35 @@ var recencyTileOptions = {
     }
 };
 
-var recencyTileOptions = {
+function tripLayerHandler(props, color) {
+    return {
+        opacity: recencyScale(props, color).color, //opacity / 3,
+        radius: 1,
+        color: color // shadeRGBColor(color, shade)
+    };
+}
+
+var didLog = false;
+
+var tripTileOptions = {
     rendererFactory: L.canvas.tile,
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
+            if (!didLog) {
+                console.log("example", "props", properties, "zoom");
+                didLog = true;
+            }
+            // hide if not on a trip
+            // if (typeof properties.Notes === "undefined" || properties.Notes === null || properties.Notes === "") {
+            if (!properties.hasOwnProperty("Notes")) {
+                return {
+                    stroke: false,
+                    weight: 0,
+                    fill: false,
+                    radius: 0  
+                }
+            }
 
             var color2 = colors[properties.Name] || "rgb(241,66,244)";
             var time = new Date(properties.Time).getTime();
@@ -234,14 +267,14 @@ var recencyTileOptions = {
             return {
                 stroke: false,
                 fill: true,
-                fillColor: recencyScale(properties, color2).color,
-                fillOpacity: recencyScale(properties, color2).opacity,
-                radius: recencyScale(properties, color2).radius,
+                fillColor: tripLayerHandler(properties, color2).color,
+                fillOpacity: tripLayerHandler(properties, color2).opacity,
+                radius: tripLayerHandler(properties, color2).radius,
                 type: "Point"
             };
         }
     },
-    // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name + f.properties.Time;
     }
@@ -261,11 +294,13 @@ var drawLayer = function drawLayer(opts) {
 function delegateDrawLayer(name) {
     drawnLayer = name
     if (name === "speed") {
-        drawLayer(speedTileOptions)
+        drawLayer(speedTileOptions);
     } else if (name === "recent") {
-        drawLayer(recencyTileOptions)
+        drawLayer(recencyTileOptions);
     } else if (name === "density") {
-        drawLayer(densityTileOptions)
+        drawLayer(densityTileOptions);
+    } else if (name === "trip") {
+        drawLayer(tripTileOptions);
     }
     $('.layer-button').css("border", "none");
     $('button#'+name+'-layer').css("border", "2px solid green");
@@ -279,7 +314,7 @@ function getQueryVariable(variable, url) {
             url = url.substring(i);
         }
        var query = decodeURIComponent(url.substring(1));
-       console.log("query/variable", query, variable);
+       // console.log("query/variable", query, variable);
        var vars = query.split("&");
        for (var i=0;i<vars.length;i++) {
                var pair = vars[i].split("=");
@@ -346,7 +381,7 @@ function getAndMakeButtonsForLastKnownCats() {
         success: function(data) { 
             console.log(data);
             $.each( data, function( key, val ) {
-                console.log("key", key, "val", val);
+                // console.log("key", key, "val", val);
                 var i = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + "</button>" );
                 i.data("lat", val["lat"]+"");
                 i.data("long", val["long"]+"");
@@ -420,6 +455,10 @@ document.getElementById("speed-layer").onclick = function() {
 };
 document.getElementById("density-layer").onclick = function() {
     delegateDrawLayer("density");
+    putViewToUrl(buildViewUrl());
+};
+document.getElementById("trip-layer").onclick = function() {
+    delegateDrawLayer("trip");
     putViewToUrl(buildViewUrl());
 };
 document.getElementById("url-location").onclick = function() {
