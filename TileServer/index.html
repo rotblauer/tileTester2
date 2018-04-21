@@ -32,12 +32,30 @@
   
 
     <style>
-        html,
-        body,
-        #map {
-            width: 100%;
-            height: 100%;
-            margin: 0;
+ /*   #element::-webkit-scrollbar { 
+        display: none; 
+    }
+    ::-webkit-scrollbar { 
+        display: none; 
+    }*/
+
+        /*html,
+        body,*/
+        html, body {
+          height: 100%;
+          margin: 0;
+        }
+        .box {
+          display: flex;
+          flex-flow: column;
+          height: 100%;
+        }
+        .box #map {
+            /*width: 100%;*/
+            /*height: 100%; cuz pps on top*/
+            /*margin: 0;*/
+            flex: 1 1 auto;
+            /*overflow: hidden;*/
         }
 
         button {
@@ -47,6 +65,9 @@
         }
         #lastknowns {
           z-index: 10000;
+          position: fixed; 
+          top: 60px; 
+          right: 10px;
         }
      #feature-count {
        position: fixed;
@@ -76,12 +97,13 @@
 </head>
 
 <body>
+  <div class="box">
     <button id="gowww" style="position: fixed; top: 100px; right: 10px;">Zoom: Globe</button>
     <button id="recent-layer" class="layer-button" style="position: fixed; top: 130px; right: 10px;">Draw: recent</button>
     <button id="speed-layer" class="layer-button" style="position: fixed; top: 160px; right: 10px;">Draw: speed</button>
     <button id="density-layer" class="layer-button" style="position: fixed; top: 190px; right: 10px;">Draw: density</button>
 
-    <div id="lastknowns" style="position: fixed; bottom: 10px; right: 10px;">
+    <div id="lastknowns" >
       <small>Last known locations:</small>
     </div>
   
@@ -96,7 +118,7 @@
 
     <script src="./app.js">
     </script>
-
+  </div>
 </body>
 
 </html>
