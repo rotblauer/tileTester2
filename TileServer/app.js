@@ -13,7 +13,7 @@ var colors = {
     "Rye8": color_jl,
     "jl": color_jl,
 
-    "Big Mamma": "rgb(0,200,0)",
+    "Big Mamma": "rgb(176,16,221)",
     "Kayleigh's iPhone": "rgb(200,200,0)"
 };
 
@@ -549,21 +549,28 @@ function getAndMakeButtonsForLastKnownCats() {
                 i.data("lat", val["lat"]+"");
                 i.data("long", val["long"]+"");
                 i.css("z-index", 10000);
-                if (jl_names.indexOf(val["name"]) >= 0) {
-                    i.css("background-color", color_jl);
-                    i.css("color", "white");
-                } else if (ia_names.indexOf(val["name"]) >= 0) {
-                    i.css("background-color", color_ia);
+                // if (jl_names.indexOf(val["name"]) >= 0) {
+                //     i.css("background-color", color_jl);
+                //     i.css("color", "white");
+                // } else if (ia_names.indexOf(val["name"]) >= 0) {
+                //     i.css("background-color", color_ia);
+                //     i.css("color", "white");
+                // }
+                var c = "#21DBEB";
+                if (colors.hasOwnProperty(val["name"])) {
+                    c = colors[val["name"]];
+                    i.css("background-color", c);
+                    // c = shadeRGBColor(c, 0.5);
                     i.css("color", "white");
                 }
                 $("#lastknowns").append(i);
 
                 var mopts = {
-                    color: "#21DBEB",
+                    color: c,
                     weight: 2,
                     // fillColor: '#EB38D3',
                     fillOpacity: 0,
-                    radius: 100
+                    radius: 150
                 }
 
                 // johnny
