@@ -233,6 +233,11 @@ var densityTileOptions = {
 
         'catTrack': function(properties, zoom) {
 
+            if (properties.hasOwnProperty("Notes") && !didLogOnce) {
+                alert("there are notesss!!!");
+                didLogOnce = true;
+            }
+
             // anything above about zoom 14-15 will not be clustered!...
             if (!properties.clustered) {
                 return {
@@ -294,7 +299,7 @@ var densityTileOptions = {
             };
             if (!didLogOnce) {
                 // console.log("example", "props", properties, "zoom");
-                console.log("logOnce:out", out);
+                console.log("logOne", "zoom", zoom, "properties", properties, "out", out);
                 didLogOnce = true;
             }
             return out;
@@ -351,6 +356,12 @@ var recencyTileOptions = {
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
+
+            if (properties.hasOwnProperty("Notes") && !didLogOnce) {
+                alert("there are notesss!!!");
+                didLogOnce = true;
+            }
+
 
             var color2 = colors[properties.Name] || "rgb(241,66,244)";
             var time = new Date(properties.Time).getTime();
