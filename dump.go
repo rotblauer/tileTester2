@@ -154,6 +154,7 @@ func dumpBolty(boltDb string, out string) error {
 			trimmedProps["Name"] = trackPointCurrent.Name
 			trimmedProps["Time"] = trackPointCurrent.Time
 			trimmedProps["Elevation"] = trackPointCurrent.Elevation
+			trimmedProps["Notes"] = trackPointCurrent.Notes
 			f1 := geojson.NewFeature(p, trimmedProps, 1)
 
 			fc.AddFeatures(f1)
