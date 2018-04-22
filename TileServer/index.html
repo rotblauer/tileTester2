@@ -86,7 +86,7 @@
            font-family: helvetica;
            font-size: small;
            margin: 0;
-           text-align: center;
+           /*text-align: center;*/
        }
        #metadata-holder {
         background-color: rgb(196, 189, 193);
@@ -106,24 +106,32 @@
        #url-location {
         cursor: pointer;
        }
+       #layer-buttons {
+          z-index: 1000;
+          /*float: right;*/
+          position: absolute;
+          top: 5em;
+          right: 0px;
+          text-align: right;
+       }
+       #layer-buttons button {
+        margin: 5px;
+       }
     </style>
 </head>
 
 <body>
-  <div class="box">
-    <button id="gowww" style="position: fixed; top: 100px; right: 10px;">Zoom: Globe</button>
-    <button id="recent-layer" class="layer-button" style="position: fixed; top: 130px; right: 10px;">Draw: recent</button>
-    <button id="speed-layer" class="layer-button" style="position: fixed; top: 160px; right: 10px;">Draw: speed</button>
-    <button id="density-layer" class="layer-button" style="position: fixed; top: 190px; right: 10px;">Draw: density</button>
-    <button id="trip-layer" 
-      class="layer-button" 
-      style="position: fixed; top: 220px; right: 10px;" 
-      disabled>Draw: trip</button>
-
-
-  
+  <div class="box">  
     <p id="url-location-holder">
       <small id="url-moved">◉ </small><small id="url-location"></small>
+      <select name="" id="goview" style="float:right;">
+        <option value="">Go to -</option>
+        <option value="world">World</option>
+        <option value="usa">USA</option>
+        <option value="stlouis">St. Louis</option>
+        <option value="iceland">Iceland</option>
+        <option value="hokkaido">Hokkaido</option>
+      </select>
     </p>
     <p id="metadata-holder">
       
@@ -132,6 +140,14 @@
         <span id="lastknowns"><small>Last known locations:</small></span>
       </span>
     </p>
+    <div id="layer-buttons">
+      <button id="recent-layer" class="layer-button" >Draw: recent</button><br>
+      <button id="speed-layer" class="layer-button" >Draw: speed</button><br>
+      <button id="density-layer" class="layer-button" >Draw: density</button><br>
+      <button id="trip-layer" 
+        class="layer-button"
+        disabled>Draw: trip</button>  
+    </div>
 
     <div id="map"></div>
 

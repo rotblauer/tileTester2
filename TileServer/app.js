@@ -455,12 +455,8 @@ function delegateDrawLayer(name) {
     }
     $('.layer-button').css("border", "none");
     $('.layer-button').css("border-radius", "0 0 0 0");
-    // $('.layer-button').css("background-color", "white");
-    // $('.layer-button').css("color", "black");
     $('button#'+name+'-layer').css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
     $('button#'+name+'-layer').css("border-radius", "4px 0px 0px 4px");
-    // $('button#'+name+'-layer').css("background-color", "black");
-    // $('button#'+name+'-layer').css("color", "white");
 }
 
 function getQueryVariable(variable, url) {
@@ -552,13 +548,7 @@ function getAndMakeButtonsForLastKnownCats() {
                 i.data("lat", val["lat"]+"");
                 i.data("long", val["long"]+"");
                 i.css("z-index", 10000);
-                // if (jl_names.indexOf(val["name"]) >= 0) {
-                //     i.css("background-color", color_jl);
-                //     i.css("color", "white");
-                // } else if (ia_names.indexOf(val["name"]) >= 0) {
-                //     i.css("background-color", color_ia);
-                //     i.css("color", "white");
-                // }
+
                 var c = "#21DBEB";
                 if (colors.hasOwnProperty(val["name"])) {
                     c = colors[val["name"]];
@@ -576,14 +566,6 @@ function getAndMakeButtonsForLastKnownCats() {
                     radius: 150
                 }
 
-                // johnny
-                // if (colors[val["name"]] === color_jl) {
-                //     // mopts["color"] = "#6495ED";
-                    
-                // } else if (colors[val["name"]] === color_ia) {
-                //     // mopts["color"] = "indianred";
-                //     mopts["color"] = "#EBD000";
-                // }
                 var circle = L.circle([+val["lat"], +val["long"]], mopts).addTo(map);
                 circle.bindPopup(JSON.stringify(val));
 
@@ -597,7 +579,6 @@ function getAndMakeButtonsForLastKnownCats() {
                             // occurs on elements that match '.dosomething'
                         });
                     });
-
                 getmetadata();
         }
     });
@@ -623,9 +604,22 @@ function getAndMakeButtonsForLastKnownCats() {
 }
 getAndMakeButtonsForLastKnownCats();
 
-document.getElementById("gowww").onclick = function() {
-    map.setView([42.94033923363183, -103.35937500000001], 3);
-};
+$("#goview").change(function(){
+    var v = $(this).val();
+    if (v === "world") {
+        // map.flyTo is cooler, but might explode computers
+        map.setView([42.94033923363183, -103.35937500000001], 3);    
+    } else if (v === "usa") {
+        map.setView([37.73596920859053, -99.97558593750001], 5);
+    } else if (v === "stlouis") {
+        map.setView([38.60969439928821, -90.24324417114258], 13);
+    } else if (v === "iceland") {
+        map.setView([63.868504963579994, -19.572143554687504], 8);
+    } else if (v === "hokkaido") {
+        map.setView([42.77322729247907, 142.20153808593753], 8);
+    }
+});
+
 document.getElementById("recent-layer").onclick = function() {
     delegateDrawLayer("recent");
     putViewToUrl(buildViewUrl());
