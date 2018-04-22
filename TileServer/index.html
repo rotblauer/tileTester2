@@ -62,12 +62,14 @@
             z-index: 10000;
             background-color: white;
             border: none;
+            cursor: pointer;
         }
         #lastknowns {
-          z-index: 10000;
-          position: fixed; 
-          top: 60px; 
-          right: 10px;
+          /*z-index: 10000;*/
+          float: right; 
+
+  /*        top: 60px; 
+          right: 10px;*/
         }
      #feature-count {
        position: fixed;
@@ -75,7 +77,7 @@
        top: 170px;
        z-index: 1000;
        }
-       #url-location {
+       #url-location-holder {
            /*z-index: 10000;*/
            color: white;
            background: dimgray;
@@ -84,14 +86,25 @@
            font-family: helvetica;
            font-size: small;
            margin: 0;
+           text-align: center;
        }
-       #metadata {
-        background-color: rgb(70, 97, 152);
+       #metadata-holder {
+        background-color: rgb(196, 189, 193);
         color: white;
         padding: 5px 5px 5px 10px;
         font-family: helvetica;
         margin: 0;
         font-size: small;
+       }
+       #metadata {
+        /*font-size: small;
+        margin-top: 5px;
+        float: left;*/
+        float: left;
+        margin-top: 5px;
+       }
+       #url-location {
+        cursor: pointer;
        }
     </style>
 </head>
@@ -107,15 +120,17 @@
       style="position: fixed; top: 220px; right: 10px;" 
       disabled>Draw: trip</button>
 
-    <div id="lastknowns" >
-      <small>Last known locations:</small>
-    </div>
-  
-    <p id="url-location">
 
+  
+    <p id="url-location-holder">
+      <small id="url-moved">◉ </small><small id="url-location"></small>
     </p>
-    <p id="metadata">
+    <p id="metadata-holder">
       
+      <span id="lastknowns-holder" >
+        <small id="metadata"></small>
+        <span id="lastknowns"><small>Last known locations:</small></span>
+      </span>
     </p>
 
     <div id="map"></div>

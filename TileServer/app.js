@@ -1,11 +1,17 @@
 // color defaults
+var color_ia="rgb(254,65,26)"; // "rgb(235,41,0)";
+var color_jl="rgb(0,162,235)";
+var color_jl_meta="rgb(70, 97, 152)";
+var color_ia_meta="#c42c21";
+var jl_names=["RyePhone", "Rye8", "jl"];
+var ia_names=["Big Papa", "Bigger Papa"];
 var colors = {
-    "Big Papa": "rgb(200,0,0)",
-    "Bigger Papa": "rgb(200,0,0)",
+    "Big Papa": color_ia,
+    "Bigger Papa": color_ia,
 
-    "RyePhone": "rgb(0,0,200)",
-    "Rye8": "rgb(0,0,200)",
-    "jl": "rgb(0,0,200)",
+    "RyePhone": color_jl,
+    "Rye8": color_jl,
+    "jl": color_jl,
 
     "Big Mamma": "rgb(0,200,0)",
     "Kayleigh's iPhone": "rgb(200,200,0)"
@@ -58,8 +64,14 @@ map = L.map('map', {
 map.on("moveend", function() {
     didLogOnce = false;
     putViewToUrl();
+    $("#url-moved").css("color", "rgb(5, 255, 170)");
+    $("#url-moved").fadeOut(100).fadeIn(100); // .fadeOut(100).fadeIn(100);
 });
-map.on("load", putViewToUrl);
+map.on("load", function() {
+    putViewToUrl();
+    $("#url-moved").css("color", "white"); 
+});
+// map.on("load", putViewToUrl);
 // Drawing Helpers
 // ********************************************************************************************************************
 // http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
@@ -225,9 +237,11 @@ var densityTileOptions = {
             if (!properties.clustered) {
                 return {
                     stroke: false,
-                    fill: false,
+                    fill: true,
+                    fillColor: "#199bff", // colors[properties.Name], // "#00A2EB", "#EB2900"
                     weight: 0,
-                    radius: 0
+                    radius: 1,
+                    opacity: 0.05
                 }
             }
 
@@ -263,11 +277,15 @@ var densityTileOptions = {
                     } else {
                         n = Math.floor(relAbsoluteDensity*(properties.point_count)*maxRadius);
                     }
+            
 
                     if (n > maxRadius) {
                         n = maxRadius;
-                    } else if (n < 2) {
-                        n = Math.floor(relAbsoluteDensity*(properties.point_count+(zoom/14))*maxRadius);
+                        if (zoom < 5) {
+                            n = zRangeMin/4 * n;
+                        }
+                    } else if (n < 1) {
+                        n = Math.floor(relAbsoluteDensity*(properties.point_count+(zoom/zRangeDiff))*maxRadius);
                     }
                     return n;
                 }(), // ~max 100 from maxDensity actual max // +1 ??
@@ -425,7 +443,13 @@ function delegateDrawLayer(name) {
         drawLayer(tripTileOptions);
     }
     $('.layer-button').css("border", "none");
-    $('button#'+name+'-layer').css("border", "2px solid green");
+    $('.layer-button').css("border-radius", "0 0 0 0");
+    // $('.layer-button').css("background-color", "white");
+    // $('.layer-button').css("color", "black");
+    $('button#'+name+'-layer').css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
+    $('button#'+name+'-layer').css("border-radius", "4px 0px 0px 4px");
+    // $('button#'+name+'-layer').css("background-color", "black");
+    // $('button#'+name+'-layer').css("color", "white");
 }
 
 function getQueryVariable(variable, url) {
@@ -490,6 +514,12 @@ function getmetadata() {
         // $("#metadata").text(JSON.stringify(data));
         $("#metadata").text(numberWithCommas(data["KeyN"]) + " points. " + data["LastUpdatedBy"] + 
             " last pushed " + data["LastUpdatedPointsN"] + " points " + moment(data["LastUpdatedAt"]).fromNow());
+
+        if (jl_names.indexOf(data["LastUpdatedBy"]) >= 0) {
+            $("#metadata-holder").css("border-left", "8px solid " + color_jl);
+        } else if (ia_names.indexOf(data["LastUpdatedBy"]) >= 0) {
+            $("#metadata-holder").css("border-left", "8px solid " + color_ia);
+        }
     }
     });
 }
@@ -508,6 +538,13 @@ function getAndMakeButtonsForLastKnownCats() {
                 i.data("lat", val["lat"]+"");
                 i.data("long", val["long"]+"");
                 i.css("z-index", 10000);
+                if (jl_names.indexOf(val["name"]) >= 0) {
+                    i.css("background-color", color_jl);
+                    i.css("color", "white");
+                } else if (ia_names.indexOf(val["name"]) >= 0) {
+                    i.css("background-color", color_ia);
+                    i.css("color", "white");
+                }
                 $("#lastknowns").append(i);
 
                 var mopts = {
@@ -519,10 +556,10 @@ function getAndMakeButtonsForLastKnownCats() {
                 }
 
                 // johnny
-                // if (colors[val["name"]] === "rgb(0,0,200)") {
+                // if (colors[val["name"]] === color_jl) {
                 //     // mopts["color"] = "#6495ED";
                     
-                // } else if (colors[val["name"]] === "rgb(200,0,0)") {
+                // } else if (colors[val["name"]] === color_ia) {
                 //     // mopts["color"] = "indianred";
                 //     mopts["color"] = "#EBD000";
                 // }
