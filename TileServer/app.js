@@ -523,9 +523,12 @@ function getmetadata() {
         // {"KeyN":3441161,"LastUpdatedAt":"2018-04-20T11:05:28.194001962-07:00","LastUpdatedBy":"Bigger Papa","LastUpdatedPointsN":84}
         // $("#metadata").text(data["KeyN"] + " points | " 
         // $("#metadata").text(JSON.stringify(data));
-        $("#metadata").text(numberWithCommas(data["KeyN"]) + " points. " + data["LastUpdatedBy"] + 
-            " last pushed " + data["LastUpdatedPointsN"] + " points " + moment(data["LastUpdatedAt"]).fromNow());
-
+        var obj = $("#metadata");
+        obj.text(numberWithCommas(data["KeyN"]) + " points.\n" 
+            + "TileDB last updated " + moment(data["TileDBLastUpdated"]).fromNow() 
+            // next updated is 4 hours from last updated
+            + "; next update " + moment().to(moment(data["TileDBLastUpdated"]).add(4, 'hours')) + ".");
+        obj.html(obj.html().replace(/\n/g,'<br/>'));
         if (jl_names.indexOf(data["LastUpdatedBy"]) >= 0) {
             $("#metadata-holder").css("border-left", "8px solid " + color_jl);
         } else if (ia_names.indexOf(data["LastUpdatedBy"]) >= 0) {
@@ -545,7 +548,7 @@ function getAndMakeButtonsForLastKnownCats() {
             // console.log(data);
             $.each( data, function( key, val ) {
                 // console.log("key", key, "val", val);
-                var i = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + "</button>" );
+                var i = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + ", " + moment(val["time"]).fromNow() + "</button>" );
                 i.data("lat", val["lat"]+"");
                 i.data("long", val["long"]+"");
                 i.css("z-index", 10000);
