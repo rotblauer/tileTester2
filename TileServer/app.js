@@ -17,9 +17,10 @@ var metadataURL = 'http://track.areteh.co:3001/metadata';
 // url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
 var defaultCenter = [38.6270, -90.1994];
 var defaultZoom = 8;
+var didLogOnce = false;
 function getBrowsePosition() {
     var got = localStorage.getItem("browsePosition");
-    console.log("got browse local", got);
+    // console.log("got browse local", got);
     if (got === null) {
         return got;
     }
@@ -55,6 +56,7 @@ map = L.map('map', {
     // preferCanvas: true
 });
 map.on("moveend", function() {
+    didLogOnce = false;
     putViewToUrl();
 });
 map.on("load", putViewToUrl);
@@ -69,13 +71,6 @@ function shadeRGBColor(color, percent) {
         G = parseInt(f[1]),
         B = parseInt(f[2]);
     return "rgb(" + (Math.round((t - R) * p) + R) + "," + (Math.round((t - G) * p) + G) + "," + (Math.round((t - B) * p) + B) + ")";
-}
-
-function densityColor(density){
-    var r = Math.floor(density*2),
-        g = Math.floor(255-density),
-        b = 0;
-    return  "rgb(" + r + "," + g + "," + b + ")";
 }
 
 function radiusFromSpeed(speed) {
@@ -143,24 +138,140 @@ var speedTileOptions = {
 // sqrt_point_count: 1.73
 // tippecanoe_feature_density: 8
 // 
+function densityColor(density){
+    var r = Math.floor(density*2),
+        g = Math.floor(255-density),
+        b = 0;
+    return  "rgb(" + r + "," + g + "," + b + ")";
+}
+// https://stackoverflow.com/questions/340209/generate-colors-between-red-and-green-for-a-power-meter/340214#340214
+function percentToRGB(percent) {
+    if (percent >= 100) {
+        percent = 99
+    }
+    
+    var r, g, b;
+
+    if (percent < 50) {
+        // green to yellow
+        r = Math.floor(255 * (percent / 50));
+        g = 255;
+
+    } else {
+        // yellow to red
+        r = 255;
+        g = Math.floor(255 * ((50 - percent % 50) / 50));
+    }
+    b = 0;
+
+    return "rgb(" + r + "," + g + "," + b + ")";
+}
+
+        
+// -ag or --calculate-feature-density: Add a new attribute, tippecanoe_feature_density, to each feature, to record how densely features are spaced in that area of the tile. You can use this attribute in the style to produce a glowing effect where points are densely packed. It can range from 0 in the sparsest areas to 255 in the densest.
+var maxDensity = 255;
+var maxRadius = 10;
+
+var zRangeMin = 3;
+var zRangeMax = 20;
+var zRangeDiff = zRangeMax - zRangeMin;
+// At lower (farther out) zooms, we should "desensitize" scaling since most points will be "clustered" in higher numbers,
+// whereas at higher (closer) zooms, we should adjust tolerance to be more centered around lower feature_density values.
+function getRelDensity(zoom, n) {
+    var stepSize = maxDensity/zRangeDiff; // 255 / 17 = 15
+    // var zAdjust = zoom-1-zRangeMin; // zoom = 14-1-3 = 10, 20-1-3 = 16, 3-1-3 = -1
+    // var bound = maxDensity - stepSize*zoom;
+    // // if zoom == 3  --> 255-15*2 as lower bound, find ratio of feature_density between 221 <-> 255; eg. 238 = 50%
+    // max(255)-stepN(34) = lower(221)
+    // max(255)-lower(221) = mldiff(34)
+    // eg(238)-lower(221)= rel(17)
+    // rel(17)/mldiff(34) == .50
+    // 
+    // //                   255 - (stepSize * zoom-1)
+    // // if zoom == 19 --> 255-(19-3-1); 
+    // if (zoom === 3) {
+    //     return n - 
+    // }
+    
+    var stepN = zoom - 1;
+    // if (zoom === 3) {
+    //     stepN = stepN + 1; // 2 * stepSize = 30, 255 - 30 = 225, 
+    // } else if (zoom === 4) {
+    //     stepN = stepN + 2;
+    // } else if (zoom === 5) {
+    //     stepN = stepN + 3; // 4 * 15 = 60, 255 - 60 = 195, 
+    // }
+    var lower = maxDensity - (stepN*stepSize);
+    if (n < lower) {
+        n = lower;
+    }
+    var mldiff = maxDensity - lower;
+    var rel = n - lower;
+    var relDensity = rel/mldiff;
+    return relDensity;
+}
+
 var densityTileOptions = {
     rendererFactory: L.canvas.tile,
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
 
-            var color2 = colors[properties.Name] || "rgb(241,66,244)";
-            return {
+            // anything above about zoom 14-15 will not be clustered!...
+            if (!properties.clustered) {
+                return {
+                    stroke: false,
+                    fill: false,
+                    weight: 0,
+                    radius: 0
+                }
+            }
+
+            // var relAbsoluteDensity = (properties.tippecanoe_feature_density/maxDensity); // maxDensity is max
+            var relAbsoluteDensity = (properties.tippecanoe_feature_density/(maxDensity*(zRangeMin/zoom))); // scale max density by zoom linearly
+            var relAbsoluteDensityPercent = Math.floor(relAbsoluteDensity*100);
+
+            // var relD = getRelDensity(zoom, properties.tippecanoe_feature_density);
+            // var relDPercent = Math.floor(relD*100);
+
+            var out = {
                 stroke: false,
                 fill: true,
-                fillColor: densityColor(properties.tippecanoe_feature_density),
-                fillOpacity: 0.10 ,
-                    radius: 2,
-                    type: "Point"
+                fillColor: function() {
+                    var factor = properties.sqrt_point_count;
+                    factor = factor * (zoom/zRangeMax)*2;
+                    var n = percentToRGB(relAbsoluteDensityPercent*factor); // densityColor(properties.tippecanoe_feature_density),
+                    return n;
+                }(),
+                // fillColor: percentToRGB(relDPercent), // densityColor(properties.tippecanoe_feature_density),
+                fillOpacity: 0.05, // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
+                radius: function() {
+                    var n = 0;
+                    if (zoom > 14) {
+                        n = Math.floor(relAbsoluteDensity*(properties.point_count)*maxRadius);
+                    } else {
+                        n = Math.floor(relAbsoluteDensity*(properties.point_count)*maxRadius);
+                    }
+
+                    if (n > maxRadius) {
+                        n = maxRadius;
+                    } else if (n < 2) {
+                        n = Math.floor(relAbsoluteDensity*(properties.point_count+(zoom/14))*maxRadius);
+                    }
+                    return n;
+                }(), // ~max 100 from maxDensity actual max // +1 ??
+                // radius: Math.floor(relDPercent*maxRadius), // ~max 100 from maxDensity actual max // +1 ??
+                type: "Point"
             };
+            if (!didLogOnce) {
+                // console.log("example", "props", properties, "zoom");
+                console.log("logOnce:out", out);
+                didLogOnce = true;
+            }
+            return out;
         }
     },
-    // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name;
     },
@@ -239,17 +350,17 @@ function tripLayerHandler(props, color) {
     };
 }
 
-var didLog = false;
+
 
 var tripTileOptions = {
     rendererFactory: L.canvas.tile,
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
-            if (!didLog) {
-                console.log("example", "props", properties, "zoom");
-                didLog = true;
-            }
+            // if (!didLogOnce) {
+            //     console.log("example", "props", properties, "zoom");
+            //     didLogOnce = true;
+            // }
             // hide if not on a trip
             // if (typeof properties.Notes === "undefined" || properties.Notes === null || properties.Notes === "") {
             if (!properties.hasOwnProperty("Notes")) {
@@ -379,7 +490,7 @@ function getAndMakeButtonsForLastKnownCats() {
         url: lastKnownJSONurl,
         dataType: 'json', 
         success: function(data) { 
-            console.log(data);
+            // console.log(data);
             $.each( data, function( key, val ) {
                 // console.log("key", key, "val", val);
                 var i = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + "</button>" );
@@ -390,24 +501,24 @@ function getAndMakeButtonsForLastKnownCats() {
 
                 var mopts = {
                     color: 'darkgreen',
-                    fillColor: '#228B22',
-                    fillOpacity: 0.5,
+                    fillColor: '#EB38D3',
+                    fillOpacity: 0.3,
                     radius: 100
                 }
 
                 // johnny
                 if (colors[val["name"]] === "rgb(0,0,200)") {
                     // mopts["color"] = "#6495ED";
-                    mopts["fillColor"] = "rgb(65,105,225)";
+                    mopts["color"] = "#21DBEB";
                 } else if (colors[val["name"]] === "rgb(200,0,0)") {
                     // mopts["color"] = "indianred";
-                    mopts["fillColor"] = "rgb(178,34,34)";
+                    mopts["color"] = "#EBD000";
                 }
                 var circle = L.circle([+val["lat"], +val["long"]], mopts).addTo(map);
                 circle.bindPopup(JSON.stringify(val));
 
                     $(document).on('click', '.lastknownlink', function(e){
-                            console.log("$this", $(this));
+                            // console.log("$this", $(this));
                             var lat = $(this).data("lat");
                             var lng = $(this).data("long");
                             // console.log(lat, lng);
