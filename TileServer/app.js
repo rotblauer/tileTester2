@@ -73,14 +73,18 @@ function shadeRGBColor(color, percent) {
     return "rgb(" + (Math.round((t - R) * p) + R) + "," + (Math.round((t - G) * p) + G) + "," + (Math.round((t - B) * p) + B) + ")";
 }
 
-function radiusFromSpeed(speed) {
+function radiusFromSpeed(speed, zoom) {
     if (typeof(speed) === "undefined") {
-        return 3;
+        return 2;
     }
     if (speed < 0) {
         speed = 0;
     }
-    return Math.abs(3 - (Math.log(speed + 0.01) / 2));
+    var x = Math.abs(2 - (Math.log(speed + 0.01) / 2));
+    if (zoom <= 12) {
+        x++;
+    }
+    return x;
 }
 
 function onEachFeature(feature) {
@@ -117,7 +121,7 @@ var speedTileOptions = {
                 fill: true,
                 fillColor: shadeRGBColor(color2, ((properties.Speed / maxNormalPossibleSpeed) % 1.0) / 2),
                 fillOpacity: 0.1,
-                radius: radiusFromSpeed(properties.Speed),
+                radius: radiusFromSpeed(properties.Speed, zoom),
                 type: "Point"
             };
         }
@@ -240,11 +244,18 @@ var densityTileOptions = {
                 fillColor: function() {
                     var factor = properties.sqrt_point_count;
                     factor = factor * (zoom/zRangeMax)*2;
+                    if (zoom <= 8 && zoom > 5) {
+                        factor = factor * (zoom / zRangeDiff);
+                    }
+                    if (zoom <= 5) {
+                        factor = properties.point_count * (zoom / zRangeDiff); // / (zoom/(zoom+1-zRangeMin));
+                    }
                     var n = percentToRGB(relAbsoluteDensityPercent*factor); // densityColor(properties.tippecanoe_feature_density),
                     return n;
                 }(),
                 // fillColor: percentToRGB(relDPercent), // densityColor(properties.tippecanoe_feature_density),
-                fillOpacity: 0.05, // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
+                // fillOpacity: 0.05, // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
+                fillOpacity: 0.05 * (zoom/zRangeDiff), // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
                 radius: function() {
                     var n = 0;
                     if (zoom > 14) {
@@ -500,20 +511,21 @@ function getAndMakeButtonsForLastKnownCats() {
                 $("#lastknowns").append(i);
 
                 var mopts = {
-                    color: 'darkgreen',
-                    fillColor: '#EB38D3',
-                    fillOpacity: 0.3,
+                    color: "#21DBEB",
+                    weight: 2,
+                    // fillColor: '#EB38D3',
+                    fillOpacity: 0,
                     radius: 100
                 }
 
                 // johnny
-                if (colors[val["name"]] === "rgb(0,0,200)") {
-                    // mopts["color"] = "#6495ED";
-                    mopts["color"] = "#21DBEB";
-                } else if (colors[val["name"]] === "rgb(200,0,0)") {
-                    // mopts["color"] = "indianred";
-                    mopts["color"] = "#EBD000";
-                }
+                // if (colors[val["name"]] === "rgb(0,0,200)") {
+                //     // mopts["color"] = "#6495ED";
+                    
+                // } else if (colors[val["name"]] === "rgb(200,0,0)") {
+                //     // mopts["color"] = "indianred";
+                //     mopts["color"] = "#EBD000";
+                // }
                 var circle = L.circle([+val["lat"], +val["long"]], mopts).addTo(map);
                 circle.bindPopup(JSON.stringify(val));
 
