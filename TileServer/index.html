@@ -86,6 +86,7 @@
            font-family: helvetica;
            font-size: small;
            margin: 0;
+
            /*text-align: center;*/
        }
        #metadata-holder {
@@ -105,6 +106,8 @@
        }
        #url-location {
         cursor: pointer;
+          max-width: 50%;
+        overflow:hidden;
        }
        #layer-buttons {
           z-index: 1000;
@@ -117,13 +120,20 @@
        #layer-buttons button {
         margin: 5px;
        }
+       #url-location-box {
+
+       }
     </style>
 </head>
 
 <body>
   <div class="box">  
+
     <p id="url-location-holder">
-      <small id="url-moved">◉ </small><small id="url-location"></small>
+      <span id="url-location-box">
+        <small id="url-moved">◉ </small><small id="url-location"></small>    
+      </span>
+  
       <select name="" id="goview" style="float:right;">
         <option value="">Go to -</option>
         <option value="world">World</option>

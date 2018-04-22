@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+rsync -avz -L --progress -h\
+    app.js index.html freya:~/punktlich.rotblauer.com/
+

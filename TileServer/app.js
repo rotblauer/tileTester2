@@ -506,6 +506,7 @@ function putUrlToView(event) {
     putViewToUrl();
 }
 putUrlToView();
+
 function numberWithCommas(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -532,53 +533,91 @@ function getmetadata() {
         }
     }
     });
+
+    setTimeout(getAndMakeButtonsForLastKnownCats, 1000*60); // re-call again in a minute
 }
 
+var catIcon = L.icon({
+    iconUrl: 'cat-icon.png',
+    // shadowUrl: 'leaf-shadow.png',
 
+    iconSize:     [32, 32], // size of the icon
+    // shadowSize:   [50, 64], // size of the shadow
+    iconAnchor:   [16, 16], // point of the icon which will correspond to marker's location
+    // shadowAnchor: [4, 62],  // the same for the shadow
+    popupAnchor:  [0, -8] // point from which the popup should open relative to the iconAnchor
+});
+var catIconSmall = L.icon({
+    iconUrl: 'cat-icon.png',
+    // shadowUrl: 'leaf-shadow.png',
+
+    iconSize:     [16, 16], // size of the icon
+    // shadowSize:   [50, 64], // size of the shadow
+    iconAnchor:   [8, 8], // point of the icon which will correspond to marker's location
+    // shadowAnchor: [4, 62],  // the same for the shadow
+    popupAnchor:  [0, -4] // point from which the popup should open relative to the iconAnchor
+});
+var onMapMarkers = [];
 function getAndMakeButtonsForLastKnownCats() {
     $.ajax({ 
         type: 'GET',
         url: lastKnownJSONurl,
         dataType: 'json', 
         success: function(data) { 
+
+            $("#lastknowns").html("<small>Last known locations:</small>");
+
+            // in case any existing already, ~make em small~ remove em
+            for (var i = 0; i < onMapMarkers.length; i++) {
+                var cat = onMapMarkers[i];
+                // cat.setIcon(catIconSmall);
+                // cat.setOpacity(1/i);
+                map.removeLayer(cat);
+            }
+            onMapMarkers = [];
+
             // console.log(data);
             $.each( data, function( key, val ) {
                 // console.log("key", key, "val", val);
-                var i = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + ", " + moment(val["time"]).fromNow() + "</button>" );
-                i.data("lat", val["lat"]+"");
-                i.data("long", val["long"]+"");
-                i.css("z-index", 10000);
+                var button = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + ", " + moment(val["time"]).fromNow() + "</button>" );
+                button.data("lat", val["lat"]+"");
+                button.data("long", val["long"]+"");
+                button.css("z-index", 10000);
 
                 var c = "#21DBEB";
                 if (colors.hasOwnProperty(val["name"])) {
                     c = colors[val["name"]];
-                    i.css("background-color", c);
+                    button.css("background-color", c);
                     // c = shadeRGBColor(c, 0.5);
-                    i.css("color", "white");
+                    button.css("color", "white");
                 }
-                $("#lastknowns").append(i);
+                $("#lastknowns").append(button);
 
-                var mopts = {
-                    color: c,
-                    weight: 2,
-                    // fillColor: '#EB38D3',
-                    fillOpacity: 0,
-                    radius: 150
-                }
+                var l = L.marker([+val["lat"], +val["long"]], {icon: catIcon});
+                map.addLayer(l);
+                onMapMarkers.push(l);
 
-                var circle = L.circle([+val["lat"], +val["long"]], mopts).addTo(map);
-                circle.bindPopup(JSON.stringify(val));
+                // var mopts = {
+                //     color: c,
+                //     weight: 2,
+                //     // fillColor: '#EB38D3',
+                //     fillOpacity: 0,
+                //     radius: 150
+                // }
 
-                    $(document).on('click', '.lastknownlink', function(e){
-                            // console.log("$this", $(this));
-                            var lat = $(this).data("lat");
-                            var lng = $(this).data("long");
-                            // console.log(lat, lng);
-                            map.setView([+lat, +lng], 13);
-                            // what you want to happen when mouseover and mouseout 
-                            // occurs on elements that match '.dosomething'
-                        });
+                // var circle = L.circle([+val["lat"], +val["long"]], mopts).addTo(map);
+                // circle.bindPopup(JSON.stringify(val));
+
+                $(document).on('click', '.lastknownlink', function(e){
+                        // console.log("$this", $(this));
+                        var lat = $(this).data("lat");
+                        var lng = $(this).data("long");
+                        // console.log(lat, lng);
+                        map.setView([+lat, +lng], 13);
+                        // what you want to happen when mouseover and mouseout 
+                        // occurs on elements that match '.dosomething'
                     });
+                });
                 getmetadata();
         }
     });
@@ -603,6 +642,18 @@ function getAndMakeButtonsForLastKnownCats() {
 
 }
 getAndMakeButtonsForLastKnownCats();
+
+$(function () {
+    // var hh = $("#url-location-holder").height();
+    // console.log("hh", hh);
+    // var h =  hh + $("#metadata-holder").height() + 30 + "px";
+    
+    var h = $("#metadata-holder")[0].getBoundingClientRect();
+    var hh = h.bottom;
+    // console.log(h, hh);
+    $("#layer-buttons").css("top", h + "px");
+});
+
 
 $("#goview").change(function(){
     var v = $(this).val();
