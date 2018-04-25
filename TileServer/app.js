@@ -1,6 +1,6 @@
 // color defaults
-var color_ia="rgb(254,65,26)"; // "rgb(235,41,0)";
-var color_jl="rgb(0,162,235)";
+var color_ia="rgb(255,0,0)"; //"rgb(254,65,26)"; // "rgb(235,41,0)";
+var color_jl="rgb(0,0,255)";// "rgb(0,162,235)";
 var color_jl_meta="rgb(70, 97, 152)";
 var color_ia_meta="#c42c21";
 var jl_names=["RyePhone", "Rye8", "jl"];
@@ -42,13 +42,44 @@ function setBrowsePosition(s) {
 }
 
 var drawnLayer = "speed";
+var pbfLayer;
+var drawnFeatures = [];
 var map;
+var current_tile_layer;
+var mb_tile_outdoors_url = "https://api.mapbox.com/styles/v1/rotblauer/cjgejdj91001c2snpjtgmt7gj/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
+var mb_tile_light1_url = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
+var mb_tile_sat_url = "https://api.mapbox.com/styles/v1/rotblauer/cjgel0gt300072rmc2s34f2ky/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
+var mb_tile_light1 = L.tileLayer(mb_tile_light1_url, {
+    maxZoom: 19
+})
+var mb_tile_outdoors = L.tileLayer(mb_tile_outdoors_url, {
+    maxZoom: 19
+})
+var mb_tile_sat = L.tileLayer(mb_tile_sat_url, {
+    maxZoom: 19
+})
+function getCurrentTileLayerName() {
+    if (current_tile_layer !== null) {
+        if (current_tile_layer === mb_tile_light1) {
+            return "tile-light";
+        } else if (current_tile_layer === mb_tile_outdoors) {
+            return "tile-outdoors";
+        }  else if (current_tile_layer === mb_tile_sat) {
+            return "tile-sat";
+        }
+    }
+    return ""
+}
 function buildViewUrl() {
     var latlng = map.getCenter();
     var lat = latlng.lat;
     var lng = latlng.lng;
     var z = map.getZoom();
-    var text = "http://punktlich.rotblauer.com?z=" + z + "&y=" + lng + "&x=" + lat + "&l=" + drawnLayer;
+    var text = "http://punktlich.rotblauer.com?z=" + z 
+        + "&y=" + lng 
+        + "&x=" + lat 
+        + "&l=" + drawnLayer 
+        + "&t=" + getCurrentTileLayerName();
     return text;
 }
 function putViewToUrl() {
@@ -102,10 +133,39 @@ function radiusFromSpeed(speed, zoom) {
 function onEachFeature(feature) {
 }
 
-var mb_light1 = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
-L.tileLayer(mb_light1, {
-    maxZoom: 22
-}).addTo(map);
+
+function setMapTileLayer(tile_layer) {
+    if (pbfLayer !== null && typeof pbfLayer !== "undefined") {map.removeLayer(pbfLayer);}
+    if (current_tile_layer !== null && typeof current_tile_layer !== "undefined") {
+        console.log("removing current tile layer");
+        map.removeLayer(current_tile_layer);
+    }
+    current_tile_layer = tile_layer;
+    map.addLayer(current_tile_layer);  
+    if (pbfLayer !== null && typeof pbfLayer !== "undefined") {map.addLayer(pbfLayer);}
+}
+
+function delegateTileLayer(name) {
+    // console.log("clicked tile setter", name);
+    if (name === "tile-light" && current_tile_layer !== mb_tile_light1) {
+        setMapTileLayer(mb_tile_light1);
+    } else if (name === "tile-outdoors" && current_tile_layer !== mb_tile_outdoors) {
+        setMapTileLayer(mb_tile_outdoors);
+    } else if (name === "tile-sat" && current_tile_layer !== mb_tile_sat) {
+        setMapTileLayer(mb_tile_sat);
+    }
+
+    $('.tile-button').css("border", "none");
+    $('.tile-button').css("border-radius", "0 0 0 0");
+    $('button#'+name).css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
+    $('button#'+name).css("border-radius", "4px 0px 0px 4px");
+}
+
+$(".tile-button").on("click", function(e) {
+    var id = $(this).attr("id");
+    delegateTileLayer(id);
+    putViewToUrl();
+});
 
 var highlight;
 var clearHighlight = function() {
@@ -115,8 +175,7 @@ var clearHighlight = function() {
     highlight = null;
 };
 
-var pbfLayer;
-var drawnFeatures = [];
+
 
 var speedTileOptions = {
     rendererFactory: L.canvas.tile,
@@ -243,7 +302,7 @@ var densityTileOptions = {
                 return {
                     stroke: false,
                     fill: true,
-                    fillColor: "#199bff", // colors[properties.Name], // "#00A2EB", "#EB2900"
+                    fillColor: "#FF10DE", // colors[properties.Name], // "#00A2EB", "#EB2900"
                     weight: 0,
                     radius: 1,
                     opacity: 0.05
@@ -437,7 +496,8 @@ var drawLayer = function drawLayer(opts) {
     }
 
     var v = L.vectorGrid;
-    pbfLayer = v.protobuf(url, opts).addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
+    pbfLayer = v.protobuf(url, opts)
+    pbfLayer.addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
         .on('load', function (e) {
             // console.log('load', e);
         });
@@ -486,6 +546,7 @@ function putUrlToView(event) {
     var y = getQueryVariable("y", pos);
     var x = getQueryVariable("x", pos);
     var layer = getQueryVariable("l", pos);
+    var tile = getQueryVariable("t", pos);
     if (z) {
         zoom = +(z) // cast to float
     }
@@ -498,6 +559,11 @@ function putUrlToView(event) {
 
     console.log("putUrlToView", center, zoom);
     map.setView(center,zoom);
+    if (tile && tile !== "") {
+        delegateTileLayer(tile);
+    } else {
+        delegateTileLayer("tile-light");
+    }
     if (layer) {
         delegateDrawLayer(layer)
     } else {
@@ -579,6 +645,12 @@ function getAndMakeButtonsForLastKnownCats() {
             // console.log(data);
             $.each( data, function( key, val ) {
                 // console.log("key", key, "val", val);
+                
+                // ignore the old ones
+                if (moment(val["time"]).add(1, 'd').isBefore(moment())) {
+                    return;
+                }
+
                 var button = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + ", " + moment(val["time"]).fromNow() + "</button>" );
                 button.data("lat", val["lat"]+"");
                 button.data("long", val["long"]+"");
@@ -609,16 +681,16 @@ function getAndMakeButtonsForLastKnownCats() {
                 // circle.bindPopup(JSON.stringify(val));
 
                 $(document).on('click', '.lastknownlink', function(e){
-                        // console.log("$this", $(this));
-                        var lat = $(this).data("lat");
-                        var lng = $(this).data("long");
-                        // console.log(lat, lng);
-                        map.setView([+lat, +lng], 13);
-                        // what you want to happen when mouseover and mouseout 
-                        // occurs on elements that match '.dosomething'
-                    });
+                    // console.log("$this", $(this));
+                    var lat = $(this).data("lat");
+                    var lng = $(this).data("long");
+                    // console.log(lat, lng);
+                    map.setView([+lat, +lng]);
+                    // what you want to happen when mouseover and mouseout 
+                    // occurs on elements that match '.dosomething'
                 });
-                getmetadata();
+            }); 
+            getmetadata();
         }
     });
     // fuck this fucking JSONP json cross origin SHIT.
