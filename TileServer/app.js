@@ -410,6 +410,7 @@ var recencyScale = function (props, color) {
     };
 };
 
+var trackExampler = 0;
 var recencyTileOptions = {
     rendererFactory: L.canvas.tile,
     vectorTileLayerStyles: {
@@ -420,7 +421,10 @@ var recencyTileOptions = {
                 alert("there are notesss!!!");
                 didLogOnce = true;
             }
-
+            if (trackExampler === 0) {
+                console.log("props", properties);
+            }
+            trackExampler++;
 
             var color2 = colors[properties.Name] || "rgb(241,66,244)";
             var time = new Date(properties.Time).getTime();
