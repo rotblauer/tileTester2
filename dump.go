@@ -217,6 +217,7 @@ func dumpBolty(boltDb string, out string) error {
 		}
 		tippmycanoeIn.Write(data)
 		(f.fw).Write(data)
+		CloseGZ(f)
 	}
 	tippmycanoeIn.Close()
 
