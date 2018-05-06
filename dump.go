@@ -194,6 +194,7 @@ func dumpBolty(boltDb string, out string) error {
 						log.Println("err write tippe in data:", e)
 					} else {
 						(f.fw).Write(data)
+						CloseGZ(f)
 						fc = geojson.NewFeatureCollection([]*geojson.Feature{})
 						f = CreateGZ(out + strconv.Itoa(count) + ".json.gz")
 					}
