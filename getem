@@ -5,6 +5,9 @@
 # # The Overview
 # server tracks.db(bolt) -> local tippecanoe -> local out.mbtiles (+ out.json) -> local tippedcanoetrack.db(bolt) -> server punktlich.rotblauer.com/
 
+echo "Moving tracks.db -> tracks.db.bak"
+mv ./tracks.db ./tracks.db.bak
+
 # update tracks from API bolt.db on Freya to local
 echo "------------------------------------------"
 echo "Syncing remote tracks.db --> local..."
