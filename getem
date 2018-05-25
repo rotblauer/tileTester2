@@ -1,5 +1,39 @@
 #!/usr/bin/env bash
 
+upload() {
+
+	# Gzip it for uploading
+	echo "------------------------------------------"
+	echo "gzipping tippedcanoetrack.db -> tippedcanoetrack.db.gz for uploading..."
+	echo
+	gzip --best --keep --verbose ./tippedcanoetrack.db
+
+	# sync newly created/update bolty db back to punktlich, finally
+	echo "------------------------------------------"
+	echo "** Syncing fresh bolt.db back to punktlich.rotblauer.com..."
+	echo
+	rsync -avzLh --progress ./tippedcanoetrack.db.gz freya:~/punktlich.rotblauer.com/tippedcanoetrack.db.gz #/tester.db
+
+	# And update locally too for development.
+	echo "------------------------------------------"
+	echo "Copying fresh tippedcanoetrack.db -> TileServer/tester.db..."
+	echo
+	cp tippedcanoetrack.db ./TileServer/tester.db
+
+	echo "------------------------------------------"
+	echo "Replacing old db with new db on Freya and kickstarting tile server..."
+	echo
+
+	ssh freya <<\EOI
+cd punktlich.rotblauer.com
+gzip --decompress ./tippedcanoetrack.db.gz
+mv ./tippedcanoetrack.db ./tester.db
+./kickstart
+exit
+EOI
+
+}
+
 # verbose='false'
 # aflag=''
 # bflag=''
@@ -17,13 +51,21 @@
 
 noupdateflag=0   # update tracks.db (rsync from server), default true
 skipupdatedeps=0 # don't update project dependencies, eg ! go get -u ...
-while getopts 'ns' flag; do
+jumpto=''
+while getopts 'nsx:' flag; do
 	case "${flag}" in
 	n) noupdateflag=1 ;;
 	s) skipupdatedeps=1 ;;
+	x) jumpto="${OPTARG}" ;;
 	*) error "Unexpected option ${flag}" ;;
 	esac
 done
+
+if [ "$jumpto" != "" ]; then
+	case "$jumpto" in
+		upload) upload && exit 0 ;;
+	esac
+fi
 
 if [[ -f backup ]]; then
 	echo "------------------------------------------"
@@ -119,58 +161,7 @@ if [[ rebuild -eq 1 ]]; then
 	go build -o dumper dump.go
 fi
 ./dumper
+upload
 
-# Gzip it for uploading
-echo "------------------------------------------"
-echo "gzipping tippedcanoetrack.db -> tippedcanoetrack.db.gz for uploading..."
-echo
-gzip --best --keep --verbose ./tippedcanoetrack.db
-
-# sync newly created/update bolty db back to punktlich, finally
-echo "------------------------------------------"
-echo "** Syncing fresh bolt.db back to punktlich.rotblauer.com..."
-echo
-rsync -avzLh --progress ./tippedcanoetrack.db.gz freya:~/punktlich.rotblauer.com/tippedcanoetrack.db.gz #/tester.db
-
-# And update locally too for development.
-echo "------------------------------------------"
-echo "Copying fresh tippedcanoetrack.db -> TileServer/tester.db..."
-echo
-cp tippedcanoetrack.db ./TileServer/tester.db
-
-# Develop
-# cd TileServer && ./TileServer
-
-# Deploy
-#
-# __the tile server
-# env GOOS=linux go build -o TileServer.linux && rsync -avzLh --progress TileServer.linux freya:~/punktlich.rotblauer.com/
-# ssh freya && ./punktlich.rotblauer.com/kickstart
-#
-# __the front end
-# cd TileServer && rsync -avzLh --progress index.js app.js freya:~/punktlich.rotblauer.com/
-
-# ------------------------------------------
-#easy_install mbutil
-#mb-util out.mbtiles test --image_format=png
-
-#http://gis.stackexchange.com/questions/3712/create-vector-tiles-for-polymaps
-#http://gis.stackexchange.com/questions/65735/geojson-in-leaflet
-
-#https://github.com/klokantech/vector-tiles-sample
-
-#mb-util --image_format=png out.mbtiles test/web
-
-#tippecanoe-decode out.mbtiles |more
-#!/usr/bin/env bash
-echo "------------------------------------------"
-echo "Replacing old db with new db on Freya and kickstarting tile server..."
-echo
-
-ssh freya <<\EOI
-cd punktlich.rotblauer.com
-gzip --decompress ./tippedcanoetrack.db.gz
-mv ./tippedcanoetrack.db ./tester.db
-./kickstart
-exit
-EOI
+# FIXME:
+# ./getem: line 173: unexpected EOF while looking for matching `"'
