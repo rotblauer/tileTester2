@@ -1,24 +1,70 @@
 #!/usr/bin/env bash
 
+# verbose='false'
+# aflag=''
+# bflag=''
+# uflag=''
 
+# while getopts 'abf:v' flag; do
+#   case "${flag}" in
+#     a) aflag='true' ;;
+#     b) bflag='true' ;;
+#     f) files="${OPTARG}" ;;
+#     v) verbose='true' ;;
+#     *) error "Unexpected option ${flag}" ;;
+#   esac
+# done
+
+noupdateflag=0   # update tracks.db (rsync from server), default true
+skipupdatedeps=0 # don't update project dependencies, eg ! go get -u ...
+while getopts 'ns' flag; do
+	case "${flag}" in
+	n) noupdateflag=1 ;;
+	s) skipupdatedeps=1 ;;
+	*) error "Unexpected option ${flag}" ;;
+	esac
+done
+
+if [[ -f backup ]]; then
+	echo "------------------------------------------"
+	echo "Backup up tracks.db -> iCloud..."
+	./backup
+fi
 
 # # The Overview
 # server tracks.db(bolt) -> local tippecanoe -> local out.mbtiles (+ out.json) -> local tippedcanoetrack.db(bolt) -> server punktlich.rotblauer.com/
+if [[ noupdateflag -eq 0 ]]; then
 
-echo "Moving tracks.db -> tracks.db.bak"
-mv ./tracks.db ./tracks.db.bak
+	# update copy of freya from which to sync from... this should keep
+	# the sync-from version relatively static...? (as opposed to syncing from a "live" db)
+	# also defacto backup
+	ssh freya <<\EOI
+kill $(ps aux | grep [t]rackermain | awk '{print $2}')
+cd track.areteh.co
+rsync -avzLh --delete --progress ./db/tracks.db ./tracks.db.sync
+./kickstart
+exit
+EOI
 
-# update tracks from API bolt.db on Freya to local
-echo "------------------------------------------"
-echo "Syncing remote tracks.db --> local..."
-echo
-
-rsync -avzLh --progress freya:~/track.areteh.co/db/tracks.db ./
+	echo "Moving tracks.db -> tracks.db.bak"
+	# make a backup/remove old local version. don't want any stragglers causing problems with bolt opening file.
+	mv ./tracks.db ./tracks.db.bak
+	# update tracks from API bolt.db on Freya to local
+	echo "------------------------------------------"
+	echo "Syncing remote tracks.db.sync --> local..."
+	echo
+	rsync -avzLh --progress freya:~/track.areteh.co/tracks.db.sync ./tracks.db #sync from upstream static copy
+else
+	if [[ ! -f "./tracks.db" ]]; then
+		echo "No local ./tracks.db found and -n flag used to prevent sync from freya. Exiting now."
+		exit 1
+	fi
+	echo "Skipping sync tracks.db from freya; using local tracks.db"
+fi
 
 # # Specifics
 # ^ tracks.db is bolt database for API that receives incoming tracks from mobile cat trackering devices. catmobileTracks ios.
 #    those points are stored as struct trackPoint.TrackPoints.
-
 
 # tldr
 # dump.go runs tracks.db(bolty) through `$ tippecanoe` which builds sensible vector mbtiles
@@ -39,7 +85,7 @@ echo "------------------------------------------"
 echo "Cleaning up old artifacts..."
 echo
 rm ./out*
-rm ./tippedcanoetrack.db # in case there's some smudgeying due to CTRL-Cing during a gettingem or something. tabulara rastafaria n all dat
+rm ./tippedcanoetrack.db    # in case there's some smudgeying due to CTRL-Cing during a gettingem or something. tabulara rastafaria n all dat
 rm ./tippedcanoetrack.db.gz #ibid, plus gzip always asks to replace
 
 # exit if any error
@@ -50,19 +96,27 @@ echo "Running dump.go..."
 echo
 rebuild=1
 if [[ -f "dumper" ]]; then
-    read -p "Found pre-existing 'dumper' binary (built from dump.go). Rebuild? (y/n)? " choice
-    case "$choice" in
-      y|Y ) echo ;;
-      n|N ) echo "Skipping rebuild of dump.go -> ./dumper ..." && echo && rebuild=0;;
-      * ) echo "Invalid choice." && exit 1;;
-    esac
+	read -p "Found pre-existing 'dumper' binary (built from dump.go). Rebuild? (y/n)? " choice
+	case "$choice" in
+	y | Y) echo ;;
+	n | N) echo "Skipping rebuild of dump.go -> ./dumper ..." && echo && rebuild=0 ;;
+	*) echo "Invalid choice." && exit 1 ;;
+	esac
 fi
 if [[ rebuild -eq 1 ]]; then
-    echo "> go build -o dumper dump.go ..."
+	# Get and update all dependencies, eg. boltdb/bolt -> coreos/bbolt
+	# use github as upstream remote "origin" because goggable dies on the reg now cuz the russians AND not https
+	# you HAVE TO ensure that origin is available and secure
+	if [[ skipupdatedeps -eq 0 ]]; then
+		git --work-tree="$GOPATH/src/github.com/rotblauer/trackpoints" --git-dir="$GOPATH/src/github.com/rotblauer/trackpoints/.git" \
+			branch --set-upstream-to=origin/master master
+		git branch --set-upstream-to=origin/master master
+		echo "> go get -v -u github.com/rotblauer/tileTester2/..."
+		go get -v -u github.com/rotblauer/tileTester2/...
+	fi
 
-    # Get and update all dependencies, eg. boltdb/bolt -> coreos/bbolt
-    go get -v -u github.com/rotblauer/tileTester2/...
-    go build -o dumper dump.go
+	echo "> go build -o dumper dump.go ..."
+	go build -o dumper dump.go
 fi
 ./dumper
 
@@ -96,18 +150,14 @@ cp tippedcanoetrack.db ./TileServer/tester.db
 # __the front end
 # cd TileServer && rsync -avzLh --progress index.js app.js freya:~/punktlich.rotblauer.com/
 
-
 # ------------------------------------------
 #easy_install mbutil
 #mb-util out.mbtiles test --image_format=png
 
-
 #http://gis.stackexchange.com/questions/3712/create-vector-tiles-for-polymaps
 #http://gis.stackexchange.com/questions/65735/geojson-in-leaflet
 
-
 #https://github.com/klokantech/vector-tiles-sample
-
 
 #mb-util --image_format=png out.mbtiles test/web
 

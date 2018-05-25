@@ -39,6 +39,16 @@ func initBoltDB(boltDb string) error {
 
 	var err error
 	db, err = bolt.Open(boltDb, 0666, nil)
+	// db, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
+	// db, err = bolt.Open(boltDb, 0666, &bolt.Options{PageSize: os.Getpagesize() * 2})
+	// &bolt.Options{}
+	// db.NoFreelistSync = true
+	// db.NoGrowSync = true
+	// db.NoSync = true
+	// db.AllocSize = 32 * 1024 * 1024
+
+	dbstats := db.Stats()
+	fmt.Printf("DB stats: %v\n", dbstats)
 
 	// return err
 	if err != nil {
@@ -159,6 +169,9 @@ func dumpBolty(boltDb string, out string) error {
 	err = getDB().View(func(tx *bolt.Tx) error {
 		var err error
 		b := tx.Bucket([]byte(trackKey))
+		if b == nil {
+			panic("no bucket under key=" + trackKey + " err=" + err.Error())
+		}
 
 		stats := b.Stats()
 		fmt.Println("Tippeing ", stats.KeyN, " total tracked points.")
