@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+rsync -avz -L --progress -h tracks.db ~/Library/Mobile\ Documents/com~apple~CloudDocs/
