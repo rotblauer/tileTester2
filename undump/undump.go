@@ -5,10 +5,11 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"github.com/boltdb/bolt"
-	"github.com/cheggaaa/pb"
-	_ "github.com/mattn/go-sqlite3"
 	"path"
+
+	"github.com/cheggaaa/pb"
+	bolt "github.com/coreos/bbolt"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (

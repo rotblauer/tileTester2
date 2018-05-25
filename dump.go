@@ -8,7 +8,7 @@ import (
 	"log"
 	"path"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 	"github.com/rotblauer/trackpoints/trackPoint"
 
 	"os"

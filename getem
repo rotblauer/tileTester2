@@ -59,11 +59,12 @@ if [[ -f "dumper" ]]; then
 fi
 if [[ rebuild -eq 1 ]]; then
     echo "> go build -o dumper dump.go ..."
+
+    # Get and update all dependencies, eg. boltdb/bolt -> coreos/bbolt
+    go get -v -u github.com/rotblauer/tileTester2/...
     go build -o dumper dump.go
 fi
 ./dumper
-# rm ./dump
-# go run dump.go
 
 # Gzip it for uploading
 echo "------------------------------------------"

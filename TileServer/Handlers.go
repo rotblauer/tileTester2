@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/binary"
-	"github.com/boltdb/bolt"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
+
+	bolt "github.com/coreos/bbolt"
+	"github.com/gorilla/mux"
 )
 
 var (
