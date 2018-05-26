@@ -74,15 +74,16 @@ exit
 EOI
 
 		# make a backup/remove old local version. don't want any stragglers causing problems with bolt opening file.
-		if [[ -f ./tracks.db ]]; then
-			logprocess "Moving existing ./tracks.db -> ./tracks.db.bak"
-			mv ./tracks.db ./tracks.db.bak
+		if [ -f ./tracks.db ]; then
+			logprocess "Moving existing ./tracks.db -> ./tracks.db.gz"
+			if [ -f ./tracks.db.gz ]; then mv ./tracks.db.gz ./tracks.db.gz.bak; fi
+			if gzip -9 ./tracks.db; then rm ./tracks.db.gz.bak; fi
 		fi
 		# update tracks from API bolt.db on Freya to local
 		logprocess "Syncing remote tracks.db.sync --> local ./tracks.db"
-		rsync -avzLhP freya:~/track.areteh.co/tracks.db.sync ./tracks.db #sync from upstream static copy
+		rsync -avzLhP --delete freya:~/track.areteh.co/tracks.db.sync ./tracks.db #sync from upstream static copy
 	else
-		if [[ ! -f "./tracks.db" ]]; then
+		if [ ! -f ./tracks.db ]; then
 			echo
 			echo "!!! No local ./tracks.db found and -n flag used to prevent sync from freya. Exiting now."
 			exit 1
@@ -135,7 +136,8 @@ cleanup() {
 		if [ -f ./out.bak.tar.gz ]; then mv ./out.bak.tar.gz ./out.bak.tar.gz.bak; fi
 		gzip -9 ./out.json
 		gzip -9 ./out.mbtiles
-		tar -zcvf out.bak.tar.gz ./out.*
+		tar -zcvf out.bak.tar.gz ./out.json.gz ./out.mbtiles.gz
+		rm out.json.gz out.mbtiles.gz
 	fi
 
 	# Remove raw tippedcanoetrack.db
