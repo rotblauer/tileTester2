@@ -150,7 +150,7 @@ while getopts 'nsx:' flag; do
 	n) noupdatedb=1 ;;
 	s) noupdatedeps=1 ;;
 	x) jumpto="${OPTARG}" ;;
-	*) error "Unexpected option ${flag}" ;;
+	*) echo "Unexpected option ${flag}" && exit 1 ;;
 	esac
 done
 
@@ -160,7 +160,7 @@ if [ "$jumpto" != "" ]; then
 	syncfrom) syncfrom && exit 0 ;;
 	cleanup) cleanup && exit 0 ;;
 	dump) dumpify && exit 0 ;;
-	*) echo "unknown optarg:$jumpto" ;;
+	*) echo "unknown optarg:$jumpto" && exit 1;;
 	esac
 fi
 
