@@ -68,7 +68,7 @@ syncfrom() {
 		ssh freya <<\EOI
 kill $(ps aux | grep [t]rackermain | awk '{print $2}')
 cd track.areteh.co
-rsync -avzLPh ./db/tracks.db ./tracks.db.sync
+rsync -avzLPhu --delete ./db/tracks.db ./tracks.db.sync
 ./kickstart
 exit
 EOI
@@ -77,7 +77,7 @@ EOI
 		if [ -f ./tracks.db ]; then
 			logprocess "Moving existing ./tracks.db -> ./tracks.db.gz"
 			if [ -f ./tracks.db.gz ]; then mv ./tracks.db.gz ./tracks.db.gz.bak; fi
-			if gzip -9 ./tracks.db; then rm ./tracks.db.gz.bak; fi
+			if gzip -9 -v ./tracks.db; then if [ -f ./tracks.db.gz.bak ]; then rm ./tracks.db.gz.bak; fi; fi
 		fi
 		# update tracks from API bolt.db on Freya to local
 		logprocess "Syncing remote tracks.db.sync --> local ./tracks.db"
@@ -134,8 +134,8 @@ cleanup() {
 	# Tar and gzip preexisting out.json and out.mbtiles files.
 	if [ -f ./out.json ] && [ -f ./out.mbtiles ]; then
 		if [ -f ./out.bak.tar.gz ]; then mv ./out.bak.tar.gz ./out.bak.tar.gz.bak; fi
-		gzip -9 ./out.json
-		gzip -9 ./out.mbtiles
+		gzip -v -9 ./out.json
+		gzip -v -9 ./out.mbtiles
 		tar -zcvf out.bak.tar.gz ./out.json.gz ./out.mbtiles.gz
 		rm out.json.gz out.mbtiles.gz
 	fi
