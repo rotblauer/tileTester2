@@ -110,13 +110,11 @@ dumpify() {
 		# you HAVE TO ensure that origin is available and secure
 		if [[ noupdatedeps -eq 0 ]]; then
 			logprocess "Updating and validating package dependencies from upstream..."
-			git --work-tree="$GOPATH/src/github.com/rotblauer/trackpoints" --git-dir="$GOPATH/src/github.com/rotblauer/trackpoints/.git" \
+			echo -n "github.com/rotblauer/trackpoints: " && git --work-tree="$GOPATH/src/github.com/rotblauer/trackpoints" --git-dir="$GOPATH/src/github.com/rotblauer/trackpoints/.git" \
 				branch --set-upstream-to=origin/master master
-			git branch --set-upstream-to=origin/master master
+			echo -n ".: " && git branch --set-upstream-to=origin/master master
 			go get -v -u github.com/rotblauer/tileTester2/...
 		fi
-
-		echo "> go build -o dumper dump.go ..."
 		logprocess "Building ./dumper"
 		go build -o dumper dump.go
 	fi
