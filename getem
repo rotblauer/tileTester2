@@ -127,7 +127,7 @@ cleanup() {
 
 	# Backup existing tracks.db to iCloud.
 	icloud="$HOME/Library/Mobile Documents/"'com~apple~CloudDocs/'
-	if [ -f ./tracks.db ] && [ -d "$icloud" ]; then rsync -avzPhL tracks.db "$icloud"; else echo "skipping icloud backup: not exist: ./tracks.db || $icloud"; fi
+	if [ -f ./tracks.db ] && [ -d "$icloud" ]; then rsync -avzPhLu --delete tracks.db "$icloud"; else echo "skipping icloud backup: not exist: ./tracks.db || $icloud"; fi
 
 	# Tar and gzip preexisting out.json and out.mbtiles files.
 	if [ -f ./out.json ] && [ -f ./out.mbtiles ]; then
