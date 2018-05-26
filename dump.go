@@ -36,9 +36,7 @@ func initBoltDB(boltDb string) error {
 
 	var err error
 	db, err = bolt.Open(boltDb, 0666, nil)
-
 	// db, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
-	// db, err = bolt.Open(boltDb, 0666, &bolt.Options{PageSize: os.Getpagesize() * 2})
 	// &bolt.Options{}
 	// db.NoFreelistSync = true
 	// db.NoGrowSync = true
@@ -67,7 +65,6 @@ func initBoltDB(boltDb string) error {
 		})
 	}
 	return err
-	// return GetDB()
 }
 
 func dumpBolty(boltDb string, out string) error {
