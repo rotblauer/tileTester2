@@ -77,7 +77,7 @@ EOI
 		if [ -f ./tracks.db ]; then
 			logprocess "Moving existing ./tracks.db -> ./tracks.db.gz"
 			if [ -f ./tracks.db.gz ]; then mv ./tracks.db.gz ./tracks.db.gz.bak; fi
-			if gzip -9 -v ./tracks.db; then if [ -f ./tracks.db.gz.bak ]; then rm ./tracks.db.gz.bak; fi; fi
+			if gzip -9 -v ./tracks.db && [ -f ./tracks.db.gz.bak ]; then rm ./tracks.db.gz.bak; fi
 		fi
 		# update tracks from API bolt.db on Freya to local
 		logprocess "Syncing remote tracks.db.sync --> local ./tracks.db"
