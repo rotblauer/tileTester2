@@ -68,7 +68,7 @@ syncfrom() {
 		ssh freya <<\EOI
 kill $(ps aux | grep "[t]rackermain" | awk '{print $2}')
 cd track.areteh.co
-rsync -avzLPhu --delete ./db/tracks.db ./tracks.db.sync
+rsync -avzLPhu ./db/tracks.db ./tracks.db.sync
 ./kickstart
 exit
 EOI
