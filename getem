@@ -66,7 +66,7 @@ syncfrom() {
 		# also creates a defacto backup
 		logprocess "Creating static copy of tracks.db on Freya"
 		ssh freya <<\EOI
-kill $(ps aux | grep [t]rackermain | awk '{print $2}')
+kill $(ps aux | grep "[t]rackermain" | awk '{print $2}')
 cd track.areteh.co
 rsync -avzLPhu --delete ./db/tracks.db ./tracks.db.sync
 ./kickstart
