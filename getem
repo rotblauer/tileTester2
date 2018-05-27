@@ -120,14 +120,19 @@ dumpify() {
 	fi
 	logprocess "Running dumper"
 	trials=0
-	while ! ./dumper && [ $trials -lt 4 ]; do
-		trials=$((trials+1))
-		echo
-		echo ">>> Dump failed, updating sync tracks.db and rerunning trial $trials / 4"
-		echo
+	dumpok=1
+	while [ $dumpok -eq 1 -a $trials -lt 4 ]; do
+		if ./dumper; then dumpok=0; fi
 		# no delete option, update option
-		rsync -avzuLhP freya:~/track.areteh.co/db/tracks.db ./tracks.db
+		trials=$((trials + 1))
+		if [ $dumpok -eq 1 ]; then
+			echo
+			echo ">>> Dump failed, updating sync tracks.db and rerunning trial $trials / 4"
+			echo
+			rsync -avzuLhP freya:~/track.areteh.co/db/tracks.db ./tracks.db
+		fi
 	done
+	if [ $dumpok -eq 1 ]; then echo "Fuck" && exit 1; fi
 }
 
 cleanup() {
