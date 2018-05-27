@@ -119,7 +119,15 @@ dumpify() {
 		go build -o dumper dump.go
 	fi
 	logprocess "Running dumper"
-	./dumper
+	trials=0
+	while ! ./dumper && [ $trials -lt 4 ]; do
+		trials=$((trials+1))
+		echo
+		echo ">>> Dump failed, updating sync tracks.db and rerunning trial $trials / 4"
+		echo
+		# no delete option, update option
+		rsync -avzuLhP freya:~/track.areteh.co/db/tracks.db ./tracks.db
+	done
 }
 
 cleanup() {
@@ -160,7 +168,7 @@ if [ "$jumpto" != "" ]; then
 	syncfrom) syncfrom && exit 0 ;;
 	cleanup) cleanup && exit 0 ;;
 	dump) dumpify && exit 0 ;;
-	*) echo "unknown optarg:$jumpto" && exit 1;;
+	*) echo "unknown optarg:$jumpto" && exit 1 ;;
 	esac
 fi
 
