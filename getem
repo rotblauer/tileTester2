@@ -68,7 +68,9 @@ syncfrom() {
 		ssh freya <<\EOI
 kill $(ps aux | grep "[t]rackermain" | awk '{print $2}')
 cd track.areteh.co
+echo "LOCK" > ./LOCK
 rsync -avzLPhu ./db/tracks.db ./tracks.db.sync
+rm -f ./LOCK
 ./kickstart
 exit
 EOI
@@ -119,20 +121,21 @@ dumpify() {
 		go build -o dumper dump.go
 	fi
 	logprocess "Running dumper"
-	trials=0
-	dumpok=1
-	while [ $dumpok -eq 1 -a $trials -lt 4 ]; do
-		if ./dumper; then dumpok=0; fi
-		# no delete option, update option
-		trials=$((trials + 1))
-		if [ $dumpok -eq 1 ]; then
-			echo
-			echo ">>> Dump failed, updating sync tracks.db and rerunning trial $trials / 4"
-			echo
-			rsync -avzuLhP freya:~/track.areteh.co/db/tracks.db ./tracks.db
-		fi
-	done
-	if [ $dumpok -eq 1 ]; then echo "Fuck" && exit 1; fi
+	./dumper
+	# trials=0
+	# dumpok=1
+	# while [ $dumpok -eq 1 -a $trials -lt 4 ]; do
+	# 	if ./dumper; then dumpok=0; fi
+	# 	# no delete option, update option
+	# 	trials=$((trials + 1))
+	# 	if [ $dumpok -eq 1 ]; then
+	# 		echo
+	# 		echo ">>> Dump failed, updating sync tracks.db and rerunning trial $trials / 4"
+	# 		echo
+	# 		rsync -avzuLhP freya:~/track.areteh.co/db/tracks.db ./tracks.db
+	# 	fi
+	# done
+	# if [ $dumpok -eq 1 ]; then echo "Fuck" && exit 1; fi
 }
 
 cleanup() {
