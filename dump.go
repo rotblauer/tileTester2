@@ -19,8 +19,9 @@ import (
 
 	"bufio"
 	"compress/gzip"
-	"github.com/cheggaaa/pb"
 	"strconv"
+
+	"github.com/cheggaaa/pb"
 )
 
 var (
