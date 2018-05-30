@@ -122,20 +122,6 @@ dumpify() {
 	fi
 	logprocess "Running dumper"
 	./dumper
-	# trials=0
-	# dumpok=1
-	# while [ $dumpok -eq 1 -a $trials -lt 4 ]; do
-	# 	if ./dumper; then dumpok=0; fi
-	# 	# no delete option, update option
-	# 	trials=$((trials + 1))
-	# 	if [ $dumpok -eq 1 ]; then
-	# 		echo
-	# 		echo ">>> Dump failed, updating sync tracks.db and rerunning trial $trials / 4"
-	# 		echo
-	# 		rsync -avzuLhP freya:~/track.areteh.co/db/tracks.db ./tracks.db
-	# 	fi
-	# done
-	# if [ $dumpok -eq 1 ]; then echo "Fuck" && exit 1; fi
 }
 
 cleanup() {
@@ -185,5 +171,3 @@ cleanup
 dumpify
 upload
 
-# FIXME: maybe
-# ./getem: line 173: unexpected EOF while looking for matching `"'
