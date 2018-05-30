@@ -97,6 +97,25 @@ func CloseGZ(f F) {
 	f.f.Close()
 }
 
+func byteToFeature(val []byte) *geojson.Feature {
+	var trackPointCurrent trackPoint.TrackPoint
+	if e := json.Unmarshal(val, &trackPointCurrent); e != nil {
+		log.Fatalln(e)
+	}
+
+	// convert to a feature
+	p := geojson.NewPoint(geojson.Coordinate{geojson.Coord(trackPointCurrent.Lng), geojson.Coord(trackPointCurrent.Lat)})
+
+	//currently need speed, name,time
+	trimmedProps := make(map[string]interface{})
+	trimmedProps["Speed"] = trackPointCurrent.Speed
+	trimmedProps["Name"] = trackPointCurrent.Name
+	trimmedProps["Time"] = trackPointCurrent.Time
+	trimmedProps["Elevation"] = trackPointCurrent.Elevation
+	trimmedProps["Notes"] = trackPointCurrent.Notes
+	return geojson.NewFeature(p, trimmedProps, 1)
+}
+
 func dumpBolty(boltDb string, out string) error {
 
 	initBoltDB(boltDb)
@@ -107,53 +126,9 @@ func dumpBolty(boltDb string, out string) error {
 
 	}()
 
-	//TODO split feature collections ala trackpointer Big Papa Mama namer
-
-	fc := geojson.NewFeatureCollection([]*geojson.Feature{})
-
-	//tippy process
-	//Mapping extremely dense point data with vector tiles
-	//https://www.mapbox.com/blog/vector-density/
-	//-z19 -d11 -g3
-	//"--no-tile-size-limit"
-	//-as or --drop-densest-as-needed: If a tile is too large, try to reduce it to under 500K by increasing the minimum spacing between features. The discovered spacing applies to the entire zoom level.
-	//-ag or --calculate-feature-density: Add a new attribute, tippecanoe_feature_density, to each feature, to record how densely features are spaced in that area of the tile. You can use this attribute in the style to produce a glowing effect where points are densely packed. It can range from 0 in the sparsest areas to 255 in the densest.
-	//-pk or --no-tile-size-limit: Don't limit tiles to 500K bytes
-	//-pf or --no-feature-limit: Don't limit tiles to 200,000 features
-	//-pd or --force-feature-limit: Dynamically drop some fraction of features from large tiles to keep them under the 500K size limit. It will probably look ugly at the tile boundaries. (This is like -ad but applies to each tile individually, not to the entire zoom level.) You probably don't want to use this.
-	//-r rate or --drop-rate=rate: Rate at which dots are dropped at zoom levels below basezoom (default 2.5). If you use -rg, it will guess a drop rate that will keep at most 50,000 features in the densest tile. You can also specify a marker-width with -rgwidth to allow fewer features in the densest tile to compensate for the larger marker, or -rfnumber to allow at most number features in the densest tile.
-	//-z zoom or --maximum-zoom=zoom: Don't copy tiles from higher zoom levels than the specified zoom
-	//-g gamma or --gamma=_gamma_: Rate at which especially dense dots are dropped (default 0, for no effect). A gamma of 2 reduces the number of dots less than a pixel apart to the square root of their original number.
-	//-n name or --name=name: Set the tileset name
-	//-ao or --reorder: Reorder features to put ones with the same properties in sequence, to try to get them to coalesce. You probably want to use this if you use --coalesce.
-	//-aC or --cluster-densest-as-needed: If a tile is too large, try to reduce its size by increasing the minimum spacing between features, and leaving one placeholder feature from each group. The remaining feature will be given a "cluster": true attribute to indicate that it represents a cluster, a "point_count" attribute to indicate the number of features that were clustered into it, and a "sqrt_point_count" attribute to indicate the relative width of a feature to represent the cluster. If
-	//- the features being clustered are points, the representative feature will be located at the average of the original points' locations; otherwise, one of the original features will be left as the representative
-	//-M bytes or --maximum-tile-bytes=bytes: Use the specified number of bytes as the maximum compressed tile size instead of 500K.
-	//-O features or --maximum-tile-features=features: Use the specified number of features as the maximum in a tile instead of 200,000.
-	//
-	//WARNINGS:
-	//Highest supported zoom with detail 14 is 18
-	tippCmd := "/usr/local/bin/tippecanoe"
-	tippargs := []string{
-		"-ag",
-		"-M", "1000000",
-		"-O", "200000",
-		"--reorder",
-		"--cluster-densest-as-needed",
-		"-g", "0.1",
-		"--full-detail", "14",
-		"--minimum-detail", "12",
-		"-rg",
-		"-rf100000",
-		"--minimum-zoom", "3",
-		"--maximum-zoom", "20",
-		"-n", "catTrack",
-		"-o", out + ".mbtiles",
-	}
+	tippCmd, tippargs := getTippyProcess(out)
 	fmt.Println(">", tippCmd, tippargs)
 	tippmycanoe := exec.Command(tippCmd, tippargs...)
-	// tippmycanoe := exec.Command("tippecanoe", "-ag", "-pk", "-pf", "--drop-rate", "0", "--maximum-zoom", "50", "-g", "0.25", "-n", "catTrack", "-o", out+".mbtiles")
-	// tippmycanoe := exec.Command("tippecanoe", "-ag", "--full-detail", "20", "--low-detail", "14", "--minimum-detail", "8", "--maximum-tile-bytes", "1000000", "--maximum-zoom", "22", "-g", "1", "-n", "catTrack", "-o", out+".mbtiles")
 
 	tippmycanoeIn, _ := tippmycanoe.StdinPipe()
 	tippmycanoe.Stdout = os.Stdout
@@ -164,6 +139,8 @@ func dumpBolty(boltDb string, out string) error {
 		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
 		os.Exit(1)
 	}
+
+	fc := geojson.NewFeatureCollection([]*geojson.Feature{})
 
 	err = getDB().View(func(tx *bolt.Tx) error {
 		var err error
@@ -178,21 +155,7 @@ func dumpBolty(boltDb string, out string) error {
 		count := 0
 
 		b.ForEach(func(trackPointKey, trackPointVal []byte) error {
-
-			var trackPointCurrent trackPoint.TrackPoint
-			json.Unmarshal(trackPointVal, &trackPointCurrent)
-
-			// convert to a feature
-			p := geojson.NewPoint(geojson.Coordinate{geojson.Coord(trackPointCurrent.Lng), geojson.Coord(trackPointCurrent.Lat)})
-			//currently need speed, name,time
-			trimmedProps := make(map[string]interface{})
-			trimmedProps["Speed"] = trackPointCurrent.Speed
-			trimmedProps["Name"] = trackPointCurrent.Name
-			trimmedProps["Time"] = trackPointCurrent.Time
-			trimmedProps["Elevation"] = trackPointCurrent.Elevation
-			trimmedProps["Notes"] = trackPointCurrent.Notes
-			f1 := geojson.NewFeature(p, trimmedProps, 1)
-
+			f1 := byteToFeature(trackPointVal)
 			fc.AddFeatures(f1)
 			bar.Increment()
 			count++
@@ -202,6 +165,7 @@ func dumpBolty(boltDb string, out string) error {
 					log.Println(count, "= count, err marshalling json geo data:", err)
 					// continue
 				} else {
+
 					if _, e := tippmycanoeIn.Write(data); e != nil {
 						log.Println("err write tippe in data:", e)
 					} else {
@@ -259,4 +223,53 @@ func main() {
 
 	undump.MbtilesToBolt(out+".mbtiles", boldDBOut)
 
+}
+
+func getTippyProcess(out string) (tippCmd string, tippargs []string) {
+	//tippy process
+	//Mapping extremely dense point data with vector tiles
+	//https://www.mapbox.com/blog/vector-density/
+	//-z19 -d11 -g3
+	//"--no-tile-size-limit"
+	//-as or --drop-densest-as-needed: If a tile is too large, try to reduce it to under 500K by increasing the minimum spacing between features. The discovered spacing applies to the entire zoom level.
+	//-ag or --calculate-feature-density: Add a new attribute, tippecanoe_feature_density, to each feature, to record how densely features are spaced in that area of the tile. You can use this attribute in the style to produce a glowing effect where points are densely packed. It can range from 0 in the sparsest areas to 255 in the densest.
+	//-pk or --no-tile-size-limit: Don't limit tiles to 500K bytes
+	//-pf or --no-feature-limit: Don't limit tiles to 200,000 features
+	//-pd or --force-feature-limit: Dynamically drop some fraction of features from large tiles to keep them under the 500K size limit. It will probably look ugly at the tile boundaries. (This is like -ad but applies to each tile individually, not to the entire zoom level.) You probably don't want to use this.
+	//-r rate or --drop-rate=rate: Rate at which dots are dropped at zoom levels below basezoom (default 2.5). If you use -rg, it will guess a drop rate that will keep at most 50,000 features in the densest tile. You can also specify a marker-width with -rgwidth to allow fewer features in the densest tile to compensate for the larger marker, or -rfnumber to allow at most number features in the densest tile.
+	//-z zoom or --maximum-zoom=zoom: Don't copy tiles from higher zoom levels than the specified zoom
+	//-g gamma or --gamma=_gamma_: Rate at which especially dense dots are dropped (default 0, for no effect). A gamma of 2 reduces the number of dots less than a pixel apart to the square root of their original number.
+	//-n name or --name=name: Set the tileset name
+	//-ao or --reorder: Reorder features to put ones with the same properties in sequence, to try to get them to coalesce. You probably want to use this if you use --coalesce.
+	//-aC or --cluster-densest-as-needed: If a tile is too large, try to reduce its size by increasing the minimum spacing between features, and leaving one placeholder feature from each group. The remaining feature will be given a "cluster": true attribute to indicate that it represents a cluster, a "point_count" attribute to indicate the number of features that were clustered into it, and a "sqrt_point_count" attribute to indicate the relative width of a feature to represent the cluster. If
+	//- the features being clustered are points, the representative feature will be located at the average of the original points' locations; otherwise, one of the original features will be left as the representative
+	//-M bytes or --maximum-tile-bytes=bytes: Use the specified number of bytes as the maximum compressed tile size instead of 500K.
+	//-O features or --maximum-tile-features=features: Use the specified number of features as the maximum in a tile instead of 200,000.
+	//-f or --force: Delete the mbtiles file if it already exists instead of giving an error
+	//
+	//WARNINGS:
+	//Highest supported zoom with detail 14 is 18
+	tippCmd = "/usr/local/bin/tippecanoe"
+	tippargs = []string{
+		"-ag",
+		"-M", "1000000",
+		"-O", "200000",
+		"--reorder",
+		"--cluster-densest-as-needed",
+		"-g", "0.1",
+		"--full-detail", "14",
+		"--minimum-detail", "12",
+		"-rg",
+		"-rf100000",
+		"--minimum-zoom", "3",
+		"--maximum-zoom", "20",
+		"-n", "catTrack",
+		"-o", out + ".mbtiles",
+		"--force",
+	}
+	// Use alternate tippecanoe path if 'bash -c which tippecanoe' returns something without error and different than default
+	if b, e := exec.Command("bash -c", "which", "tippecanoe").Output(); e == nil && string(b) != tippCmd {
+		tippCmd = string(b)
+	}
+	return
 }
