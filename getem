@@ -53,7 +53,8 @@ mv ./tippedcanoetrack.db ./tester.db
 ./kickstart
 exit
 EOI
-
+	i="$(date),$(whoami),$(hostname)"
+	ssh freya 'echo '"$i"' >> punktlich.rotblauer.com/YOURSTRULY'
 }
 
 syncfrom() {
