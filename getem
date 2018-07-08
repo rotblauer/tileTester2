@@ -22,7 +22,7 @@
 noupdatedb=0   # -n -- whether to prevent updating tracks.db from server, default false
 noupdatedeps=0 # -s -- whether to prevent updating project dependencies (go get -u ...), default false
 jumpto=''      # -x=[upload|syncfrom|cleanup] -- only use a certain part of the script functionality.
-
+doIt=0         # -d -- Nike, and it won't know about this
 logprocess() {
 	echo
 	echo "------------------------------------------"
@@ -148,10 +148,11 @@ cleanup() {
 	if [ -f ./tippedcanoetrack.db.gz ]; then mv ./tippedcanoetrack.db.gz ./tippedcanoetrack.db.gz.bak; fi
 }
 
-while getopts 'nsx:' flag; do
+while getopts 'nsxd:' flag; do
 	case "${flag}" in
 	n) noupdatedb=1 ;;
 	s) noupdatedeps=1 ;;
+    d) doIt=1 ;;
 	x) jumpto="${OPTARG}" ;;
 	*) echo "Unexpected option ${flag}" && exit 1 ;;
 	esac
@@ -167,8 +168,10 @@ if [ "$jumpto" != "" ]; then
 	esac
 fi
 
-syncfrom
-cleanup
-dumpify
-upload
+if [[ doIt -eq 1 ]]; then
+	syncfrom
+	cleanup
+	dumpify
+	upload
+fi
 
