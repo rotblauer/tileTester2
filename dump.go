@@ -22,6 +22,7 @@ import (
 	"strconv"
 
 	"github.com/cheggaaa/pb"
+	"runtime/pprof"
 )
 
 var (
@@ -211,6 +212,9 @@ func main() {
 	flag.StringVar(&boltDb, "in", path.Join("./", "tracks.db"), "specify the input bolt db holding trackpoints")
 	flag.StringVar(&out, "out", "out", "base name of the output")
 	flag.StringVar(&boldDBOut, "boltout", "tippedcanoetrack.db", "output bold db holding tippecanoe-ified trackpoints, which is a vector tiled db for /z/x/y")
+
+	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+
 	flag.Parse()
 
 	fmt.Println("Dump: Migrating boltdb trackpoints -> geojson/+mbtiles, boltdb:", boltDb, "out:", out+".json/+.mbtiles")
@@ -220,6 +224,13 @@ func main() {
 	}
 
 	fmt.Println("Dump: Migrating .mbtiles file back into a bolt db: ", boldDBOut)
+
+	f, err := os.Create(*cpuprofile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
 
 	undump.MbtilesToBolt(out+".mbtiles", boldDBOut)
 
