@@ -17,7 +17,6 @@ import (
 	"github.com/kpawlik/geojson"
 	"github.com/rotblauer/tileTester2/undump"
 
-	"bufio"
 	"compress/gzip"
 	"runtime/pprof"
 )
@@ -72,7 +71,6 @@ func initBoltDB(boltDb string) error {
 type F struct {
 	f  *os.File
 	gf *gzip.Writer
-	fw *bufio.Writer
 	je *json.Encoder
 }
 
@@ -88,15 +86,14 @@ func CreateGZ(s string, compressLevel int) (f F) {
 		log.Printf("Error in Create gz \n")
 		panic(err)
 	}
-	fw := bufio.NewWriter(gf)
-	je := json.NewEncoder(fw)
-	f = F{fi, gf, fw, je}
+	je := json.NewEncoder(gf)
+	f = F{fi, gf, je}
 	return
 }
 
 func CloseGZ(f F) {
-	f.fw.Flush()
 	// Close the gzip first.
+	f.gf.Flush()
 	f.gf.Close()
 	f.f.Close()
 }
@@ -124,11 +121,11 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 
 	initBoltDB(boltDb)
 	// If the file doesn't exist, create it, or append to the file
-	f := CreateGZ(out+"0.json.gz", compressLevel)
+	f := CreateGZ(out+".json.gz", compressLevel)
 	count := 0
 
-	byteChan := make(chan []byte)
-	featureChan := make(chan *geojson.Feature)
+	byteChan := make(chan []byte, 100000)
+	featureChan := make(chan *geojson.Feature, 100000)
 	done := make(chan bool)
 
 	go func() {
@@ -159,8 +156,9 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 
 			c := b.Cursor()
 
-			for k, v := c.First(); k != nil; k, v = c.Next() {
-				byteChan <- v
+			// get all trackpoints
+			for k, tp := c.First(); k != nil; k, tp = c.Next() {
+				byteChan <- tp
 			}
 
 			return err
