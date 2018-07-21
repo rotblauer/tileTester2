@@ -160,15 +160,14 @@ func dumpBolty(boltDb string, out string, batchSize int) error {
 		count := 0
 
 		b.ForEach(func(trackPointKey, trackPointVal []byte) error {
-			if(count<batchSize*3){
 
 			f1 := byteToFeature(trackPointVal)
 			fc.AddFeatures(f1)
 
-				//bar.Increment()
+			//bar.Increment()
 			count++
 			if count%batchSize == 0 {
-				fmt.Println("count", count)
+				fmt.Println("Number of points scanned: ", count)
 
 				data, err := json.Marshal(fc)
 				if err != nil {
@@ -185,13 +184,6 @@ func dumpBolty(boltDb string, out string, batchSize int) error {
 						f = CreateGZ(out + strconv.Itoa(count) + ".json.gz")
 					}
 				}
-			}
-			}else{
-				count++
-				if count%batchSize == 0 {
-					fmt.Println("count", count)
-				}
-				//bar.Increment()
 			}
 			return nil
 		})
