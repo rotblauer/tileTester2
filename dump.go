@@ -22,6 +22,7 @@ import (
 	"strconv"
 
 	"github.com/cheggaaa/pb"
+	"runtime/pprof"
 )
 
 var (
@@ -116,7 +117,7 @@ func byteToFeature(val []byte) *geojson.Feature {
 	return geojson.NewFeature(p, trimmedProps, 1)
 }
 
-func dumpBolty(boltDb string, out string) error {
+func dumpBolty(boltDb string, out string, batchSize int) error {
 
 	initBoltDB(boltDb)
 	// If the file doesn't exist, create it, or append to the file
@@ -159,7 +160,7 @@ func dumpBolty(boltDb string, out string) error {
 			fc.AddFeatures(f1)
 			bar.Increment()
 			count++
-			if count%100000 == 0 {
+			if count%batchSize == 0 {
 				data, err := json.Marshal(fc)
 				if err != nil {
 					log.Println(count, "= count, err marshalling json geo data:", err)
@@ -207,14 +208,30 @@ func main() {
 	var boltDb string
 	var out string
 	var boldDBOut string
+	var cpuprofile string
+	var batchSize int
 
 	flag.StringVar(&boltDb, "in", path.Join("./", "tracks.db"), "specify the input bolt db holding trackpoints")
 	flag.StringVar(&out, "out", "out", "base name of the output")
 	flag.StringVar(&boldDBOut, "boltout", "tippedcanoetrack.db", "output bold db holding tippecanoe-ified trackpoints, which is a vector tiled db for /z/x/y")
+	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to file, leave blank for no profile")
+	flag.IntVar(&batchSize, "batchSize", 100000, "after this many points, dump a batch")
+
 	flag.Parse()
 
+	if cpuprofile != "" {
+
+		fmt.Println("CPU profile heading to ", cpuprofile)
+		f, err := os.Create(cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
 	fmt.Println("Dump: Migrating boltdb trackpoints -> geojson/+mbtiles, boltdb:", boltDb, "out:", out+".json/+.mbtiles")
-	e := dumpBolty(boltDb, out)
+	e := dumpBolty(boltDb, out, batchSize)
 	if e != nil {
 		fmt.Println("error dumping orignial bolty", e)
 	}
