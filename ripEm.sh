@@ -117,3 +117,7 @@ channels
 #      0.04s 0.0066% 97.92%    132.44s 21.91%  runtime.systemstack
 #      0.03s 0.005% 97.93%     20.95s  3.47%  compress/flate.(*Writer).Write
 
+
+10 mins bolt->json.gz
+10 mins json.gz->start tippy
+
