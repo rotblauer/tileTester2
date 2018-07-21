@@ -17,10 +17,7 @@ import (
 	"github.com/kpawlik/geojson"
 	"github.com/rotblauer/tileTester2/undump"
 
-	"bufio"
 	"compress/gzip"
-	"strconv"
-
 	"runtime/pprof"
 )
 
@@ -74,25 +71,29 @@ func initBoltDB(boltDb string) error {
 type F struct {
 	f  *os.File
 	gf *gzip.Writer
-	fw *bufio.Writer
+	je *json.Encoder
 }
 
-func CreateGZ(s string) (f F) {
+func CreateGZ(s string, compressLevel int) (f F) {
 
 	fi, err := os.OpenFile(s, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
-		log.Printf("Error in Create\n")
+		log.Printf("Error in Create file\n")
 		panic(err)
 	}
-	gf := gzip.NewWriter(fi)
-	fw := bufio.NewWriter(gf)
-	f = F{fi, gf, fw}
+	gf, err := gzip.NewWriterLevel(fi, compressLevel)
+	if err != nil {
+		log.Printf("Error in Create gz \n")
+		panic(err)
+	}
+	je := json.NewEncoder(gf)
+	f = F{fi, gf, je}
 	return
 }
 
 func CloseGZ(f F) {
-	f.fw.Flush()
 	// Close the gzip first.
+	f.gf.Flush()
 	f.gf.Close()
 	f.f.Close()
 }
@@ -116,21 +117,58 @@ func byteToFeature(val []byte) *geojson.Feature {
 	return geojson.NewFeature(p, trimmedProps, 1)
 }
 
-func dumpBolty(boltDb string, out string, batchSize int) error {
+func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) error {
 
 	initBoltDB(boltDb)
 	// If the file doesn't exist, create it, or append to the file
-	f := CreateGZ(out + "0.json.gz")
-	defer func() {
-		CloseGZ(f)
+	jsonGzTracks := out + ".json.gz"
+	f := CreateGZ(jsonGzTracks, compressLevel)
+	count := 0
 
+	featureChan := make(chan *geojson.Feature, 100000)
+	done := make(chan bool)
+
+	go func() {
+		for feature := range featureChan {
+			f.je.Encode(feature)
+			count++
+			if count%batchSize == 0 {
+				fmt.Println("Dumped ", count, " total tracked points.")
+			}
+		}
+		done <- true
 	}()
 
-	tippCmd, tippargs := getTippyProcess(out)
+	go func() {
+		err := getDB().View(func(tx *bolt.Tx) error {
+			var err error
+			b := tx.Bucket([]byte(trackKey))
+			if b == nil {
+				panic("no bucket under key=" + trackKey + " err=" + err.Error())
+			}
+
+			c := b.Cursor()
+
+			// get all trackpoints
+			for k, tp := c.First(); k != nil; k, tp = c.Next() {
+				featureChan <- byteToFeature(tp)
+			}
+			return err
+		})
+
+		if err != nil {
+			log.Println("what da dump", err)
+		}
+		close(featureChan)
+	}()
+
+	<-done
+
+	CloseGZ(f)
+
+	tippCmd, tippargs := getTippyProcess(out, jsonGzTracks)
 	fmt.Println(">", tippCmd, tippargs)
 	tippmycanoe := exec.Command(tippCmd, tippargs...)
-
-	tippmycanoeIn, _ := tippmycanoe.StdinPipe()
 	tippmycanoe.Stdout = os.Stdout
 	tippmycanoe.Stderr = os.Stderr
 
@@ -140,60 +178,9 @@ func dumpBolty(boltDb string, out string, batchSize int) error {
 		os.Exit(1)
 	}
 
-	fc := geojson.NewFeatureCollection([]*geojson.Feature{})
-
-	err = getDB().View(func(tx *bolt.Tx) error {
-		var err error
-		b := tx.Bucket([]byte(trackKey))
-		if b == nil {
-			panic("no bucket under key=" + trackKey + " err=" + err.Error())
-		}
-
-		count := 0
-
-		b.ForEach(func(trackPointKey, trackPointVal []byte) error {
-			f1 := byteToFeature(trackPointVal)
-			fc.AddFeatures(f1)
-			count++
-			if count%batchSize == 0 {
-				fmt.Println("Dumped ", count, " total tracked points.")
-				data, err := json.Marshal(fc)
-				if err != nil {
-					log.Println(count, "= count, err marshalling json geo data:", err)
-					// continue
-				} else {
-
-					if _, e := tippmycanoeIn.Write(data); e != nil {
-						log.Println("err write tippe in data:", e)
-					} else {
-						(f.fw).Write(data)
-						CloseGZ(f)
-						fc = geojson.NewFeatureCollection([]*geojson.Feature{})
-						f = CreateGZ(out + strconv.Itoa(count) + ".json.gz")
-					}
-				}
-			}
-			return nil
-		})
-		return err
-	})
-
-	if err != nil {
-		log.Println("what da dump", err)
-	}
-
-	if len(fc.Features) > 0 {
-		data, err := json.Marshal(fc)
-		if err != nil {
-			log.Println("finish, err marshalling json geo data:", err)
-		}
-		tippmycanoeIn.Write(data)
-		(f.fw).Write(data)
-		CloseGZ(f)
-	}
-	tippmycanoeIn.Close()
-
 	return tippmycanoe.Wait()
+
+	return nil
 }
 
 func main() {
@@ -205,12 +192,14 @@ func main() {
 	var boldDBOut string
 	var cpuprofile string
 	var batchSize int
+	var compressLevel int
 
 	flag.StringVar(&boltDb, "in", path.Join("./", "tracks.db"), "specify the input bolt db holding trackpoints")
 	flag.StringVar(&out, "out", "out", "base name of the output")
 	flag.StringVar(&boldDBOut, "boltout", "tippedcanoetrack.db", "output bold db holding tippecanoe-ified trackpoints, which is a vector tiled db for /z/x/y")
 	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to file, leave blank for no profile")
-	flag.IntVar(&batchSize, "batchSize", 100000, "after this many points, dump a batch")
+	flag.IntVar(&compressLevel, "compressLevel", gzip.DefaultCompression, "compression level for gzip")
+	flag.IntVar(&batchSize, "batchSize", 100000, "report dumping progress after this many trackpoints")
 
 	flag.Parse()
 
@@ -226,7 +215,7 @@ func main() {
 	}
 
 	fmt.Println("Dump: Migrating boltdb trackpoints -> geojson/+mbtiles, boltdb:", boltDb, "out:", out+".json/+.mbtiles")
-	e := dumpBolty(boltDb, out, batchSize)
+	e := dumpBolty(boltDb, out, compressLevel, batchSize)
 	if e != nil {
 		fmt.Println("error dumping orignial bolty", e)
 	}
@@ -237,7 +226,7 @@ func main() {
 
 }
 
-func getTippyProcess(out string) (tippCmd string, tippargs []string) {
+func getTippyProcess(out string, in string) (tippCmd string, tippargs []string) {
 	//tippy process
 	//Mapping extremely dense point data with vector tiles
 	//https://www.mapbox.com/blog/vector-density/
@@ -277,7 +266,7 @@ func getTippyProcess(out string) (tippCmd string, tippargs []string) {
 		"--maximum-zoom", "20",
 		"-n", "catTrack",
 		"-o", out + ".mbtiles",
-		"--force",
+		"--force", "-P", in,
 	}
 	// Use alternate tippecanoe path if 'bash -c which tippecanoe' returns something without error and different than default
 	if b, e := exec.Command("bash -c", "which", "tippecanoe").Output(); e == nil && string(b) != tippCmd {
