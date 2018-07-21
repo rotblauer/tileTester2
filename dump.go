@@ -198,7 +198,7 @@ func main() {
 	flag.StringVar(&out, "out", "out", "base name of the output")
 	flag.StringVar(&boldDBOut, "boltout", "tippedcanoetrack.db", "output bold db holding tippecanoe-ified trackpoints, which is a vector tiled db for /z/x/y")
 	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to file, leave blank for no profile")
-	flag.IntVar(&compressLevel, "compressLevel", 2, "compression level for gzip")
+	flag.IntVar(&compressLevel, "compressLevel", gzip.DefaultCompression, "compression level for gzip")
 	flag.IntVar(&batchSize, "batchSize", 100000, "report dumping progress after this many trackpoints")
 
 	flag.Parse()
