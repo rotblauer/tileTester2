@@ -121,19 +121,12 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 
 	initBoltDB(boltDb)
 	// If the file doesn't exist, create it, or append to the file
-	f := CreateGZ(out+".json.gz", compressLevel)
+	jsonGzTracks := out + ".json.gz"
+	f := CreateGZ(jsonGzTracks, compressLevel)
 	count := 0
 
-	byteChan := make(chan []byte, 100000)
 	featureChan := make(chan *geojson.Feature, 100000)
 	done := make(chan bool)
-
-	go func() {
-		for byteFeature := range byteChan {
-			featureChan <- byteToFeature(byteFeature)
-		}
-		close(featureChan)
-	}()
 
 	go func() {
 		for feature := range featureChan {
@@ -158,7 +151,7 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 
 			// get all trackpoints
 			for k, tp := c.First(); k != nil; k, tp = c.Next() {
-				byteChan <- tp
+				featureChan <- byteToFeature(tp)
 			}
 
 			return err
@@ -167,7 +160,7 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 		if err != nil {
 			log.Println("what da dump", err)
 		}
-		close(byteChan)
+		close(featureChan)
 	}()
 
 	<-done
@@ -176,20 +169,23 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 
 	//
 	//
-	//tippCmd, tippargs := getTippyProcess(out)
-	//fmt.Println(">", tippCmd, tippargs)
-	//tippmycanoe := exec.Command(tippCmd, tippargs...)
+	tippCmd, tippargs := getTippyProcess(out, jsonGzTracks)
+	fmt.Println(">", tippCmd, tippargs)
+	tippmycanoe := exec.Command(tippCmd, tippargs...)
 	//
 	//tippmycanoeIn, _ := tippmycanoe.StdinPipe()
-	//tippmycanoe.Stdout = os.Stdout
-	//tippmycanoe.Stderr = os.Stderr
+	tippmycanoe.Stdout = os.Stdout
+	tippmycanoe.Stderr = os.Stderr
 	//
-	//err := tippmycanoe.Start()
-	//if err != nil {
-	//	fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
-	//	os.Exit(1)
-	//}
-	//
+	err := tippmycanoe.Start()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
+		os.Exit(1)
+	}
+
+	return tippmycanoe.Wait()
+
+	return nil
 	//fc := geojson.NewFeatureCollection([]*geojson.Feature{})
 	//
 	//if len(fc.Features) > 0 {
@@ -203,9 +199,6 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 	//}
 	//tippmycanoeIn.Close()
 	//
-	//return tippmycanoe.Wait()
-
-	return nil
 }
 
 func main() {
@@ -251,7 +244,7 @@ func main() {
 
 }
 
-func getTippyProcess(out string) (tippCmd string, tippargs []string) {
+func getTippyProcess(out string, in string) (tippCmd string, tippargs []string) {
 	//tippy process
 	//Mapping extremely dense point data with vector tiles
 	//https://www.mapbox.com/blog/vector-density/
@@ -291,7 +284,7 @@ func getTippyProcess(out string) (tippCmd string, tippargs []string) {
 		"--maximum-zoom", "20",
 		"-n", "catTrack",
 		"-o", out + ".mbtiles",
-		"--force",
+		"--force", "-P", in,
 	}
 	// Use alternate tippecanoe path if 'bash -c which tippecanoe' returns something without error and different than default
 	if b, e := exec.Command("bash -c", "which", "tippecanoe").Output(); e == nil && string(b) != tippCmd {
