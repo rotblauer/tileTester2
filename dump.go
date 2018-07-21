@@ -18,6 +18,7 @@ import (
 	"github.com/rotblauer/tileTester2/undump"
 
 	"compress/gzip"
+	"github.com/rotblauer/tileTester2/note"
 	"runtime/pprof"
 )
 
@@ -104,6 +105,8 @@ func byteToFeature(val []byte) *geojson.Feature {
 		log.Fatalln(e)
 	}
 
+	var note note.Note
+
 	// convert to a feature
 	p := geojson.NewPoint(geojson.Coordinate{geojson.Coord(trackPointCurrent.Lng), geojson.Coord(trackPointCurrent.Lat)})
 
@@ -112,8 +115,17 @@ func byteToFeature(val []byte) *geojson.Feature {
 	trimmedProps["Speed"] = trackPointCurrent.Speed
 	trimmedProps["Name"] = trackPointCurrent.Name
 	trimmedProps["Time"] = trackPointCurrent.Time
+	trimmedProps["UnixTime"] = trackPointCurrent.Time.Unix()
 	trimmedProps["Elevation"] = trackPointCurrent.Elevation
-	trimmedProps["Notes"] = trackPointCurrent.Notes
+
+	e := json.Unmarshal([]byte(trackPointCurrent.Notes), &note)
+	if e != nil {
+		trimmedProps["Notes"] = note.CustomNote
+		trimmedProps["Pressure"] = note.Pressure
+		trimmedProps["Activity"] = note.Activity
+	} else {
+		trimmedProps["Notes"] = trackPointCurrent.Notes
+	}
 	return geojson.NewFeature(p, trimmedProps, 1)
 }
 
