@@ -9,10 +9,15 @@ rsync -avz --progress freya:~/track.areteh.co/tracks.db.sync ./tracks.db
 
 go run dump.go -batchSize 1000000 -cpuprofile cpu.prof
 
+
+go run dump.go -batchSize 1000000 
+
 go tool pprof cpu.prof 
 
 
 go tool pprof cpu.prof 
+
+
 
 
 # just dumps
@@ -78,4 +83,37 @@ channels
 #      0.09s 0.0077% 97.52%      6.26s  0.54%  runtime.gcDrain
 #      0.09s 0.0077% 97.53%    406.36s 34.97%  runtime.semasleep
 #      0.09s 0.0077% 97.54%    404.28s 34.79%  runtime.stopm
+
+1 chan
+
+# Main binary filename not available.
+# Type: cpu
+# Time: Jul 21, 2018 at 3:30pm (CDT)
+# Duration: 12.04mins, Total samples = 10.07mins (83.66%)
+# Entering interactive mode (type "help" for commands, "o" for options)
+# (pprof) top20
+# Showing nodes accounting for 591.95s, 97.93% of 604.47s total
+# Dropped 410 nodes (cum <= 3.02s)
+# Showing top 20 nodes out of 78
+#       flat  flat%   sum%        cum   cum%
+#    206.12s 34.10% 34.10%    206.12s 34.10%  github.com/coreos/bbolt.(*elemRef).isLeaf
+#    168.33s 27.85% 61.95%    168.33s 27.85%  runtime.mach_semaphore_wait
+#    130.86s 21.65% 83.60%    130.86s 21.65%  runtime.mach_semaphore_signal
+#     34.71s  5.74% 89.34%     34.71s  5.74%  runtime.usleep
+#     19.85s  3.28% 92.62%     19.85s  3.28%  syscall.Syscall
+#     12.58s  2.08% 94.70%     18.70s  3.09%  encoding/json.checkValid
+#      6.50s  1.08% 95.78%     10.60s  1.75%  encoding/json.(*encodeState).marshal
+#      6.04s     1% 96.78%      9.80s  1.62%  runtime.mallocgc
+#      3.83s  0.63% 97.41%      3.83s  0.63%  runtime.mach_semaphore_timedwait
+#      2.06s  0.34% 97.75%      3.10s  0.51%  runtime.scanobject
+#      0.37s 0.061% 97.81%      3.88s  0.64%  runtime.gcMarkDone
+#      0.24s  0.04% 97.85%     20.84s  3.45%  compress/flate.(*compressor).deflate
+#      0.10s 0.017% 97.87%    200.97s 33.25%  runtime.findrunnable
+#      0.07s 0.012% 97.88%     12.48s  2.06%  compress/flate.(*huffmanBitWriter).writeCode
+#      0.06s 0.0099% 97.89%      3.93s  0.65%  encoding/json.(*structEncoder).encode
+#      0.06s 0.0099% 97.90%     32.53s  5.38%  runtime.runqgrab
+#      0.05s 0.0083% 97.91%     19.23s  3.18%  compress/flate.(*huffmanBitWriter).writeTokens
+#      0.05s 0.0083% 97.92%      3.10s  0.51%  encoding/json.(*mapEncoder).encode
+#      0.04s 0.0066% 97.92%    132.44s 21.91%  runtime.systemstack
+#      0.03s 0.005% 97.93%     20.95s  3.47%  compress/flate.(*Writer).Write
 

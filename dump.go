@@ -153,7 +153,6 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 			for k, tp := c.First(); k != nil; k, tp = c.Next() {
 				featureChan <- byteToFeature(tp)
 			}
-
 			return err
 		})
 
@@ -167,16 +166,12 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 
 	CloseGZ(f)
 
-	//
-	//
 	tippCmd, tippargs := getTippyProcess(out, jsonGzTracks)
 	fmt.Println(">", tippCmd, tippargs)
 	tippmycanoe := exec.Command(tippCmd, tippargs...)
-	//
-	//tippmycanoeIn, _ := tippmycanoe.StdinPipe()
 	tippmycanoe.Stdout = os.Stdout
 	tippmycanoe.Stderr = os.Stderr
-	//
+
 	err := tippmycanoe.Start()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
@@ -186,19 +181,6 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 	return tippmycanoe.Wait()
 
 	return nil
-	//fc := geojson.NewFeatureCollection([]*geojson.Feature{})
-	//
-	//if len(fc.Features) > 0 {
-	//	data, err := json.Marshal(fc)
-	//	if err != nil {
-	//		log.Println("finish, err marshalling json geo data:", err)
-	//	}
-	//	tippmycanoeIn.Write(data)
-	//	(f.fw).Write(data)
-	//	CloseGZ(f)
-	//}
-	//tippmycanoeIn.Close()
-	//
 }
 
 func main() {
@@ -217,7 +199,7 @@ func main() {
 	flag.StringVar(&boldDBOut, "boltout", "tippedcanoetrack.db", "output bold db holding tippecanoe-ified trackpoints, which is a vector tiled db for /z/x/y")
 	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to file, leave blank for no profile")
 	flag.IntVar(&compressLevel, "compressLevel", 2, "compression level for gzip")
-	flag.IntVar(&batchSize, "batchSize", 100000, "after this many points, dump a batch")
+	flag.IntVar(&batchSize, "batchSize", 100000, "report dumping progress after this many trackpoints")
 
 	flag.Parse()
 
