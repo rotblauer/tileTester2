@@ -8,7 +8,7 @@ import (
 	"log"
 	"path"
 
-	bolt "github.com/coreos/bbolt"
+	"github.com/coreos/bbolt"
 	"github.com/rotblauer/trackpoints/trackPoint"
 
 	"os"
@@ -21,7 +21,6 @@ import (
 	"compress/gzip"
 	"strconv"
 
-	"github.com/cheggaaa/pb"
 	"runtime/pprof"
 )
 
@@ -150,17 +149,14 @@ func dumpBolty(boltDb string, out string, batchSize int) error {
 			panic("no bucket under key=" + trackKey + " err=" + err.Error())
 		}
 
-		stats := b.Stats()
-		fmt.Println("Tippeing ", stats.KeyN, " total tracked points.")
-		bar := pb.StartNew(stats.KeyN)
 		count := 0
 
 		b.ForEach(func(trackPointKey, trackPointVal []byte) error {
 			f1 := byteToFeature(trackPointVal)
 			fc.AddFeatures(f1)
-			bar.Increment()
 			count++
 			if count%batchSize == 0 {
+				fmt.Println("Dumped ", count, " total tracked points.")
 				data, err := json.Marshal(fc)
 				if err != nil {
 					log.Println(count, "= count, err marshalling json geo data:", err)
@@ -179,7 +175,6 @@ func dumpBolty(boltDb string, out string, batchSize int) error {
 			}
 			return nil
 		})
-		bar.Finish()
 		return err
 	})
 
