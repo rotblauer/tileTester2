@@ -142,7 +142,9 @@ func dumpBolty(boltDb string, out string, batchSize int) error {
 		os.Exit(1)
 	}
 	fmt.Println("start ")
-	fc := geojson.NewFeatureCollection([]*geojson.Feature{})
+
+	var idx =0
+	var fcTmps=make([]*geojson.Feature, batchSize)
 
 	err = getDB().View(func(tx *bolt.Tx) error {
 		var err error
@@ -161,14 +163,13 @@ func dumpBolty(boltDb string, out string, batchSize int) error {
 
 		b.ForEach(func(trackPointKey, trackPointVal []byte) error {
 
-			f1 := byteToFeature(trackPointVal)
-			fc.AddFeatures(f1)
-
+			fcTmps[idx]= byteToFeature(trackPointVal)
+			idx++
 			//bar.Increment()
 			count++
 			if count%batchSize == 0 {
-				fmt.Println("Number of points scanned: ", count)
-
+				fmt.Println("Number of points scanned: ", count, " idx ",idx)
+				fc := geojson.NewFeatureCollection(fcTmps)
 				data, err := json.Marshal(fc)
 				if err != nil {
 					log.Println(count, "= count, err marshalling json geo data:", err)
@@ -180,8 +181,8 @@ func dumpBolty(boltDb string, out string, batchSize int) error {
 					} else {
 						(f.fw).Write(data)
 						CloseGZ(f)
-						fc = geojson.NewFeatureCollection([]*geojson.Feature{})
 						f = CreateGZ(out + strconv.Itoa(count) + ".json.gz")
+						idx=0
 					}
 				}
 			}
@@ -195,8 +196,8 @@ func dumpBolty(boltDb string, out string, batchSize int) error {
 		log.Println("what da dump", err)
 	}
 
-	if len(fc.Features) > 0 {
-		data, err := json.Marshal(fc)
+	if idx > 0 {
+		data, err := json.Marshal(geojson.NewFeatureCollection(fcTmps[0:idx]))
 		if err != nil {
 			log.Println("finish, err marshalling json geo data:", err)
 		}
