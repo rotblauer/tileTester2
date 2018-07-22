@@ -105,7 +105,7 @@ func byteToFeature(val []byte) *geojson.Feature {
 		log.Fatalln(e)
 	}
 
-	var note note.Note
+	var currentNote note.Note
 
 	// convert to a feature
 	p := geojson.NewPoint(geojson.Coordinate{geojson.Coord(trackPointCurrent.Lng), geojson.Coord(trackPointCurrent.Lat)})
@@ -118,11 +118,11 @@ func byteToFeature(val []byte) *geojson.Feature {
 	trimmedProps["UnixTime"] = trackPointCurrent.Time.Unix()
 	trimmedProps["Elevation"] = trackPointCurrent.Elevation
 
-	e := json.Unmarshal([]byte(trackPointCurrent.Notes), &note)
+	e := json.Unmarshal([]byte(trackPointCurrent.Notes), &currentNote)
 	if e != nil {
-		trimmedProps["Notes"] = note.CustomNote
-		trimmedProps["Pressure"] = note.Pressure
-		trimmedProps["Activity"] = note.Activity
+		trimmedProps["Notes"] = currentNote.CustomNote
+		trimmedProps["Pressure"] = currentNote.Pressure
+		trimmedProps["Activity"] = currentNote.Activity
 	} else {
 		trimmedProps["Notes"] = trackPointCurrent.Notes
 	}
@@ -137,6 +137,8 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 	f := CreateGZ(jsonGzTracks, compressLevel)
 	count := 0
 
+	fmt.Print("\nDumping tracks")
+
 	featureChan := make(chan *geojson.Feature, 100000)
 	done := make(chan bool)
 
@@ -145,7 +147,7 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 			f.je.Encode(feature)
 			count++
 			if count%batchSize == 0 {
-				fmt.Println("Dumped ", count, " total tracked points.")
+				fmt.Print(".")
 			}
 		}
 		done <- true
