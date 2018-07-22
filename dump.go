@@ -165,6 +165,9 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 			for k, tp := c.First(); k != nil; k, tp = c.Next() {
 				featureChan <- byteToFeature(tp)
 			}
+			//for _, tp := c.First(); count < batchSize; _, tp = c.Next() {
+			//	featureChan <- byteToFeature(tp)
+			//}
 			return err
 		})
 
@@ -276,6 +279,7 @@ func getTippyProcess(out string, in string) (tippCmd string, tippargs []string) 
 		"-rf100000",
 		"--minimum-zoom", "3",
 		"--maximum-zoom", "20",
+		"-l", "catTrack",
 		"-n", "catTrack",
 		"-o", out + ".mbtiles",
 		"--force", "-P", in,
