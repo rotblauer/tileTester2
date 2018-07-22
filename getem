@@ -25,6 +25,7 @@ jumpto=''      # -x=[upload|syncfrom|cleanup] -- only use a certain part of the 
 logprocess() {
 	echo
 	echo "------------------------------------------"
+	date
 	echo ">>> $1"
 	echo
 }
