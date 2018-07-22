@@ -160,13 +160,14 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 			if b == nil {
 				panic("no bucket under key=" + trackKey + " err=" + err.Error())
 			}
-
 			c := b.Cursor()
 
 			// get all trackpoints
 			for k, tp := c.First(); k != nil; k, tp = c.Next() {
 				featureChan <- byteToFeature(tp)
 			}
+
+			//for speedier test test testing
 			//for _, tp := c.First(); count < batchSize; _, tp = c.Next() {
 			//	featureChan <- byteToFeature(tp)
 			//}
