@@ -658,9 +658,9 @@ function getAndMakeButtonsForLastKnownCats() {
                 // console.log("key", key, "val", val);
                 
                 // ignore the old ones
-                if (moment(val["time"]).add(1, 'd').isBefore(moment())) {
-                    return;
-                }
+                // if (moment(val["time"]).add(1, 'd').isBefore(moment())) {
+                //     return;
+                // }
 
                 var button = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + ", " + moment(val["time"]).fromNow() + "</button>" );
                 button.data("lat", val["lat"]+"");
