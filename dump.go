@@ -270,7 +270,6 @@ func getTippyProcess(out string, in string) (tippCmd string, tippargs []string) 
 		"-ag",
 		"-M", "1000000",
 		"-O", "200000",
-		"--reorder",
 		"--cluster-densest-as-needed",
 		"-g", "0.1",
 		"--full-detail", "14",
@@ -282,7 +281,7 @@ func getTippyProcess(out string, in string) (tippCmd string, tippargs []string) 
 		"-l", "catTrack",
 		"-n", "catTrack",
 		"-o", out + ".mbtiles",
-		"--force", "-P", in,
+		"--force", "-P", in, "--reorder",
 	}
 	// Use alternate tippecanoe path if 'bash -c which tippecanoe' returns something without error and different than default
 	if b, e := exec.Command("bash -c", "which", "tippecanoe").Output(); e == nil && string(b) != tippCmd {
