@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"path"
+	"path/filepath"
 
 	"github.com/coreos/bbolt"
 	"github.com/rotblauer/trackpoints/trackPoint"
@@ -240,7 +241,12 @@ func main() {
 
 	fmt.Println("Dump: Migrating .mbtiles file back into a bolt db: ", boldDBOut)
 
-	undump.MbtilesToBolt(out+".mbtiles", boldDBOut)
+	absoluteOut, err := filepath.Abs(out + ".mbtiles")
+	if err != nil {
+		fmt.Printf("err: %v", err)
+		return
+	}
+	undump.MbtilesToBolt(absoluteOut, boldDBOut)
 
 }
 
