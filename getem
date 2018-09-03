@@ -170,6 +170,7 @@ fi
 
 syncfrom
 cleanup
+set -e # exit if error
 dumpify
 upload
 
