@@ -43,7 +43,7 @@ upload() {
 
 	# And update locally too for development.
 	logprocess "Copying fresh tippedcanoetrack.db -> TileServer/tester.db..."
-	cp tippedcanoetrack.db ./TileServer/tester.db
+	if [[ -f tippedcanoetrack.db ]]; then cp tippedcanoetrack.db ./TileServer/tester.db; fi
 
 	logprocess "Replacing old db with new db on Freya and kickstarting tile server..."
 	ssh freya <<\EOI
