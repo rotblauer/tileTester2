@@ -16,23 +16,20 @@
     <script src="./node_modules/underscore/underscore.js"></script>
 
     <script src="https://d3js.org/d3-array.v1.min.js"></script>
-<script src="https://d3js.org/d3-collection.v1.min.js"></script>
-<script src="https://d3js.org/d3-color.v1.min.js"></script>
-<script src="https://d3js.org/d3-format.v1.min.js"></script>
-<script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
-<script src="https://d3js.org/d3-time.v1.min.js"></script>
-<script src="https://d3js.org/d3-time-format.v2.min.js"></script>
-<script src="https://d3js.org/d3-scale.v1.min.js"></script>
+    <script src="https://d3js.org/d3-collection.v1.min.js"></script>
+    <script src="https://d3js.org/d3-color.v1.min.js"></script>
+    <script src="https://d3js.org/d3-format.v1.min.js"></script>
+    <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+    <script src="https://d3js.org/d3-time.v1.min.js"></script>
+    <script src="https://d3js.org/d3-time-format.v2.min.js"></script>
+    <script src="https://d3js.org/d3-scale.v1.min.js"></script>
 
-<script
-  src="https://code.jquery.com/jquery-3.3.1.min.js"
-  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-  crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
-  
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
+
 
     <style>
- /*   #element::-webkit-scrollbar { 
+        /*   #element::-webkit-scrollbar { 
         display: none; 
     }
     ::-webkit-scrollbar { 
@@ -41,15 +38,18 @@
 
         /*html,
         body,*/
-        html, body {
-          height: 100%;
-          margin: 0;
+        html,
+        body {
+            height: 100%;
+            margin: 0;
         }
+
         .box {
-          display: flex;
-          flex-flow: column;
-          height: 100%;
+            display: flex;
+            flex-flow: column;
+            height: 100%;
         }
+
         .box #map {
             /*width: 100%;*/
             /*height: 100%; cuz pps on top*/
@@ -64,109 +64,117 @@
             border: none;
             cursor: pointer;
         }
-        #lastknowns {
-          /*z-index: 10000;*/
-          float: right; 
 
-  /*        top: 60px; 
+        #lastknowns {
+            /*z-index: 10000;*/
+            float: right;
+
+            /*        top: 60px; 
           right: 10px;*/
         }
-     #feature-count {
-       position: fixed;
-       right: 10px;
-       top: 170px;
-       z-index: 1000;
-       }
-       #url-location-holder {
-           /*z-index: 10000;*/
-           color: white;
-           background: dimgray;
-           /*font-weight: bold;*/
-           padding: 5px 5px 5px 10px;
-           font-family: helvetica;
-           font-size: small;
-           margin: 0;
 
-           /*text-align: center;*/
-       }
-       #metadata-holder {
-        background-color: rgb(196, 189, 193);
-        color: white;
-        padding: 5px 5px 5px 10px;
-        font-family: helvetica;
-        margin: 0;
-        font-size: small;
-       }
-       #metadata {
-        /*font-size: small;
+        #feature-count {
+            position: fixed;
+            right: 10px;
+            top: 170px;
+            z-index: 1000;
+        }
+
+        #url-location-holder {
+            /*z-index: 10000;*/
+            color: white;
+            background: dimgray;
+            /*font-weight: bold;*/
+            padding: 5px 5px 5px 10px;
+            font-family: helvetica;
+            font-size: small;
+            margin: 0;
+
+            /*text-align: center;*/
+        }
+
+        #metadata-holder {
+            background-color: rgb(196, 189, 193);
+            color: white;
+            padding: 5px 5px 5px 10px;
+            font-family: helvetica;
+            margin: 0;
+            font-size: small;
+        }
+
+        #metadata {
+            /*font-size: small;
         margin-top: 5px;
         float: left;*/
-        float: left;
-        /*margin-top: 3px;*/
-       }
-       #url-location {
-        cursor: pointer;
-          max-width: 50%;
-        overflow:hidden;
-       }
-       #layer-buttons {
-          z-index: 1000;
-          /*float: right;*/
-          position: absolute;
-          top: 5em;
-          right: 0px;
-          text-align: right;
-       }
-       #layer-buttons button {
-        margin: 5px;
-       }
-       #url-location-box {
+            float: left;
+            /*margin-top: 3px;*/
+        }
 
-       }
+        #url-location {
+            cursor: pointer;
+            max-width: 50%;
+            overflow: hidden;
+        }
+
+        #layer-buttons {
+            z-index: 1000;
+            /*float: right;*/
+            position: absolute;
+            top: 5em;
+            right: 0px;
+            text-align: right;
+        }
+
+        #layer-buttons button {
+            margin: 5px;
+        }
+
+        #url-location-box {}
     </style>
 </head>
 
 <body>
-  <div class="box">  
+    <div class="box">
 
-    <p id="url-location-holder">
-      <span id="url-location-box">
-        <small id="url-moved">◉ </small><small id="url-location"></small>    
-      </span>
-  
-      <select name="" id="goview" style="float:right;">
-        <option value="">Go to -</option>
-        <option value="world">World</option>
-        <option value="usa">USA</option>
-        <option value="stlouis">St. Louis</option>
-        <option value="iceland">Iceland</option>
-        <option value="hokkaido">Hokkaido</option>
-      </select>
-    </p>
-    <p id="metadata-holder">
-      
-      <span id="lastknowns-holder" >
-        <small id="metadata"></small>
-        <span id="lastknowns"><small>Last known locations:</small></span>
-      </span>
-    </p>
-    <div id="layer-buttons">
-      <button id="recent-layer" class="layer-button" >Draw: recent</button><br/>
-      <button id="speed-layer" class="layer-button" >Draw: speed</button><br/>
-      <button id="density-layer" class="layer-button" >Draw: density</button><br/>
-      <button id="trip-layer" 
-        class="layer-button"
-        disabled>Draw: trip</button> <br/>
-      <button id="tile-light" class="tile-button">Tile: light</button><br/>
-      <button id="tile-outdoors" class="tile-button">Tile: outdoors</button><br>
-      <button id="tile-sat" class="tile-button">Tile: satellite</button>
+        <p id="url-location-holder">
+            <span id="url-location-box">
+                <small id="url-moved">◉ </small><small id="url-location"></small>
+            </span>
+
+            <span style="float: right;">
+                <a href="http://www.catstats.rotblauer.com/" style="" target="_">CatStats</a>
+                <select name="" id="goview" style="">
+                    <option value="">Go to -</option>
+                    <option value="world">World</option>
+                    <option value="usa">USA</option>
+                    <option value="stlouis">St. Louis</option>
+                    <option value="iceland">Iceland</option>
+                    <option value="hokkaido">Hokkaido</option>
+                </select>
+            </span>
+        </p>
+        <p id="metadata-holder">
+
+            <span id="lastknowns-holder">
+                <small id="metadata"></small>
+                <span id="lastknowns"><small>Last known locations:</small></span>
+            </span>
+        </p>
+        <div id="layer-buttons">
+            <button id="recent-layer" class="layer-button">Draw: recent</button><br />
+            <button id="speed-layer" class="layer-button">Draw: speed</button><br />
+            <button id="density-layer" class="layer-button">Draw: density</button><br />
+            <button id="trip-layer" class="layer-button" disabled>Draw: trip</button> <br />
+            <button id="tile-light" class="tile-button">Tile: light</button><br />
+            <button id="tile-outdoors" class="tile-button">Tile: outdoors</button><br>
+            <button id="tile-sat" class="tile-button">Tile: satellite</button>
+        </div>
+
+        <div id="map"></div>
+
+        <script src="./app.js">
+        </script>
     </div>
-
-    <div id="map"></div>
-
-    <script src="./app.js">
-    </script>
-  </div>
 </body>
 
 </html>
