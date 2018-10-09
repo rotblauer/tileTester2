@@ -644,7 +644,7 @@ function getAndMakeButtonsForLastKnownCats() {
 
             $("#lastknowns").html("<small>Last known locations:</small>");
 
-            // in case any existing already, ~make em small~ remove em
+            // in case any existing already, remove em
             for (var i = 0; i < onMapMarkers.length; i++) {
                 var cat = onMapMarkers[i];
                 // cat.setIcon(catIconSmall);
@@ -656,11 +656,10 @@ function getAndMakeButtonsForLastKnownCats() {
             // console.log(data);
             $.each( data, function( key, val ) {
                 // console.log("key", key, "val", val);
-                
                 // ignore the old ones
-                // if (moment(val["time"]).add(1, 'd').isBefore(moment())) {
-                //     return;
-                // }
+                if (moment(val["time"]).add(1, 'weeks').isBefore(moment())) {
+                    return;
+                }
 
                 var button = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + ", " + moment(val["time"]).fromNow() + "</button>" );
                 button.data("lat", val["lat"]+"");
