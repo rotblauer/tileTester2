@@ -17,11 +17,11 @@ var colors = {
     "Kayleigh's iPhone": "rgb(200,200,0)",
 
     // matt
-    "Twenty7": "rgb(87,147,166)",
+    "Twenty7": "rgb(20, 83, 94)",
 
     // chris
-    "iPhone": "rgb(103,184,68)",
-    "Chishiki": "rgb(103,184,68)",
+    "iPhone": "rgb(27,142,29)",
+    "Chishiki": "rgb(27,142,29)"
 };
 
 var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
