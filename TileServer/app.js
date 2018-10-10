@@ -1,10 +1,10 @@
 // color defaults
-var color_ia="rgb(255,0,0)"; //"rgb(254,65,26)"; // "rgb(235,41,0)";
-var color_jl="rgb(0,0,255)";// "rgb(0,162,235)";
-var color_jl_meta="rgb(70, 97, 152)";
-var color_ia_meta="#c42c21";
-var jl_names=["RyePhone", "Rye8", "jl"];
-var ia_names=["Big Papa", "Bigger Papa"];
+var color_ia = "rgb(255,0,0)"; //"rgb(254,65,26)"; // "rgb(235,41,0)";
+var color_jl = "rgb(0,0,255)"; // "rgb(0,162,235)";
+var color_jl_meta = "rgb(70, 97, 152)";
+var color_ia_meta = "#c42c21";
+var jl_names = ["RyePhone", "Rye8", "jl"];
+var ia_names = ["Big Papa", "Bigger Papa"];
 var colors = {
     "Big Papa": color_ia,
     "Bigger Papa": color_ia,
@@ -31,6 +31,7 @@ var metadataURL = 'http://track.areteh.co:3001/metadata';
 var defaultCenter = [38.6270, -90.1994];
 var defaultZoom = 8;
 var didLogOnce = false;
+
 function getBrowsePosition() {
     var got = localStorage.getItem("browsePosition");
     // console.log("got browse local", got);
@@ -53,7 +54,7 @@ var pbfLayer;
 var drawnFeatures = [];
 var map;
 var current_tile_layer;
-var mb_tile_outdoors_url = "https://api.mapbox.com/styles/v1/rotblauer/cjgejdj91001c2snpjtgmt7gj/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";                            
+var mb_tile_outdoors_url = "https://api.mapbox.com/styles/v1/rotblauer/cjgejdj91001c2snpjtgmt7gj/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 var mb_tile_light1_url = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 var mb_tile_sat_url = "https://api.mapbox.com/styles/v1/rotblauer/cjgel0gt300072rmc2s34f2ky/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 var mb_tile_light1 = L.tileLayer(mb_tile_light1_url, {
@@ -65,30 +66,33 @@ var mb_tile_outdoors = L.tileLayer(mb_tile_outdoors_url, {
 var mb_tile_sat = L.tileLayer(mb_tile_sat_url, {
     maxZoom: 19
 })
+
 function getCurrentTileLayerName() {
     if (current_tile_layer !== null) {
         if (current_tile_layer === mb_tile_light1) {
             return "tile-light";
         } else if (current_tile_layer === mb_tile_outdoors) {
             return "tile-outdoors";
-        }  else if (current_tile_layer === mb_tile_sat) {
+        } else if (current_tile_layer === mb_tile_sat) {
             return "tile-sat";
         }
     }
     return ""
 }
+
 function buildViewUrl() {
     var latlng = map.getCenter();
     var lat = latlng.lat;
     var lng = latlng.lng;
     var z = map.getZoom();
-    var text = "http://punktlich.rotblauer.com?z=" + z 
-        + "&y=" + lng 
-        + "&x=" + lat 
-        + "&l=" + drawnLayer 
-        + "&t=" + getCurrentTileLayerName();
+    var text = "http://punktlich.rotblauer.com?z=" + z +
+        "&y=" + lng +
+        "&x=" + lat +
+        "&l=" + drawnLayer +
+        "&t=" + getCurrentTileLayerName();
     return text;
 }
+
 function putViewToUrl() {
     var t = buildViewUrl();
     setBrowsePosition(t);
@@ -107,7 +111,7 @@ map.on("moveend", function() {
 });
 map.on("load", function() {
     putViewToUrl();
-    $("#url-moved").css("color", "white"); 
+    $("#url-moved").css("color", "white");
 });
 // map.on("load", putViewToUrl);
 // Drawing Helpers
@@ -137,19 +141,22 @@ function radiusFromSpeed(speed, zoom) {
     return x;
 }
 
-function onEachFeature(feature) {
-}
+function onEachFeature(feature) {}
 
 
 function setMapTileLayer(tile_layer) {
-    if (pbfLayer !== null && typeof pbfLayer !== "undefined") {map.removeLayer(pbfLayer);}
+    if (pbfLayer !== null && typeof pbfLayer !== "undefined") {
+        map.removeLayer(pbfLayer);
+    }
     if (current_tile_layer !== null && typeof current_tile_layer !== "undefined") {
         console.log("removing current tile layer");
         map.removeLayer(current_tile_layer);
     }
     current_tile_layer = tile_layer;
-    map.addLayer(current_tile_layer);  
-    if (pbfLayer !== null && typeof pbfLayer !== "undefined") {map.addLayer(pbfLayer);}
+    map.addLayer(current_tile_layer);
+    if (pbfLayer !== null && typeof pbfLayer !== "undefined") {
+        map.addLayer(pbfLayer);
+    }
 }
 
 function delegateTileLayer(name) {
@@ -164,8 +171,8 @@ function delegateTileLayer(name) {
 
     $('.tile-button').css("border", "none");
     $('.tile-button').css("border-radius", "0 0 0 0");
-    $('button#'+name).css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
-    $('button#'+name).css("border-radius", "4px 0px 0px 4px");
+    $('button#' + name).css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
+    $('button#' + name).css("border-radius", "4px 0px 0px 4px");
 }
 
 $(".tile-button").on("click", function(e) {
@@ -220,18 +227,18 @@ var speedTileOptions = {
 // sqrt_point_count: 1.73
 // tippecanoe_feature_density: 8
 // 
-function densityColor(density){
-    var r = Math.floor(density*2),
-        g = Math.floor(255-density),
+function densityColor(density) {
+    var r = Math.floor(density * 2),
+        g = Math.floor(255 - density),
         b = 0;
-    return  "rgb(" + r + "," + g + "," + b + ")";
+    return "rgb(" + r + "," + g + "," + b + ")";
 }
 // https://stackoverflow.com/questions/340209/generate-colors-between-red-and-green-for-a-power-meter/340214#340214
 function percentToRGB(percent) {
     if (percent >= 100) {
         percent = 99
     }
-    
+
     var r, g, b;
 
     if (percent < 50) {
@@ -249,7 +256,7 @@ function percentToRGB(percent) {
     return "rgb(" + r + "," + g + "," + b + ")";
 }
 
-        
+
 // -ag or --calculate-feature-density: Add a new attribute, tippecanoe_feature_density, to each feature, to record how densely features are spaced in that area of the tile. You can use this attribute in the style to produce a glowing effect where points are densely packed. It can range from 0 in the sparsest areas to 255 in the densest.
 var maxDensity = 255;
 var maxRadius = 10;
@@ -260,7 +267,7 @@ var zRangeDiff = zRangeMax - zRangeMin;
 // At lower (farther out) zooms, we should "desensitize" scaling since most points will be "clustered" in higher numbers,
 // whereas at higher (closer) zooms, we should adjust tolerance to be more centered around lower feature_density values.
 function getRelDensity(zoom, n) {
-    var stepSize = maxDensity/zRangeDiff; // 255 / 17 = 15
+    var stepSize = maxDensity / zRangeDiff; // 255 / 17 = 15
     // var zAdjust = zoom-1-zRangeMin; // zoom = 14-1-3 = 10, 20-1-3 = 16, 3-1-3 = -1
     // var bound = maxDensity - stepSize*zoom;
     // // if zoom == 3  --> 255-15*2 as lower bound, find ratio of feature_density between 221 <-> 255; eg. 238 = 50%
@@ -274,7 +281,7 @@ function getRelDensity(zoom, n) {
     // if (zoom === 3) {
     //     return n - 
     // }
-    
+
     var stepN = zoom - 1;
     // if (zoom === 3) {
     //     stepN = stepN + 1; // 2 * stepSize = 30, 255 - 30 = 225, 
@@ -283,13 +290,13 @@ function getRelDensity(zoom, n) {
     // } else if (zoom === 5) {
     //     stepN = stepN + 3; // 4 * 15 = 60, 255 - 60 = 195, 
     // }
-    var lower = maxDensity - (stepN*stepSize);
+    var lower = maxDensity - (stepN * stepSize);
     if (n < lower) {
         n = lower;
     }
     var mldiff = maxDensity - lower;
     var rel = n - lower;
-    var relDensity = rel/mldiff;
+    var relDensity = rel / mldiff;
     return relDensity;
 }
 
@@ -317,8 +324,8 @@ var densityTileOptions = {
             }
 
             // var relAbsoluteDensity = (properties.tippecanoe_feature_density/maxDensity); // maxDensity is max
-            var relAbsoluteDensity = (properties.tippecanoe_feature_density/(maxDensity*(zRangeMin/zoom))); // scale max density by zoom linearly
-            var relAbsoluteDensityPercent = Math.floor(relAbsoluteDensity*100);
+            var relAbsoluteDensity = (properties.tippecanoe_feature_density / (maxDensity * (zRangeMin / zoom))); // scale max density by zoom linearly
+            var relAbsoluteDensityPercent = Math.floor(relAbsoluteDensity * 100);
 
             // var relD = getRelDensity(zoom, properties.tippecanoe_feature_density);
             // var relDPercent = Math.floor(relD*100);
@@ -328,35 +335,35 @@ var densityTileOptions = {
                 fill: true,
                 fillColor: function() {
                     var factor = properties.sqrt_point_count;
-                    factor = factor * (zoom/zRangeMax)*2;
+                    factor = factor * (zoom / zRangeMax) * 2;
                     if (zoom <= 8 && zoom > 5) {
                         factor = factor * (zoom / zRangeDiff);
                     }
                     if (zoom <= 5) {
                         factor = properties.point_count * (zoom / zRangeDiff); // / (zoom/(zoom+1-zRangeMin));
                     }
-                    var n = percentToRGB(relAbsoluteDensityPercent*factor); // densityColor(properties.tippecanoe_feature_density),
+                    var n = percentToRGB(relAbsoluteDensityPercent * factor); // densityColor(properties.tippecanoe_feature_density),
                     return n;
                 }(),
                 // fillColor: percentToRGB(relDPercent), // densityColor(properties.tippecanoe_feature_density),
                 // fillOpacity: 0.05, // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
-                fillOpacity: 0.05 * (zoom/zRangeDiff), // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
+                fillOpacity: 0.05 * (zoom / zRangeDiff), // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
                 radius: function() {
                     var n = 0;
                     if (zoom > 14) {
-                        n = Math.floor(relAbsoluteDensity*(properties.point_count)*maxRadius);
+                        n = Math.floor(relAbsoluteDensity * (properties.point_count) * maxRadius);
                     } else {
-                        n = Math.floor(relAbsoluteDensity*(properties.point_count)*maxRadius);
+                        n = Math.floor(relAbsoluteDensity * (properties.point_count) * maxRadius);
                     }
-            
+
 
                     if (n > maxRadius) {
                         n = maxRadius;
                         if (zoom < 5) {
-                            n = zRangeMin/4 * n;
+                            n = zRangeMin / 4 * n;
                         }
                     } else if (n < 1) {
-                        n = Math.floor(relAbsoluteDensity*(properties.point_count+(zoom/zRangeDiff))*maxRadius);
+                        n = Math.floor(relAbsoluteDensity * (properties.point_count + (zoom / zRangeDiff)) * maxRadius);
                     }
                     return n;
                 }(), // ~max 100 from maxDensity actual max // +1 ??
@@ -382,14 +389,16 @@ var densityTileOptions = {
 var now = new Date().getTime();
 var oldest = new Date("2010-05-04T09:15:12Z").getTime();
 
-var oneDay = 1000*60*60*24;
+var oneDay = 1000 * 60 * 60 * 24;
 
 // var maxDateDiff = now - oneWeek; // diff in millis
 
-var recencyScale = function (props, color) {
+var recencyScale = function(props, color) {
     var dateString = props.Time;
     var density = props.tippecanoe_feature_density;
-    if (density === 0) { density += 1; }
+    if (density === 0) {
+        density += 1;
+    }
     var then = new Date(dateString).getTime();
     var diff = now - then;
 
@@ -399,16 +408,35 @@ var recencyScale = function (props, color) {
     // radius
     // day, 3 days, week, fortnight, month, sixmonth, year
     // 2    3       4      5         6      7         9
-    var opacity=0.05;
-    var radius=20;
-    var shade=0.8;
+    var opacity = 0.05;
+    var radius = 20;
+    var shade = 0.8;
 
-    if (diff <= oneDay) { opacity = 0.9; radius = 2; shade = -0.5; }
-    else if (diff <= oneDay*3) { opacity = 0.8; radius = 2; shade = -0.2; }
-    else if (diff <= oneDay*7) { opacity = 0.6; radius = 3; shade = -0.1 ; }
-    else if (diff <= oneDay*14) { opacity = 0.3; radius = 5; shade = 0.2; }
-    else if (diff <= oneDay*30) { opacity = 0.15; radius = 10; shade = 0.5; }
-    else if (diff <= oneDay*150) { opacity = 0.09; radius = 15; shade = 0.7; }
+    if (diff <= oneDay) {
+        opacity = 0.9;
+        radius = 2;
+        shade = -0.5;
+    } else if (diff <= oneDay * 3) {
+        opacity = 0.8;
+        radius = 2;
+        shade = -0.2;
+    } else if (diff <= oneDay * 7) {
+        opacity = 0.6;
+        radius = 3;
+        shade = -0.1;
+    } else if (diff <= oneDay * 14) {
+        opacity = 0.3;
+        radius = 5;
+        shade = 0.2;
+    } else if (diff <= oneDay * 30) {
+        opacity = 0.15;
+        radius = 10;
+        shade = 0.5;
+    } else if (diff <= oneDay * 150) {
+        opacity = 0.09;
+        radius = 15;
+        shade = 0.7;
+    }
 
     return {
         opacity: opacity, //opacity / 3,
@@ -478,7 +506,7 @@ var tripTileOptions = {
                     stroke: false,
                     weight: 0,
                     fill: false,
-                    radius: 0  
+                    radius: 0
                 }
             }
 
@@ -509,10 +537,11 @@ var drawLayer = function drawLayer(opts) {
     var v = L.vectorGrid;
     pbfLayer = v.protobuf(url, opts)
     pbfLayer.addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
-        .on('load', function (e) {
+        .on('load', function(e) {
             // console.log('load', e);
         });
 };
+
 function delegateDrawLayer(name) {
     drawnLayer = name
     if (name === "speed") {
@@ -526,25 +555,27 @@ function delegateDrawLayer(name) {
     }
     $('.layer-button').css("border", "none");
     $('.layer-button').css("border-radius", "0 0 0 0");
-    $('button#'+name+'-layer').css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
-    $('button#'+name+'-layer').css("border-radius", "4px 0px 0px 4px");
+    $('button#' + name + '-layer').css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
+    $('button#' + name + '-layer').css("border-radius", "4px 0px 0px 4px");
 }
 
 function getQueryVariable(variable, url) {
-        if (typeof url === "undefined" || url === null || window.location.href.indexOf("=") >= 0) {
-            url = window.location.search;
-        } else {
-            i = url.indexOf("?")
-            url = url.substring(i);
+    if (typeof url === "undefined" || url === null || window.location.href.indexOf("=") >= 0) {
+        url = window.location.search;
+    } else {
+        i = url.indexOf("?")
+        url = url.substring(i);
+    }
+    var query = decodeURIComponent(url.substring(1));
+    // console.log("query/variable", query, variable);
+    var vars = query.split("&");
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        if (pair[0] == variable) {
+            return pair[1];
         }
-       var query = decodeURIComponent(url.substring(1));
-       // console.log("query/variable", query, variable);
-       var vars = query.split("&");
-       for (var i=0;i<vars.length;i++) {
-               var pair = vars[i].split("=");
-               if(pair[0] == variable){return pair[1];}
-       }
-       return(false);
+    }
+    return (false);
 }
 
 function putUrlToView(event) {
@@ -569,7 +600,7 @@ function putUrlToView(event) {
     }
 
     console.log("putUrlToView", center, zoom);
-    map.setView(center,zoom);
+    map.setView(center, zoom);
     if (tile && tile !== "") {
         delegateTileLayer(tile);
     } else {
@@ -585,62 +616,66 @@ function putUrlToView(event) {
 putUrlToView();
 
 function numberWithCommas(x) {
-  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
 function getmetadata() {
-    $.ajax({ 
-    type: 'GET',
-    url: metadataURL,
-    dataType: 'json', 
-    success: function(data) { 
-        console.log(data);
-        // {"KeyN":3441161,"LastUpdatedAt":"2018-04-20T11:05:28.194001962-07:00","LastUpdatedBy":"Bigger Papa","LastUpdatedPointsN":84}
-        // $("#metadata").text(data["KeyN"] + " points | " 
-        // $("#metadata").text(JSON.stringify(data));
-        var obj = $("#metadata");
-        obj.text(numberWithCommas(data["KeyN"]) + " points.\n" 
-            + "TileDB last updated " + moment(data["TileDBLastUpdated"]).fromNow() 
-            // next updated is 4 hours from last updated
-            + "; next update " + moment().to(moment(data["TileDBLastUpdated"]).add(4, 'hours')) + ".");
-        obj.html(obj.html().replace(/\n/g,'<br/>'));
-        if (jl_names.indexOf(data["LastUpdatedBy"]) >= 0) {
-            $("#metadata-holder").css("border-left", "8px solid " + color_jl);
-        } else if (ia_names.indexOf(data["LastUpdatedBy"]) >= 0) {
-            $("#metadata-holder").css("border-left", "8px solid " + color_ia);
+    $.ajax({
+        type: 'GET',
+        url: metadataURL,
+        dataType: 'json',
+        success: function(data) {
+            console.log(data);
+            // {"KeyN":3441161,"LastUpdatedAt":"2018-04-20T11:05:28.194001962-07:00","LastUpdatedBy":"Bigger Papa","LastUpdatedPointsN":84}
+            // $("#metadata").text(data["KeyN"] + " points | " 
+            // $("#metadata").text(JSON.stringify(data));
+            var obj = $("#metadata");
+            obj.text(numberWithCommas(data["KeyN"]) + " points.\n" +
+                "TileDB last updated " + moment(data["TileDBLastUpdated"]).fromNow()
+                // next updated is 4 hours from last updated
+                +
+                     // "; next update " + moment().to(moment(data["TileDBLastUpdated"]).add(4, 'hours')) +
+                     ".");
+            obj.html(obj.html().replace(/\n/g, '<br/>'));
+            if (jl_names.indexOf(data["LastUpdatedBy"]) >= 0) {
+                $("#metadata-holder").css("border-left", "8px solid " + color_jl);
+            } else if (ia_names.indexOf(data["LastUpdatedBy"]) >= 0) {
+                $("#metadata-holder").css("border-left", "8px solid " + color_ia);
+            }
         }
-    }
     });
 
-    setTimeout(getAndMakeButtonsForLastKnownCats, 1000*60); // re-call again in a minute
+    setTimeout(getAndMakeButtonsForLastKnownCats, 1000 * 60); // re-call again in a minute
 }
 
 var catIcon = L.icon({
     iconUrl: 'cat-icon.png',
     // shadowUrl: 'leaf-shadow.png',
 
-    iconSize:     [32, 32], // size of the icon
+    iconSize: [32, 32], // size of the icon
     // shadowSize:   [50, 64], // size of the shadow
-    iconAnchor:   [16, 16], // point of the icon which will correspond to marker's location
+    iconAnchor: [16, 16], // point of the icon which will correspond to marker's location
     // shadowAnchor: [4, 62],  // the same for the shadow
-    popupAnchor:  [0, -8] // point from which the popup should open relative to the iconAnchor
+    popupAnchor: [0, -8] // point from which the popup should open relative to the iconAnchor
 });
 var catIconSmall = L.icon({
     iconUrl: 'cat-icon.png',
     // shadowUrl: 'leaf-shadow.png',
 
-    iconSize:     [16, 16], // size of the icon
+    iconSize: [16, 16], // size of the icon
     // shadowSize:   [50, 64], // size of the shadow
-    iconAnchor:   [8, 8], // point of the icon which will correspond to marker's location
+    iconAnchor: [8, 8], // point of the icon which will correspond to marker's location
     // shadowAnchor: [4, 62],  // the same for the shadow
-    popupAnchor:  [0, -4] // point from which the popup should open relative to the iconAnchor
+    popupAnchor: [0, -4] // point from which the popup should open relative to the iconAnchor
 });
 var onMapMarkers = [];
+
 function getAndMakeButtonsForLastKnownCats() {
-    $.ajax({ 
+    $.ajax({
         type: 'GET',
         url: lastKnownJSONurl,
-        dataType: 'json', 
-        success: function(data) { 
+        dataType: 'json',
+        success: function(data) {
 
             $("#lastknowns").html("<small>Last known locations:</small>");
 
@@ -654,16 +689,16 @@ function getAndMakeButtonsForLastKnownCats() {
             onMapMarkers = [];
 
             // console.log(data);
-            $.each( data, function( key, val ) {
+            $.each(data, function(key, val) {
                 // console.log("key", key, "val", val);
                 // ignore the old ones
                 if (moment(val["time"]).add(1, 'weeks').isBefore(moment())) {
                     return;
                 }
 
-                var button = $( "<button id='" + key + "' class='lastknownlink'> " + val["name"] + ", " + moment(val["time"]).fromNow() + "</button>" );
-                button.data("lat", val["lat"]+"");
-                button.data("long", val["long"]+"");
+                var button = $("<button id='" + key + "' class='lastknownlink'> " + val["name"] + ", " + moment(val["time"]).fromNow() + "</button>");
+                button.data("lat", val["lat"] + "");
+                button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
 
                 var c = "#21DBEB";
@@ -675,7 +710,9 @@ function getAndMakeButtonsForLastKnownCats() {
                 }
                 $("#lastknowns").append(button);
 
-                var l = L.marker([+val["lat"], +val["long"]], {icon: catIcon});
+                var l = L.marker([+val["lat"], +val["long"]], {
+                    icon: catIcon
+                });
                 map.addLayer(l);
                 onMapMarkers.push(l);
 
@@ -690,7 +727,7 @@ function getAndMakeButtonsForLastKnownCats() {
                 // var circle = L.circle([+val["lat"], +val["long"]], mopts).addTo(map);
                 // circle.bindPopup(JSON.stringify(val));
 
-                $(document).on('click', '.lastknownlink', function(e){
+                $(document).on('click', '.lastknownlink', function(e) {
                     // console.log("$this", $(this));
                     var lat = $(this).data("lat");
                     var lng = $(this).data("long");
@@ -699,7 +736,7 @@ function getAndMakeButtonsForLastKnownCats() {
                     // what you want to happen when mouseover and mouseout 
                     // occurs on elements that match '.dosomething'
                 });
-            }); 
+            });
             getmetadata();
         }
     });
@@ -725,11 +762,11 @@ function getAndMakeButtonsForLastKnownCats() {
 }
 getAndMakeButtonsForLastKnownCats();
 
-$(function () {
+$(function() {
     // var hh = $("#url-location-holder").height();
     // console.log("hh", hh);
     // var h =  hh + $("#metadata-holder").height() + 30 + "px";
-    
+
     var h = $("#metadata-holder")[0].getBoundingClientRect();
     var hh = h.bottom;
     // console.log(h, hh);
@@ -737,11 +774,11 @@ $(function () {
 });
 
 
-$("#goview").change(function(){
+$("#goview").change(function() {
     var v = $(this).val();
     if (v === "world") {
         // map.flyTo is cooler, but might explode computers
-        map.setView([42.94033923363183, -103.35937500000001], 3);    
+        map.setView([42.94033923363183, -103.35937500000001], 3);
     } else if (v === "usa") {
         map.setView([37.73596920859053, -99.97558593750001], 5);
     } else if (v === "stlouis") {
@@ -772,4 +809,3 @@ document.getElementById("trip-layer").onclick = function() {
 document.getElementById("url-location").onclick = function() {
     window.location.href = encodeURI(buildViewUrl());
 }
-
