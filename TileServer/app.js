@@ -631,7 +631,7 @@ function getmetadata() {
             // $("#metadata").text(JSON.stringify(data));
             var obj = $("#metadata");
             obj.text(numberWithCommas(data["KeyN"]) + " points added since " +
-                     moment(data["LastUpdatedAt"]).fromNow()
+                     moment(data["KeyNUpdated"]).fromNow()
                 // "TileDB last updated " + moment(data["TileDBLastUpdated"]).fromNow()
                 // next updated is 4 hours from last updated
                 +
