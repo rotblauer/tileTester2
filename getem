@@ -142,6 +142,11 @@ cleanup() {
     rm ./*.json.gz
 	fi
 
+  # Make a directory for backups.
+  if [[ ! -d bak ]]; then mkdir -p bak; fi
+  # Move out.json.gz to backups dir, if it wasn't cleaned up above.
+  if [[ -f ./out.json.gz ]]; then mv ./out.json.gz ./bak/; fi
+
 	# Remove raw tippedcanoetrack.db
 	if [ -f ./tippedcanoetrack.db ]; then rm ./tippedcanoetrack.db; fi
 
