@@ -32,6 +32,8 @@ var defaultCenter = [38.6270, -90.1994];
 var defaultZoom = 8;
 var didLogOnce = false;
 
+var globalSinceFloor = ""; // actually will be an integer, but will just use +"" to cast that
+
 function getBrowsePosition() {
     var got = localStorage.getItem("browsePosition");
     // console.log("got browse local", got);
@@ -89,8 +91,14 @@ function buildViewUrl() {
         "&y=" + lng +
         "&x=" + lat +
         "&l=" + drawnLayer +
-        "&t=" + getCurrentTileLayerName();
+        "&t=" + getCurrentTileLayerName() +
+        "&s=" + globalSinceFloor
+    ;
     return text;
+}
+
+function handleSinceFloor(v) {
+    globalSinceFloor = v;
 }
 
 function putViewToUrl() {
@@ -197,6 +205,13 @@ var speedTileOptions = {
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
+
+            if (globalSinceFloor !== "") {
+
+                if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
+                    return {};
+                }
+            }
 
             var color2 = colors[properties.Name] || "rgb(241,66,244)";
 
@@ -305,6 +320,12 @@ var densityTileOptions = {
     vectorTileLayerStyles: {
 
         'catTrack': function(properties, zoom) {
+
+            if (globalSinceFloor !== "") {
+                    if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
+                    return {};
+                }
+            }
 
             if (properties.hasOwnProperty("Notes") && !didLogOnce) {
                 // alert("there are notesss!!!");
@@ -452,6 +473,13 @@ var recencyTileOptions = {
 
         'catTrack': function(properties, zoom) {
 
+            if (globalSinceFloor !== "") {
+                console.log("recent globalSinceFloor", globalSinceFloor);
+                    if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
+                    return {};
+                }
+            }
+
             if (properties.hasOwnProperty("Notes") && !didLogOnce) {
                 // alert("there are notesss!!!");
                 didLogOnce = true;
@@ -589,6 +617,7 @@ function putUrlToView(event) {
     var x = getQueryVariable("x", pos);
     var layer = getQueryVariable("l", pos);
     var tile = getQueryVariable("t", pos);
+    var since = getQueryVariable("s", pos);
     if (z) {
         zoom = +(z) // cast to float
     }
@@ -597,6 +626,13 @@ function putUrlToView(event) {
     }
     if (x) {
         center[0] = +(x)
+    }
+
+    if (since) {
+        globalSinceFloor = ""+since;
+        $("#sincefloor").val(""+since);
+    } else {
+        $("#sincefloor").val("");
     }
 
     console.log("putUrlToView", center, zoom);
@@ -639,15 +675,19 @@ function getmetadata() {
                      // "; next update " + moment().to(moment(data["TileDBLastUpdated"]).add(4, 'hours')) +
                      ".");
             obj.html(obj.html().replace(/\n/g, '<br/>'));
-            if (jl_names.indexOf(data["LastUpdatedBy"]) >= 0) {
-                $("#metadata-holder").css("border-left", "8px solid " + color_jl);
-            } else if (ia_names.indexOf(data["LastUpdatedBy"]) >= 0) {
-                $("#metadata-holder").css("border-left", "8px solid " + color_ia);
+            if (colors.hasOwnProperty(data["LastUpdatedBy"])) {
+                $("#metadata-holder").css("border-left", "8px solid " + colors[data["LastUpdatedBy"]]);
             }
+            // if (jl_names.indexOf(data["LastUpdatedBy"]) >= 0) {
+            //     $("#metadata-holder").css("border-left", "8px solid " + color_jl);
+            // } else if (ia_names.indexOf(data["LastUpdatedBy"]) >= 0) {
+            //     $("#metadata-holder").css("border-left", "8px solid " + color_ia);
+            // }
+            setTimeout(getAndMakeButtonsForLastKnownCats, 1000 * 60); // re-call again in a minute
         }
     });
 
-    setTimeout(getAndMakeButtonsForLastKnownCats, 1000 * 60); // re-call again in a minute
+
 }
 
 var catIcon = L.icon({
@@ -740,6 +780,11 @@ function getAndMakeButtonsForLastKnownCats() {
                 });
             });
             getmetadata();
+        },
+        error: function(err) {
+            console.log("err", err);
+            $("#metadata").text("DB locked; syncing to the tracks mapper master.");
+            $("#lastknowns").html("");
         }
     });
     // fuck this fucking JSONP json cross origin SHIT.
@@ -773,6 +818,15 @@ $(function() {
     var hh = h.bottom;
     // console.log(h, hh);
     $("#layer-buttons").css("top", h + "px");
+});
+
+
+
+$("#sincefloor").change(function() {
+    var v = $(this).val();
+    handleSinceFloor(v);
+    putViewToUrl();
+    putUrlToView();
 });
 
 

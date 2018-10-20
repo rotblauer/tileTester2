@@ -100,6 +100,8 @@
             font-family: helvetica;
             margin: 0;
             font-size: small;
+            /* filter: alpha(opacity=50); */
+            /* opacity: 0.5; */
         }
 
         #metadata {
@@ -143,6 +145,14 @@
 
             <span style="float: right;">
                 <a href="http://www.catstats.rotblauer.com/" style="" target="_">CatStats</a>
+                <select id="sincefloor" name="">
+                    <option value="">Since anytime</option> 
+                    <option value="0.5">Last 0.5 days</option>
+                    <option value="1">Last 1 day</option>
+                    <option value="7">Last week</option>
+                    <option value="30">Last month</option>
+                    <option value="365">Last year</option>
+                </select>
                 <select name="" id="goview" style="">
                     <option value="">Go to -</option>
                     <option value="world">World</option>
@@ -157,7 +167,7 @@
 
             <span id="lastknowns-holder">
                 <small id="metadata"></small>
-                <span id="lastknowns"><small>Last known locations:</small></span>
+                <span id="lastknowns"></span>
             </span>
         </p>
         <div id="layer-buttons">
