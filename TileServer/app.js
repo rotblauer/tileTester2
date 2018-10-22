@@ -3,11 +3,11 @@ var color_ia = "rgb(255,0,0)"; //"rgb(254,65,26)"; // "rgb(235,41,0)";
 var color_jl = "rgb(0,0,255)"; // "rgb(0,162,235)";
 var color_jl_meta = "rgb(70, 97, 152)";
 var color_ia_meta = "#c42c21";
-var jl_names = ["RyePhone", "Rye8", "jl"];
-var ia_names = ["Big Papa", "Bigger Papa"];
 var colors = {
     "Big Papa": color_ia,
     "Bigger Papa": color_ia,
+    "P2": color_ia,
+    "ubp52": color_ia,
 
     "RyePhone": color_jl,
     "Rye8": color_jl,
@@ -662,28 +662,22 @@ function getmetadata() {
         dataType: 'json',
         success: function(data) {
             console.log(data);
+            // debug and notes
             // {"KeyN":3441161,"LastUpdatedAt":"2018-04-20T11:05:28.194001962-07:00","LastUpdatedBy":"Bigger Papa","LastUpdatedPointsN":84}
-            // $("#metadata").text(data["KeyN"] + " points | " 
             // $("#metadata").text(JSON.stringify(data));
-            var obj = $("#metadata");
-            obj.text(numberWithCommas(data["KeyN"]) + " points added in the last " +
-                     moment(data["KeyNUpdated"]).fromNow(true).replace("a ", "") + "." +
-                     "\n" +
-                "TileDB last updated " + moment(data["TileDBLastUpdated"]).fromNow()
-                // next updated is 4 hours from last updated
-                +
-                     // "; next update " + moment().to(moment(data["TileDBLastUpdated"]).add(4, 'hours')) +
-                     ".");
-            obj.html(obj.html().replace(/\n/g, '<br/>'));
+
+            var div = $("#metadata");
+            div.text(numberWithCommas(data["KeyN"]) + " points added in the last " +
+                     moment(data["KeyNUpdated"]).fromNow(true).replace("a ", "") + "." + "\n" +
+                     "TileDB last updated " + moment(data["TileDBLastUpdated"]).fromNow() + ".");
+
+            // replace all newlines with html linebreaks
+            div.html(div.html().replace(/\n/g, '<br/>'));
+
+            // set border on left to color of latest-known cat
             if (colors.hasOwnProperty(data["LastUpdatedBy"])) {
                 $("#metadata-holder").css("border-left", "8px solid " + colors[data["LastUpdatedBy"]]);
             }
-            // if (jl_names.indexOf(data["LastUpdatedBy"]) >= 0) {
-            //     $("#metadata-holder").css("border-left", "8px solid " + color_jl);
-            // } else if (ia_names.indexOf(data["LastUpdatedBy"]) >= 0) {
-            //     $("#metadata-holder").css("border-left", "8px solid " + color_ia);
-            // }
-            setTimeout(getAndMakeButtonsForLastKnownCats, 1000 * 60); // re-call again in a minute
         }
     });
 
@@ -713,12 +707,13 @@ var catIconSmall = L.icon({
 var onMapMarkers = [];
 
 function getAndMakeButtonsForLastKnownCats() {
+    // $("#metadata").hide();
     $.ajax({
         type: 'GET',
         url: lastKnownJSONurl,
         dataType: 'json',
         success: function(data) {
-
+            $("#metadata").show();
             $("#lastknowns").html("<small>Last known locations:</small>");
 
             // in case any existing already, remove em
@@ -734,7 +729,7 @@ function getAndMakeButtonsForLastKnownCats() {
             $.each(data, function(key, val) {
                 // console.log("key", key, "val", val);
                 // ignore the old ones
-                if (moment(val["time"]).add(1, 'weeks').isBefore(moment())) {
+                if (moment(val["time"]).add(3, 'days').isBefore(moment())) {
                     return;
                 }
 
@@ -780,11 +775,16 @@ function getAndMakeButtonsForLastKnownCats() {
                 });
             });
             getmetadata();
+            setTimeout(getAndMakeButtonsForLastKnownCats, 1000 * 60); // re-call again in a minute
         },
         error: function(err) {
             console.log("err", err);
+            $("#metadata").show();
+            $("#metadata").css("background-color", "rgb(249, 133, 0)");
             $("#metadata").text("DB locked; syncing to the tracks mapper master.");
             $("#lastknowns").html("");
+            setTimeout(function() {$("#metadata").hide();}, 1000 * 3);
+            setTimeout(getAndMakeButtonsForLastKnownCats, 1000 * 120); // re-call again in two minutes
         }
     });
     // fuck this fucking JSONP json cross origin SHIT.
