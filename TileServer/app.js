@@ -417,7 +417,7 @@ var densityTileOptions = {
 
 
 var now = new Date().getTime();
-var oldest = new Date("2010-05-04T09:15:12Z").getTime();
+var oldest = new Date("2012-03-24T15:01:44Z").getTime();
 
 var oneDay = 1000 * 60 * 60 * 24;
 
@@ -427,7 +427,7 @@ var recencyScale = function(props, color) {
     var dateString = props.Time;
     var density = props.tippecanoe_feature_density;
     if (density === 0) {
-        density += 1;
+        density = 1;
     }
     var then = new Date(dateString).getTime();
     var diff = now - then;
@@ -439,38 +439,32 @@ var recencyScale = function(props, color) {
     // day, 3 days, week, fortnight, month, sixmonth, year
     // 2    3       4      5         6      7         9
     var opacity = 0.05;
-    var radius = 20;
+    const radius = 2;
     var shade = 0.8;
 
     if (diff <= oneDay) {
         opacity = 0.9;
-        radius = 2;
         shade = -0.5;
     } else if (diff <= oneDay * 3) {
         opacity = 0.8;
-        radius = 2;
         shade = -0.2;
     } else if (diff <= oneDay * 7) {
         opacity = 0.6;
-        radius = 3;
         shade = -0.1;
     } else if (diff <= oneDay * 14) {
         opacity = 0.3;
-        radius = 5;
         shade = 0.2;
     } else if (diff <= oneDay * 30) {
         opacity = 0.15;
-        radius = 10;
         shade = 0.5;
     } else if (diff <= oneDay * 150) {
         opacity = 0.09;
-        radius = 15;
         shade = 0.7;
     }
 
     return {
         opacity: opacity, //opacity / 3,
-        radius: 2,
+        radius: radius,
         color: shadeRGBColor(color, shade)
     };
 };
@@ -686,7 +680,7 @@ function getmetadata() {
 
             var div = $("#metadata");
             div.text(numberWithCommas(data["KeyN"]) + " points added in the last " +
-                     moment(data["KeyNUpdated"]).fromNow(true).replace("a ", "") + "." + "\n" +
+                     moment(data["KeyNUpdated"]).fromNow(true).replace("a ", "").replace("an ", "") + "." + "\n" +
                      "TileDB last updated " + moment(data["TileDBLastUpdated"]).fromNow() + ".");
 
             // replace all newlines with html linebreaks
