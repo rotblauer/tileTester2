@@ -1,3 +1,4 @@
+var earliestTrack = null;
 // color defaults
 var color_ia = "rgb(255,0,0)"; //"rgb(254,65,26)"; // "rgb(235,41,0)";
 var color_jl = "rgb(0,0,255)"; // "rgb(0,162,235)";
@@ -51,7 +52,7 @@ function setBrowsePosition(s) {
     localStorage.setItem("browsePosition", s);
 }
 
-var drawnLayer = "speed";
+var drawnLayer = "recent";
 var pbfLayer;
 var drawnFeatures = [];
 var map;
@@ -488,6 +489,14 @@ var recencyTileOptions = {
                 }
             }
 
+            // if (earliestTrack == null) {
+            //     earliestTrack = properties["Time"];
+            // } else if (moment(properties["Time"]).isBefore(earliestTrack)) {
+            //     earliestTrack = properties["Time"];
+            //     console.log("earliesttrack", earliestTrack);
+            // #=> earliesttrack 2012-03-24T15:01:44Z
+            // }
+
             if (properties.hasOwnProperty("Notes") && !didLogOnce) {
                 // alert("there are notesss!!!");
                 didLogOnce = true;
@@ -593,6 +602,7 @@ function delegateDrawLayer(name) {
     $('.layer-button').css("border-radius", "0 0 0 0");
     $('button#' + name + '-layer').css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
     $('button#' + name + '-layer').css("border-radius", "4px 0px 0px 4px");
+
 }
 
 function getQueryVariable(variable, url) {
@@ -648,7 +658,7 @@ function putUrlToView(event) {
     if (tile && tile !== "") {
         delegateTileLayer(tile);
     } else {
-        delegateTileLayer("tile-light");
+        delegateTileLayer("tile-dark");
     }
     if (layer) {
         delegateDrawLayer(layer)
@@ -723,7 +733,7 @@ function getAndMakeButtonsForLastKnownCats() {
         success: function(data) {
             console.log("data getandmakebuttonsforlastknowncats", data);
             $("#metadata").show();
-            $("#lastknowns").html("<small>Last known locations:</small>");
+            $("#lastknowns").html("");
 
             // in case any existing already, remove em
             for (var i = 0; i < onMapMarkers.length; i++) {
@@ -750,23 +760,6 @@ function getAndMakeButtonsForLastKnownCats() {
             }
             // console.log("collectedByUser", collectedByUser);
 
-            // probs trash
-            // $.each(data, function(key, val) {
-            //     if (sortedByTime.length === 0) {
-            //         sortedByTime[0] = val;
-            //         return;
-            //     }
-
-            //     var incomingIndex = sortedByTime.length-1;
-            //     for (var i = 0; i < sortedByTime.length; i++) {
-            //         if (moment(sortedByTime[i]["time"]).isAfter(val["time"])) {
-            //             incomingIndex = i;
-            //             break;
-            //         }
-            //     }
-            //     sortedByTime.splice(incomingIndex, 0, val);
-            // });
-
             $.each(collectedByUser, function(key, val) {
                 console.log("1key", key, "val", val);
                 // ignore the old ones
@@ -787,10 +780,10 @@ function getAndMakeButtonsForLastKnownCats() {
                 }
 
                 var n = val["name"];
-                if (oVal.length > 1) {
-                    n += "<sup>" + oVal.length + "</sup>";
-                }
-                var button = $("<button id='" + key + "' class='lastknownlink'> " + n + ", " + moment(val["time"]).fromNow() + "</button>");
+                // if (oVal.length > 1) {
+                //     n += "<sup>" + oVal.length + "</sup>";
+                // }
+                var button = $("<button id='" + key + "' class='lastknownlink' style='font-size: 8pt;'> " + n + ", " + moment(val["time"]).fromNow() + "</button>");
                 button.data("lat", val["lat"] + "");
                 button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
@@ -835,12 +828,12 @@ function getAndMakeButtonsForLastKnownCats() {
             setTimeout(getAndMakeButtonsForLastKnownCats, 1000 * 60); // re-call again in a minute
         },
         error: function(err) {
-            console.log("err", err);
+            console.error("err", err);
             $("#metadata").show();
-            $("#metadata").css("background-color", "rgb(249, 133, 0)");
+            $("#metadata-holder").css("background-color", "rgb(249, 133, 0)");
             $("#metadata").text("DB locked; syncing to the tracks mapper master.");
             $("#lastknowns").html("");
-            setTimeout(function() {$("#metadata").hide();}, 1000 * 3);
+            // setTimeout(function() {$("#metadata").hide();}, 1000 * 20);
             setTimeout(getAndMakeButtonsForLastKnownCats, 1000 * 120); // re-call again in two minutes
         }
     });
