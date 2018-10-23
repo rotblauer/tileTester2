@@ -59,15 +59,19 @@ var current_tile_layer;
 var mb_tile_outdoors_url = "https://api.mapbox.com/styles/v1/rotblauer/cjgejdj91001c2snpjtgmt7gj/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 var mb_tile_light1_url = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 var mb_tile_sat_url = "https://api.mapbox.com/styles/v1/rotblauer/cjgel0gt300072rmc2s34f2ky/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
+var mb_tile_dark_url = "https://api.mapbox.com/styles/v1/rotblauer/cjnlrb8hq0jgh2rozuxxzopgx/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 var mb_tile_light1 = L.tileLayer(mb_tile_light1_url, {
     maxZoom: 19
-})
+});
 var mb_tile_outdoors = L.tileLayer(mb_tile_outdoors_url, {
     maxZoom: 19
-})
+});
 var mb_tile_sat = L.tileLayer(mb_tile_sat_url, {
     maxZoom: 19
-})
+});
+var mb_tile_dark = L.tileLayer(mb_tile_dark_url, {
+    maxZoom: 19
+});
 
 function getCurrentTileLayerName() {
     if (current_tile_layer !== null) {
@@ -77,6 +81,8 @@ function getCurrentTileLayerName() {
             return "tile-outdoors";
         } else if (current_tile_layer === mb_tile_sat) {
             return "tile-sat";
+        } else if (current_tile_layer === mb_tile_dark) {
+            return "tile-dark";
         }
     }
     return ""
@@ -175,6 +181,8 @@ function delegateTileLayer(name) {
         setMapTileLayer(mb_tile_outdoors);
     } else if (name === "tile-sat" && current_tile_layer !== mb_tile_sat) {
         setMapTileLayer(mb_tile_sat);
+    } else if (name === "tile-dark" && current_tile_layer !== mb_tile_dark) {
+        setMapTileLayer(mb_tile_dark);
     }
 
     $('.tile-button').css("border", "none");
@@ -241,7 +249,7 @@ var speedTileOptions = {
 // point_count: 3
 // sqrt_point_count: 1.73
 // tippecanoe_feature_density: 8
-// 
+//
 function densityColor(density) {
     var r = Math.floor(density * 2),
         g = Math.floor(255 - density),
@@ -290,20 +298,20 @@ function getRelDensity(zoom, n) {
     // max(255)-lower(221) = mldiff(34)
     // eg(238)-lower(221)= rel(17)
     // rel(17)/mldiff(34) == .50
-    // 
+    //
     // //                   255 - (stepSize * zoom-1)
-    // // if zoom == 19 --> 255-(19-3-1); 
+    // // if zoom == 19 --> 255-(19-3-1);
     // if (zoom === 3) {
-    //     return n - 
+    //     return n -
     // }
 
     var stepN = zoom - 1;
     // if (zoom === 3) {
-    //     stepN = stepN + 1; // 2 * stepSize = 30, 255 - 30 = 225, 
+    //     stepN = stepN + 1; // 2 * stepSize = 30, 255 - 30 = 225,
     // } else if (zoom === 4) {
     //     stepN = stepN + 2;
     // } else if (zoom === 5) {
-    //     stepN = stepN + 3; // 4 * 15 = 60, 255 - 60 = 195, 
+    //     stepN = stepN + 3; // 4 * 15 = 60, 255 - 60 = 195,
     // }
     var lower = maxDensity - (stepN * stepSize);
     if (n < lower) {
@@ -713,6 +721,7 @@ function getAndMakeButtonsForLastKnownCats() {
         url: lastKnownJSONurl,
         dataType: 'json',
         success: function(data) {
+            console.log("data getandmakebuttonsforlastknowncats", data);
             $("#metadata").show();
             $("#lastknowns").html("<small>Last known locations:</small>");
 
@@ -725,15 +734,63 @@ function getAndMakeButtonsForLastKnownCats() {
             }
             onMapMarkers = [];
 
-            // console.log(data);
-            $.each(data, function(key, val) {
-                // console.log("key", key, "val", val);
+            var sortedByTime = [];
+            $.each(data, function(key, val) { sortedByTime.push(val); });
+            sortedByTime.sort((a,b) => (moment(a["time"]).isBefore(b["time"])) ? 1 : ((moment( b["time"] ).isBefore( a["time"] )) ? -1 : 0));
+            // console.log("sortedByTime", sortedByTime);
+
+            var collectedByUser = {};
+            for (var i = 0; i < sortedByTime.length; i++) {
+                var color = colors[sortedByTime[i]["name"]];
+                if (!collectedByUser.hasOwnProperty(color)) {
+                    collectedByUser[color] = [sortedByTime[i]];
+                } else {
+                    collectedByUser[color].push(sortedByTime[i]);
+                }
+            }
+            // console.log("collectedByUser", collectedByUser);
+
+            // probs trash
+            // $.each(data, function(key, val) {
+            //     if (sortedByTime.length === 0) {
+            //         sortedByTime[0] = val;
+            //         return;
+            //     }
+
+            //     var incomingIndex = sortedByTime.length-1;
+            //     for (var i = 0; i < sortedByTime.length; i++) {
+            //         if (moment(sortedByTime[i]["time"]).isAfter(val["time"])) {
+            //             incomingIndex = i;
+            //             break;
+            //         }
+            //     }
+            //     sortedByTime.splice(incomingIndex, 0, val);
+            // });
+
+            $.each(collectedByUser, function(key, val) {
+                console.log("1key", key, "val", val);
                 // ignore the old ones
+
+                // override because we used colors as alias for identity, now we want names back to avoid refactoring
+                var oVal = val;
+                val = val[0];
+                key = val["name"]; // key was color
+
+                console.log("2key", key, "val", val);
+
                 if (moment(val["time"]).add(3, 'days').isBefore(moment())) {
                     return;
                 }
 
-                var button = $("<button id='" + key + "' class='lastknownlink'> " + val["name"] + ", " + moment(val["time"]).fromNow() + "</button>");
+                if (val.hasOwnProperty("notes") && val["notes"] !== "") {
+                    console.log(key, "steps", JSON.parse(val["notes"]));
+                }
+
+                var n = val["name"];
+                if (oVal.length > 1) {
+                    n += "<sup>" + oVal.length + "</sup>";
+                }
+                var button = $("<button id='" + key + "' class='lastknownlink'> " + n + ", " + moment(val["time"]).fromNow() + "</button>");
                 button.data("lat", val["lat"] + "");
                 button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
@@ -770,7 +827,7 @@ function getAndMakeButtonsForLastKnownCats() {
                     var lng = $(this).data("long");
                     // console.log(lat, lng);
                     map.setView([+lat, +lng]);
-                    // what you want to happen when mouseover and mouseout 
+                    // what you want to happen when mouseover and mouseout
                     // occurs on elements that match '.dosomething'
                 });
             });
@@ -791,7 +848,7 @@ function getAndMakeButtonsForLastKnownCats() {
     // $.getJSON(lastKnownJSONurl + "?callback=?", function( res ) {
     //     // var string = JSON.stringify(res);
     //     // var data = JSON.parse(string);
-    //     // 
+    //     //
     //     var data = res;
 
     //     console.log(data["Bigger Papa"]);
@@ -801,7 +858,7 @@ function getAndMakeButtonsForLastKnownCats() {
     //             map.setView([+val["lat"], +val["long"]], 13);
     //         };
     //         items.push(i);
-    //       });   
+    //       });
     // });
     // console.log("items", items);
     // have to set from document because thye're dynamically created eleements and SO says so: https://stackoverflow.com/questions/203198/event-binding-on-dynamically-created-elements
