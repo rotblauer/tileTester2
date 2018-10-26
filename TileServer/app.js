@@ -112,7 +112,8 @@ function handleSinceFloor(v) {
 function putViewToUrl() {
     var t = buildViewUrl();
     setBrowsePosition(t);
-    document.getElementById("url-location").innerHTML = t;
+    // document.getElementById("url-location").innerHTML = t;
+    $("#url-location").attr("href", t);
 }
 map = L.map('map', {
     maxZoom: 20,
@@ -183,8 +184,14 @@ function delegateTileLayer(name) {
         setMapTileLayer(mb_tile_outdoors);
     } else if (name === "tile-sat" && current_tile_layer !== mb_tile_sat) {
         setMapTileLayer(mb_tile_sat);
-    } else if (name === "tile-dark" && current_tile_layer !== mb_tile_dark) {
+    }
+    if (name === "tile-dark" && current_tile_layer !== mb_tile_dark) {
         setMapTileLayer(mb_tile_dark);
+        $("#metadata-holder").css("background-color", "black");
+        $("#metadata").css("color", "white");
+    } else {
+        $("#metadata-holder").css("background-color", "white");
+        $("#metadata").css("color", "black");
     }
 
     $('.tile-button').css("border", "none");
@@ -432,6 +439,7 @@ var recencyScale = function(props, color) {
     }
     var then = new Date(dateString).getTime();
     var diff = now - then;
+    //Fit[{1,3,7,14,30,150,2000},{0.99,0.8,0.6,0.3,0.15,0.09,0},x]
 
     // opacity
     // day, 3 days, week, fortnight, month, sixmonth, year
@@ -736,7 +744,7 @@ function getAndMakeButtonsForLastKnownCats() {
         url: lastKnownJSONurl,
         dataType: 'json',
         success: function(data) {
-            $("#metadata-holder").css("background-color", "rgb(196, 189, 193)");
+            $("#metadata-holder").css("background-color", "black");
             console.log("data getandmakebuttonsforlastknowncats", data);
             $("#metadata").show();
             $("#lastknowns").html("");
@@ -789,7 +797,7 @@ function getAndMakeButtonsForLastKnownCats() {
                 // if (oVal.length > 1) {
                 //     n += "<sup>" + oVal.length + "</sup>";
                 // }
-                var button = $("<button id='" + key + "' class='lastknownlink' style='font-size: 8pt;'> " + n + ", " + moment(val["time"]).fromNow() + "</button>");
+                var button = $("<span id='" + key + "' class='lastknownlink' style=''> " + n + ", " + moment(val["time"]).fromNow() + "</span>");
                 button.data("lat", val["lat"] + "");
                 button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
@@ -802,6 +810,7 @@ function getAndMakeButtonsForLastKnownCats() {
                     button.css("color", "white");
                 }
                 $("#lastknowns").append(button);
+                $("#lastknowns").append($("<br>"));
 
                 var l = L.marker([+val["lat"], +val["long"]], {
                     icon: catIcon
@@ -921,3 +930,205 @@ document.getElementById("trip-layer").onclick = function() {
 document.getElementById("url-location").onclick = function() {
     window.location.href = encodeURI(buildViewUrl());
 }
+
+$("#metadata-holder").css("top", $("#map")[0].getBoundingClientRect().top);
+
+// {
+//   "Big Mamma": {
+//     "uuid": "71ACB5F0-FE89-405A-8CDB-16DB56ED104E",
+//     "id": 0,
+//     "name": "Big Mamma",
+//     "lat": 38.60419845581055,
+//     "long": -90.33721160888672,
+//     "accuracy": 10,
+//     "elevation": 150.54522705078125,
+//     "speed": 0,
+//     "tilt": 0,
+//     "heading": -1,
+//     "heartrate": 0,
+//     "time": "2018-10-26T18:01:07.996Z",
+//     "notes": "{\"floorsAscended\":0,\"customNote\":\"\",\"currentTripStart\":\"2018-10-26T15:18:55.893Z\",\"floorsDescended\":0,\"averageActivePace\":0.79020182004524075,\"numberOfSteps\":392,\"relativeAltitude\":-8.534698486328125,\"currentCadence\":1.6278067827224731,\"activity\":\"Stationary\",\"currentPace\":0.75226451898987856,\"pressure\":98.876823425292969,\"distance\":279.06735425814986}"
+//   },
+//   "Big Papa": {
+//     "uuid": "E96EEFB7-3A69-434D-9453-8BBFE0C22542",
+//     "id": 0,
+//     "name": "Big Papa",
+//     "lat": 38.604530334472656,
+//     "long": -90.22959899902344,
+//     "accuracy": 10,
+//     "elevation": 165.889892578125,
+//     "speed": 0,
+//     "tilt": 0,
+//     "heading": 63.28125,
+//     "heartrate": 0,
+//     "time": "2018-10-26T18:01:38.985Z",
+//     "notes": "{\"floorsAscended\":5,\"customNote\":\"\",\"currentTripStart\":\"2018-10-26T13:36:26.838Z\",\"floorsDescended\":1,\"averageActivePace\":0.69014509839607008,\"numberOfSteps\":3750,\"relativeAltitude\":4.46551513671875,\"currentCadence\":1.6933163404464722,\"activity\":\"Stationary\",\"currentPace\":0.69752418994903564,\"pressure\":98.69244384765625,\"distance\":3073.288706459105}"
+//   },
+//   "Bigger Papa": {
+//     "uuid": "8F0BAEE9-19CD-4203-A025-D64F5D706220",
+//     "id": 0,
+//     "name": "Bigger Papa",
+//     "lat": 38.604427337646484,
+//     "long": -90.22966003417969,
+//     "accuracy": 10,
+//     "elevation": 169.50436401367188,
+//     "speed": 0,
+//     "tilt": 0,
+//     "heading": -1,
+//     "heartrate": 0,
+//     "time": "2018-10-26T07:26:46.995Z",
+//     "notes": "{\"floorsAscended\":0,\"customNote\":\"\",\"currentTripStart\":\"2018-10-26T02:48:56.830Z\",\"floorsDescended\":0,\"averageActivePace\":0,\"numberOfSteps\":0,\"relativeAltitude\":27.577896118164062,\"currentCadence\":0,\"activity\":\"Stationary\",\"currentPace\":0,\"pressure\":98.920867919921875,\"distance\":0}"
+//   },
+//   "Chishiki": {
+//     "uuid": "49E78967-1891-4364-8910-2DA90B063C0C",
+//     "id": 0,
+//     "name": "Chishiki",
+//     "lat": 41.78996658325195,
+//     "long": 140.75045776367188,
+//     "accuracy": 65,
+//     "elevation": 16.439998626708984,
+//     "speed": -1,
+//     "tilt": 0,
+//     "heading": -1,
+//     "heartrate": 0,
+//     "time": "2018-10-26T13:50:15.584Z",
+//     "notes": ""
+//   },
+//   "Kayleigh's iPhone": {
+//     "uuid": "B303CA8D-B199-4526-ADAC-FDA34696FB70",
+//     "id": 0,
+//     "name": "Kayleigh's iPhone",
+//     "lat": 38.62228775024414,
+//     "long": -90.23755645751953,
+//     "accuracy": 65,
+//     "elevation": 158.66403198242188,
+//     "speed": -1,
+//     "tilt": 0,
+//     "heading": -1,
+//     "heartrate": 0,
+//     "time": "2018-10-22T15:39:39.539Z",
+//     "notes": "{\"floorsAscended\":0,\"customNote\":\"\",\"currentTripStart\":\"2018-10-22T13:06:09.184Z\",\"floorsDescended\":0,\"averageActivePace\":0.87531100477783375,\"numberOfSteps\":547,\"relativeAltitude\":0,\"currentCadence\":1.6991448402404785,\"activity\":\"Stationary\",\"currentPace\":0.77753710746765137,\"pressure\":0,\"distance\":358.89475801773369}"
+//   },
+//   "Kitty’s MacBook Pro": {
+//     "uuid": "B2490ACA-E64F-40C2-8903-638AFF6E6EE4",
+//     "id": 0,
+//     "name": "Kitty’s MacBook Pro",
+//     "lat": 37.44910430908203,
+//     "long": -122.27674102783203,
+//     "accuracy": 5,
+//     "elevation": 0,
+//     "speed": 35.36000061035156,
+//     "tilt": 0,
+//     "heading": 310.7799987792969,
+//     "heartrate": 0,
+//     "time": "2018-05-26T13:40:22.916Z",
+//     "notes": "{\"pressure\":0,\"numberOfSteps\":0,\"distance\":0,\"relativeAltitude\":0,\"averageActivePace\":0,\"activity\":\"Unknown\",\"currentCadence\":0,\"floorsAscended\":0,\"currentPace\":0,\"currentTripStart\":\"2018-05-26T13:26:46.606Z\",\"customNote\":\"\"}"
+//   },
+//   "P2": {
+//     "uuid": "729D4E76-9408-4805-A187-BD3D72BABFFF",
+//     "id": 0,
+//     "name": "P2",
+//     "lat": 38.604434967041016,
+//     "long": -90.229736328125,
+//     "accuracy": 65,
+//     "elevation": 163.39080810546875,
+//     "speed": -1,
+//     "tilt": 0,
+//     "heading": -1,
+//     "heartrate": 0,
+//     "time": "2018-10-26T15:25:55.411Z",
+//     "notes": "{\"floorsAscended\":0,\"customNote\":\"\",\"currentTripStart\":\"2018-10-22T02:59:28.745Z\",\"floorsDescended\":0,\"averageActivePace\":0,\"numberOfSteps\":0,\"relativeAltitude\":0,\"currentCadence\":0,\"activity\":\"Stationary\",\"currentPace\":0,\"pressure\":0,\"distance\":0}"
+//   },
+//   "Rye8": {
+//     "uuid": "2F357B63-9C1F-41FB-9605-93E45D6D448B",
+//     "id": 0,
+//     "name": "Rye8",
+//     "lat": 38.64745330810547,
+//     "long": -90.27598571777344,
+//     "accuracy": 65,
+//     "elevation": 146.97579956054688,
+//     "speed": -1,
+//     "tilt": 0,
+//     "heading": -1,
+//     "heartrate": 0,
+//     "time": "2018-10-26T18:04:28.609Z",
+//     "notes": "{\"floorsAscended\":0,\"customNote\":\"\",\"currentTripStart\":\"2018-10-26T17:44:04.130Z\",\"floorsDescended\":0,\"averageActivePace\":0,\"numberOfSteps\":0,\"relativeAltitude\":1.9024658203125,\"currentCadence\":0,\"activity\":\"Stationary\",\"currentPace\":0,\"pressure\":98.877777099609375,\"distance\":0}"
+//   },
+//   "RyePhone": {
+//     "uuid": "AAECF823-2D5E-44B5-83CC-A0CDBE04AEC8",
+//     "id": 0,
+//     "name": "RyePhone",
+//     "lat": 38.64742,
+//     "long": -90.27564,
+//     "accuracy": 10,
+//     "elevation": 165.1669,
+//     "speed": 0,
+//     "tilt": 0,
+//     "heading": -1,
+//     "heartrate": 0,
+//     "time": "2018-10-26T00:39:14Z",
+//     "notes": "{\"floorsDescended\":0,\"numberOfSteps\":0,\"floorsAscended\":0,\"currentTripStart\":\"2018-10-26T00:37:40.760Z\",\"activity\":\"Unknown\",\"customNote\":\"cat\",\"currentPace\":0,\"relativeAltitude\":0,\"distance\":0,\"averageActivePace\":0,\"currentCadence\":0,\"pressure\":0}"
+//   },
+//   "Twenty7": {
+//     "uuid": "B5F8BB33-C010-47C0-A6ED-755BF7549DA0",
+//     "id": 0,
+//     "name": "Twenty7",
+//     "lat": 33.86307144165039,
+//     "long": -118.37136840820312,
+//     "accuracy": 10,
+//     "elevation": 37.05802536010742,
+//     "speed": 0,
+//     "tilt": 0,
+//     "heading": -1,
+//     "heartrate": 0,
+//     "time": "2018-10-26T12:26:45.004Z",
+//     "notes": ""
+//   },
+//   "iPhone": {
+//     "uuid": "49E78967-1891-4364-8910-2DA90B063C0C",
+//     "id": 0,
+//     "name": "iPhone",
+//     "lat": 62.905555725097656,
+//     "long": 18.349388122558594,
+//     "accuracy": 10,
+//     "elevation": 37.3433837890625,
+//     "speed": 0.7799999713897705,
+//     "tilt": 0,
+//     "heading": 137.4609375,
+//     "heartrate": 0,
+//     "time": "2018-05-22T14:30:50Z",
+//     "notes": "roadtrip"
+//   },
+//   "jl": {
+//     "uuid": "",
+//     "id": 0,
+//     "name": "jl",
+//     "lat": 51.537466563390566,
+//     "long": 10.064866563390568,
+//     "accuracy": 0,
+//     "elevation": 0,
+//     "speed": 0,
+//     "tilt": 0,
+//     "heading": 0,
+//     "heartrate": 0,
+//     "time": "0001-01-01T00:00:00Z",
+//     "notes": "json web post"
+//   },
+//   "ubp52": {
+//     "uuid": "",
+//     "id": 0,
+//     "name": "ubp52",
+//     "lat": 59.3326,
+//     "long": 18.0649,
+//     "accuracy": 0,
+//     "elevation": 0,
+//     "speed": 0,
+//     "tilt": 0,
+//     "heading": 0,
+//     "heartrate": 0,
+//     "time": "2018-10-16T23:23:01Z",
+//     "notes": ""
+//   }
+// }
+
+// {"KeyN":314099,"KeyNUpdated":"2018-10-25T19:09:54.850037684Z","LastUpdatedAt":"2018-10-26T18:04:30.581047064Z","LastUpdatedBy":"Rye8","LastUpdatedPointsN":1097,"TileDBLastUpdated":"2018-10-26T09:16:54.304260747-07:00"}

@@ -9,6 +9,7 @@
 
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
     <!--     <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script> -->
     <script src="./node_modules/whatwg-fetch/fetch.js"></script>
@@ -82,8 +83,9 @@
 
         #url-location-holder {
             /*z-index: 10000;*/
-            color: white;
-            background: dimgray;
+            /* color: white; */
+            /* background: dimgray; */
+            /* background-color: black; */
             /*font-weight: bold;*/
             padding: 5px 5px 5px 10px;
             font-family: helvetica;
@@ -94,14 +96,21 @@
         }
 
         #metadata-holder {
-            background-color: rgb(196, 189, 193);
-            color: white;
-            padding: 5px 5px 5px 10px;
+            background-color: white;
+            color: black;
+            /* padding: 5px 5px 5px 10px; */
             font-family: helvetica;
             margin: 0;
             font-size: small;
             /* filter: alpha(opacity=50); */
             /* opacity: 0.5; */
+            position: fixed;
+            /* left: 64px; */
+            right: 0px;
+            /* bottom: 0px; */
+            /* height: 30px; */
+            /* width: 100%; */
+            z-index: 1000;
         }
 
         #metadata {
@@ -110,6 +119,7 @@
         float: left;*/
             float: left;
             /*margin-top: 3px;*/
+            /* background-color: black; */
         }
 
         #url-location {
@@ -132,53 +142,75 @@
         }
 
         #url-location-box {}
+
+        select {
+            color: black;
+        }
+
+        #lastknowns-div {
+            position: absolute;
+            z-index: 1000;
+            bottom: 0px;
+            background-opacity: 0;
+            right: 0px;
+            padding-bottom: 1.5em;
+            text-align: right;
+        }
+
+        .lastknownlink {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+            /* padding-top: 0.5em; */
+            /* padding-bottom: 0.5em; */
+        }
     </style>
 </head>
 
 <body>
     <div class="box">
+        <div id="selectables">
+            <select id="sincefloor" name="">
+                <option value="">Since anytime</option>
+                <option value="0.5">Last 0.5 days</option>
+                <option value="1">Last 1 day</option>
+                <option value="7">Last week</option>
+                <option value="30">Last month</option>
+                <option value="365">Last year</option>
+            </select>
+            <select name="" id="goview" style="">
+                <option value="">Go to -</option>
+                <option value="world">World</option>
+                <option value="usa">USA</option>
+                <option value="stlouis">St. Louis</option>
+                <option value="iceland">Iceland</option>
+                <option value="hokkaido">Hokkaido</option>
+            </select>
+        </div>
 
-        <p id="url-location-holder">
-            <span id="url-location-box">
-                <small id="url-moved">◉ </small><small id="url-location"></small>
-            </span>
-
-            <span style="float: right;">
-                <a href="http://www.catstats.rotblauer.com/" style="" target="_">CatStats</a>
-                <select id="sincefloor" name="">
-                    <option value="">Since anytime</option> 
-                    <option value="0.5">Last 0.5 days</option>
-                    <option value="1">Last 1 day</option>
-                    <option value="7">Last week</option>
-                    <option value="30">Last month</option>
-                    <option value="365">Last year</option>
-                </select>
-                <select name="" id="goview" style="">
-                    <option value="">Go to -</option>
-                    <option value="world">World</option>
-                    <option value="usa">USA</option>
-                    <option value="stlouis">St. Louis</option>
-                    <option value="iceland">Iceland</option>
-                    <option value="hokkaido">Hokkaido</option>
-                </select>
-            </span>
-        </p>
-        <p id="metadata-holder">
+        <div id="metadata-holder">
+            <p id="url-location-holder">
+                <span id="url-location-box">
+                    <a id="url-location" href=""><i class="glyphicon glyphicon-share"></i></a>
+                    <a href="http://www.catstats.rotblauer.com/" style="" target="_"><i class="glyphicon glyphicon-stats"></i></a>
+                </span>
+            </p>
 
             <span id="lastknowns-holder">
-                <small id="metadata"></small>
-                <span id="lastknowns"></span>
+                <small id="metadata" style="margin: 5px;"></small>
             </span>
-        </p>
+        </div>
+        <div id="lastknowns-div">
+            <span id="lastknowns"></span>
+        </div>
         <div id="layer-buttons">
-            <button id="recent-layer" class="layer-button">Draw: recency</button><br />
-            <button id="speed-layer" class="layer-button">Draw: speed</button><br />
-            <button id="density-layer" class="layer-button">Draw: density</button><br />
-            <button id="trip-layer" class="layer-button" disabled>Draw: trip</button> <br />
-            <button id="tile-light" class="tile-button">Tile: light</button><br />
-            <button id="tile-dark" class="tile-button">Tile: dark</button><br />
-            <button id="tile-outdoors" class="tile-button">Tile: outdoors</button><br>
-            <button id="tile-sat" class="tile-button">Tile: satellite</button>
+            <button id="recent-layer" class="layer-button">Points: recency</button><br />
+            <button id="speed-layer" class="layer-button">Points: speed</button><br />
+            <button id="density-layer" class="layer-button">Points: density</button><br />
+            <button id="trip-layer" class="layer-button" disabled>Points: trip</button> <br />
+            <button id="tile-light" class="tile-button">Map: light</button><br />
+            <button id="tile-dark" class="tile-button">Map: dark</button><br />
+            <button id="tile-outdoors" class="tile-button">Map: outdoors</button><br>
+            <button id="tile-sat" class="tile-button">Map: satellite</button>
         </div>
 
         <div id="map"></div>
