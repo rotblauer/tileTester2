@@ -94,7 +94,8 @@ function buildViewUrl() {
     var lat = latlng.lat;
     var lng = latlng.lng;
     var z = map.getZoom();
-    var text = "http://punktlich.rotblauer.com?z=" + z +
+    var wl = window.location.origin;
+    var text = wl + "?z=" + z +
         "&y=" + lng +
         "&x=" + lat +
         "&l=" + drawnLayer +
@@ -659,6 +660,16 @@ function putUrlToView(event) {
     } else {
         delegateDrawLayer(drawnLayer);
     }
+    console.log("wl", window.location);
+    if (window.location.host.includes("catonmap")) {
+        document.title = "Cat On Map";
+    } else if (window.location.host.includes("punktlich")) {
+        document.title = "Punktlich";
+    } else if (window.location.host.includes("localhost")) {
+        document.title = "Development";
+    } else {
+        console.log("nope", window.location+"".indexOf("localhost"));
+    }
     putViewToUrl();
 }
 putUrlToView();
@@ -725,6 +736,7 @@ function getAndMakeButtonsForLastKnownCats() {
         url: lastKnownJSONurl,
         dataType: 'json',
         success: function(data) {
+            $("#metadata-holder").css("background-color", "rgb(196, 189, 193)");
             console.log("data getandmakebuttonsforlastknowncats", data);
             $("#metadata").show();
             $("#lastknowns").html("");
