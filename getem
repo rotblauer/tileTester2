@@ -129,9 +129,9 @@ cleanup() {
 	logprocess "Backing up and cleaning up old artifacts..."
 
 	# Make a directory for backups.
-  if [[ -d ./bak ]]; then mv bak bakbak ; fi
+	if [[ -d ./bak ]]; then mv bak bakbak; fi
 	mkdir -p ./bak
-  mv ./out.* ./tracks.db ./tippedcanoe* ./bak/
+	mv ./out.* ./tracks.db ./tippedcanoe* ./bak/
 }
 
 while getopts 'nsx:' flag; do
