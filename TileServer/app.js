@@ -114,6 +114,15 @@ function putViewToUrl() {
     setBrowsePosition(t);
     // document.getElementById("url-location").innerHTML = t;
     $("#url-location").attr("href", t);
+    if ($("#map-layer-select").val() === "tile-dark") {
+        $("#metadata-holder").css("background-color", "black");
+        $("#metadata").css("color", "white");
+        $("body").css("background-color", "black");
+    } else {
+        $("#metadata-holder").css("background-color", "white");
+        $("#metadata").css("color", "black");
+        $("body").css("background-color", "white");
+    }
 }
 map = L.map('map', {
     maxZoom: 20,
@@ -123,8 +132,8 @@ map = L.map('map', {
 map.on("moveend", function() {
     didLogOnce = false;
     putViewToUrl();
-    $("#url-moved").css("color", "rgb(5, 255, 170)");
-    $("#url-moved").fadeOut(100).fadeIn(100); // .fadeOut(100).fadeIn(100);
+    // $("#url-moved").css("color", "rgb(5, 255, 170)");
+    // $("#url-moved").fadeOut(100).fadeIn(100); // .fadeOut(100).fadeIn(100);
 });
 map.on("load", function() {
     putViewToUrl();
