@@ -78,7 +78,7 @@ type F struct {
 
 func CreateGZ(s string, compressLevel int) (f F) {
 
-	fi, err := os.OpenFile(s, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
+	fi, err := os.OpenFile(s, os.O_WRONLY|os.O_CREATE, 0660)
 	if err != nil {
 		log.Printf("Error in Create file\n")
 		panic(err)
