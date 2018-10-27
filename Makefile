@@ -3,6 +3,9 @@
 TRACKS_UPSTREAM_ROOT=/home/freyabison/track.areteh.co
 PUNKTS_UPSTREAM_ROOT=/home/freyabison/punktlich.rotblauer.com
 
+COMMIT=`git rev-parse HEAD`
+
+
 export GOPATH?=${HOME}/go
 
 getem: clean download update rundump upload
@@ -19,6 +22,7 @@ update:
 	git --work-tree=${GOPATH}/src/github.com/rotblauer/trackpoints --git-dir=${GOPATH}/src/github.com/rotblauer/trackpoints/.git branch --set-upstream-to=origin/master master
 	git branch --set-upstream-to=origin/master master
 	go get -v -u github.com/rotblauer/tileTester2/...
+	@echo "GIT HEAD=$(BINARY)"
 
 rundump:
 	go build -o dumper dump.go
