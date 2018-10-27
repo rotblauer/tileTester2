@@ -194,10 +194,9 @@ function delegateTileLayer(name) {
         $("#metadata").css("color", "black");
     }
 
-    $('.tile-button').css("border", "none");
-    $('.tile-button').css("border-radius", "0 0 0 0");
-    $('button#' + name).css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
-    $('button#' + name).css("border-radius", "4px 0px 0px 4px");
+    if ($("#map-layer-select").val() !== name) {
+        $("#map-layer-select").val(name);
+    }
 }
 
 $(".tile-button").on("click", function(e) {
@@ -601,11 +600,9 @@ function delegateDrawLayer(name) {
     } else if (name === "trip") {
         drawLayer(tripTileOptions);
     }
-    $('.layer-button').css("border", "none");
-    $('.layer-button').css("border-radius", "0 0 0 0");
-    $('button#' + name + '-layer').css("border-left", "8px solid rgba(65, 123, 229, 0.36)");
-    $('button#' + name + '-layer').css("border-radius", "4px 0px 0px 4px");
-
+    if ($("#points-layer-select").val() !== drawnLayer) {
+        $("#points-layer-select").val(drawnLayer);
+    }
 }
 
 function getQueryVariable(variable, url) {
@@ -744,7 +741,7 @@ function getAndMakeButtonsForLastKnownCats() {
         url: lastKnownJSONurl,
         dataType: 'json',
         success: function(data) {
-            $("#metadata-holder").css("background-color", "black");
+            // $("#metadata-holder").css("background-color", "black");
             console.log("data getandmakebuttonsforlastknowncats", data);
             $("#metadata").show();
             $("#lastknowns").html("");
@@ -874,18 +871,6 @@ function getAndMakeButtonsForLastKnownCats() {
 }
 getAndMakeButtonsForLastKnownCats();
 
-$(function() {
-    // var hh = $("#url-location-holder").height();
-    // console.log("hh", hh);
-    // var h =  hh + $("#metadata-holder").height() + 30 + "px";
-
-    var h = $("#metadata-holder")[0].getBoundingClientRect();
-    var hh = h.bottom;
-    // console.log(h, hh);
-    $("#layer-buttons").css("top", h + "px");
-});
-
-
 
 $("#sincefloor").change(function() {
     var v = $(this).val();
@@ -911,27 +896,43 @@ $("#goview").change(function() {
     }
 });
 
-document.getElementById("recent-layer").onclick = function() {
-    delegateDrawLayer("recent");
-    putViewToUrl(buildViewUrl());
-};
-document.getElementById("speed-layer").onclick = function() {
-    delegateDrawLayer("speed");
-    putViewToUrl(buildViewUrl());
-};
-document.getElementById("density-layer").onclick = function() {
-    delegateDrawLayer("density");
-    putViewToUrl(buildViewUrl());
-};
-document.getElementById("trip-layer").onclick = function() {
-    delegateDrawLayer("trip");
-    putViewToUrl(buildViewUrl());
-};
+$("#points-layer-select").on("change", function() {
+    var v = $(this).val();
+    delegateDrawLayer(v);
+    // putViewToUrl(buildViewUrl());
+    putViewToUrl();
+    putUrlToView();
+});
+
+$("#map-layer-select").on("change", function() {
+    var v = $(this).val();
+    // var id = $(this).attr("id");
+    delegateTileLayer(v);
+    putViewToUrl();
+});
+
+// document.getElementById("recent-layer").onclick = function() {
+//     delegateDrawLayer("recent");
+//     putViewToUrl(buildViewUrl());
+// };
+// document.getElementById("speed-layer").onclick = function() {
+//     delegateDrawLayer("speed");
+//     putViewToUrl(buildViewUrl());
+// };
+// document.getElementById("density-layer").onclick = function() {
+//     delegateDrawLayer("density");
+//     putViewToUrl(buildViewUrl());
+// };
+// document.getElementById("trip-layer").onclick = function() {
+//     delegateDrawLayer("trip");
+//     putViewToUrl(buildViewUrl());
+// };
 document.getElementById("url-location").onclick = function() {
     window.location.href = encodeURI(buildViewUrl());
 }
 
 $("#metadata-holder").css("top", $("#map")[0].getBoundingClientRect().top);
+// $("#lastknowns-div").css("bottom", $("#map")[0].getBoundingClientRect().bottom);
 
 // {
 //   "Big Mamma": {
@@ -946,31 +947,6 @@ $("#metadata-holder").css("top", $("#map")[0].getBoundingClientRect().top);
 //     "tilt": 0,
 //     "heading": -1,
 //     "heartrate": 0,
-//     "time": "2018-10-26T18:01:07.996Z",
-//     "notes": "{\"floorsAscended\":0,\"customNote\":\"\",\"currentTripStart\":\"2018-10-26T15:18:55.893Z\",\"floorsDescended\":0,\"averageActivePace\":0.79020182004524075,\"numberOfSteps\":392,\"relativeAltitude\":-8.534698486328125,\"currentCadence\":1.6278067827224731,\"activity\":\"Stationary\",\"currentPace\":0.75226451898987856,\"pressure\":98.876823425292969,\"distance\":279.06735425814986}"
-//   },
-//   "Big Papa": {
-//     "uuid": "E96EEFB7-3A69-434D-9453-8BBFE0C22542",
-//     "id": 0,
-//     "name": "Big Papa",
-//     "lat": 38.604530334472656,
-//     "long": -90.22959899902344,
-//     "accuracy": 10,
-//     "elevation": 165.889892578125,
-//     "speed": 0,
-//     "tilt": 0,
-//     "heading": 63.28125,
-//     "heartrate": 0,
-//     "time": "2018-10-26T18:01:38.985Z",
-//     "notes": "{\"floorsAscended\":5,\"customNote\":\"\",\"currentTripStart\":\"2018-10-26T13:36:26.838Z\",\"floorsDescended\":1,\"averageActivePace\":0.69014509839607008,\"numberOfSteps\":3750,\"relativeAltitude\":4.46551513671875,\"currentCadence\":1.6933163404464722,\"activity\":\"Stationary\",\"currentPace\":0.69752418994903564,\"pressure\":98.69244384765625,\"distance\":3073.288706459105}"
-//   },
-//   "Bigger Papa": {
-//     "uuid": "8F0BAEE9-19CD-4203-A025-D64F5D706220",
-//     "id": 0,
-//     "name": "Bigger Papa",
-//     "lat": 38.604427337646484,
-//     "long": -90.22966003417969,
-//     "accuracy": 10,
 //     "elevation": 169.50436401367188,
 //     "speed": 0,
 //     "tilt": 0,

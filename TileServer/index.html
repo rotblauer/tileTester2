@@ -105,8 +105,8 @@
             /* filter: alpha(opacity=50); */
             /* opacity: 0.5; */
             position: fixed;
-            /* left: 64px; */
-            right: 0px;
+            left: 64px;
+            /* right: 0px; */
             /* bottom: 0px; */
             /* height: 30px; */
             /* width: 100%; */
@@ -124,15 +124,17 @@
 
         #url-location {
             cursor: pointer;
-            max-width: 50%;
-            overflow: hidden;
+            /* max-width: 50%; */
+            /* overflow: hidden; */
+            /* font-size: 0.6em; */
         }
 
         #layer-buttons {
             z-index: 1000;
             /*float: right;*/
-            position: absolute;
-            top: 5em;
+            position: fixed;
+            /* top: 5em; */
+            bottom: 1em;
             right: 0px;
             text-align: right;
         }
@@ -148,7 +150,7 @@
         }
 
         #lastknowns-div {
-            position: absolute;
+            position: fixed;
             z-index: 1000;
             bottom: 0px;
             background-opacity: 0;
@@ -185,13 +187,23 @@
                 <option value="iceland">Iceland</option>
                 <option value="hokkaido">Hokkaido</option>
             </select>
+            <select id="points-layer-select" name="">
+                <option value="recent">Points: recency</option>
+                <option value="speed">Points: speed</option>
+                <option value="density">Points: density</option>
+            </select>
+            <select id="map-layer-select" id="" name="">
+                <option value="tile-light">Map: light</option>
+                <option value="tile-dark">Map: dark</option>
+                <option value="tile-outdoors">Map: outdoors</option>
+                <option value="tile-sat">Map: satellite</option>
+            </select>
         </div>
 
         <div id="metadata-holder">
             <p id="url-location-holder">
                 <span id="url-location-box">
-                    <a id="url-location" href=""><i class="glyphicon glyphicon-share"></i></a>
-                    <a href="http://www.catstats.rotblauer.com/" style="" target="_"><i class="glyphicon glyphicon-stats"></i></a>
+                    <a id="url-location" href="">link</a> | <a href="http://www.catstats.rotblauer.com/" style="" target="_">catstats</a> | <a href="http://punktlich.rotblauer.com/install" >download latest</a>
                 </span>
             </p>
 
@@ -202,16 +214,12 @@
         <div id="lastknowns-div">
             <span id="lastknowns"></span>
         </div>
-        <div id="layer-buttons">
-            <button id="recent-layer" class="layer-button">Points: recency</button><br />
-            <button id="speed-layer" class="layer-button">Points: speed</button><br />
-            <button id="density-layer" class="layer-button">Points: density</button><br />
-            <button id="trip-layer" class="layer-button" disabled>Points: trip</button> <br />
-            <button id="tile-light" class="tile-button">Map: light</button><br />
-            <button id="tile-dark" class="tile-button">Map: dark</button><br />
-            <button id="tile-outdoors" class="tile-button">Map: outdoors</button><br>
-            <button id="tile-sat" class="tile-button">Map: satellite</button>
-        </div>
+        <!-- <div id="layer-buttons"> -->
+        <!-- <button id="tile-light" class="tile-button">Map: light</button><br /> -->
+        <!-- <button id="tile-dark" class="tile-button">Map: dark</button><br /> -->
+        <!-- <button id="tile-outdoors" class="tile-button">Map: outdoors</button><br> -->
+        <!-- <button id="tile-sat" class="tile-button">Map: satellite</button> -->
+        <!-- </div> -->
 
         <div id="map"></div>
 
