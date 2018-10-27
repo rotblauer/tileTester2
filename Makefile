@@ -32,7 +32,6 @@ upload:
 	gzip --best --keep --verbose ./tippedcanoetrack.db
 	rsync -avzLPh ./tippedcanoetrack.db.gz freya:${PUNKTS_UPSTREAM_ROOT}/tippedcanoetrack.db.gz
 	./getems/decompress_and_update_upstream.sh
-	cp tippedcanoetrack.db ./TileServer/tester.db
 
 nuke:
 	rm -rf ./TileServer/tester.db
