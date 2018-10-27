@@ -38,6 +38,10 @@ nuke: ## Removes all possible getem artifacts
 	rm -rf ./bak
 	rm -rf ./out* ./tracks* ./tippedcanoe*
 
+dev: ## Build and start dev tile server
+	go build -o TileServer/TileServer ./TileServer
+	./TileServer/TileServer
+
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
