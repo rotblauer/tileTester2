@@ -189,9 +189,12 @@ function delegateTileLayer(name) {
         setMapTileLayer(mb_tile_dark);
         $("#metadata-holder").css("background-color", "black");
         $("#metadata").css("color", "white");
+        $("body").css("background-color", "black");
+
     } else {
         $("#metadata-holder").css("background-color", "white");
         $("#metadata").css("color", "black");
+        $("body").css("background-color", "white");
     }
 
     if ($("#map-layer-select").val() !== name) {
