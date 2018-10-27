@@ -22,7 +22,7 @@ update:
 	git --work-tree=${GOPATH}/src/github.com/rotblauer/trackpoints --git-dir=${GOPATH}/src/github.com/rotblauer/trackpoints/.git branch --set-upstream-to=origin/master master
 	git branch --set-upstream-to=origin/master master
 	go get -v -u github.com/rotblauer/tileTester2/...
-	@echo "GIT HEAD=$(BINARY)"
+	@echo "GIT HEAD=$(COMMIT)"
 
 rundump:
 	go build -o dumper dump.go
