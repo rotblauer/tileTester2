@@ -185,7 +185,11 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int) erro
 
 	CloseGZ(f)
 
-	tippCmd, tippargs := getTippyProcess(out, jsonGzTracks)
+	tippCmd, tippargs, tipperr := getTippyProcess(out, jsonGzTracks)
+	if tipperr != nil {
+		return tipperr
+	}
+
 	fmt.Println(">", tippCmd, tippargs)
 	tippmycanoe := exec.Command(tippCmd, tippargs...)
 	tippmycanoe.Stdout = os.Stdout
@@ -250,7 +254,7 @@ func main() {
 
 }
 
-func getTippyProcess(out string, in string) (tippCmd string, tippargs []string) {
+func getTippyProcess(out string, in string) (tippCmd string, tippargs []string, err error) {
 	//tippy process
 	//Mapping extremely dense point data with vector tiles
 	//https://www.mapbox.com/blog/vector-density/
@@ -274,6 +278,7 @@ func getTippyProcess(out string, in string) (tippCmd string, tippargs []string) 
 	//
 	//WARNINGS:
 	//Highest supported zoom with detail 14 is 18
+
 	tippCmd = "/usr/local/bin/tippecanoe"
 	tippargs = []string{
 		"-ag",
@@ -292,6 +297,13 @@ func getTippyProcess(out string, in string) (tippCmd string, tippargs []string) 
 		"-o", out + ".mbtiles",
 		"--force", "-P", in, "--reorder",
 	}
+
+	// 'in' should be an existing file
+	_, err = os.Stat(in)
+	if err != nil {
+		return
+	}
+
 	// Use alternate tippecanoe path if 'bash -c which tippecanoe' returns something without error and different than default
 	if b, e := exec.Command("bash -c", "which", "tippecanoe").Output(); e == nil && string(b) != tippCmd {
 		tippCmd = string(b)
