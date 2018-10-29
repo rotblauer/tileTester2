@@ -25,10 +25,13 @@ var colors = {
     "Chishiki": "rgb(27,142,29)"
 };
 
-var url = 'http://punktlich.rotblauer.com:8081/tiles/{z}/{x}/{y}';
 var lastKnownJSONurl = 'http://track.areteh.co:3001/lastknown';
 var metadataURL = 'http://track.areteh.co:3001/metadata';
-// url = 'http://localhost:8080/tiles/{z}/{x}/{y}';
+// var url = 'http://punktlich.rotblauer.com:8081/master/{z}/{x}/{y}';
+// var pbfurlmaster = 'http://punktlich.rotblauer.com:8081/anything/{z}/{x}/{y}';
+// var url = 'http://localhost:8080/master/{z}/{x}/{y}';
+// var pbfurlmaster = 'http://catonmap.info:8080/master/{z}/{x}/{y}';
+var pbfurlmaster = 'http://catonmap.info:8080/master/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
 var defaultCenter = [38.6270, -90.1994];
 var defaultZoom = 8;
 var didLogOnce = false;
@@ -594,7 +597,8 @@ var drawLayer = function drawLayer(opts) {
     }
 
     var v = L.vectorGrid;
-    pbfLayer = v.protobuf(url, opts)
+    // TODO: add edge layer adder here
+    pbfLayer = v.protobuf(pbfurlmaster, opts)
     pbfLayer.addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
         .on('load', function(e) {
             // console.log('load', e);
@@ -798,9 +802,9 @@ function getAndMakeButtonsForLastKnownCats() {
                     return;
                 }
 
-                if (val.hasOwnProperty("notes") && val["notes"] !== "") {
-                    console.log(key, "steps", JSON.parse(val["notes"]));
-                }
+                // if (val.hasOwnProperty("notes") && val["notes"] !== "") {
+                //     console.log(key, "steps", JSON.parse(val["notes"]));
+                // }
 
                 var n = val["name"];
                 // if (oVal.length > 1) {

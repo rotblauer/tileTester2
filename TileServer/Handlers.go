@@ -11,20 +11,59 @@ import (
 )
 
 var (
-	db *bolt.DB
+	db                                    *bolt.DB
+	devopdb                               *bolt.DB
+	edgedb                                *bolt.DB
+	masterdbpath, devopdbpath, edgedbpath string
 )
 
 // GetDB is db getter.
-func GetDB() *bolt.DB {
-	return db
+func GetDB(nameof string) *bolt.DB {
+	switch nameof {
+	case "master", "":
+		return db
+	case "devop":
+		return devopdb
+	case "edge":
+		return edgedb
+	default:
+		log.Println("invalid db requested")
+	}
+	return nil
 }
 
 // string arg for da cattrack main to rid dis
-func InitBoltDB(boltDb string) error {
-
+func InitBoltDB(nameof, boltDb string) error {
 	var err error
-	db, err = bolt.Open(boltDb, 0666, nil)
-
+	switch nameof {
+	case "master", "":
+		if db != nil {
+			db.Close()
+		}
+		if boltDb == "" {
+			boltDb = masterdbpath
+		}
+		db, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
+		masterdbpath = boltDb
+	case "devop":
+		if devopdb != nil {
+			devopdb.Close()
+		}
+		if boltDb == "" {
+			boltDb = devopdbpath
+		}
+		devopdb, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
+		devopdbpath = boltDb
+	case "edge":
+		if edgedb != nil {
+			edgedb.Close()
+		}
+		if boltDb == "" {
+			boltDb = edgedbpath
+		}
+		edgedb, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
+		edgedbpath = boltDb
+	}
 	if err != nil {
 		log.Println("Could not initialize Bolt database. ", err)
 	} else {
@@ -39,6 +78,21 @@ func i32tob(v int32) []byte {
 	return b
 }
 
+func RefreshDB(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	vars := mux.Vars(r)
+	dbName := vars["db"]
+	if dbName == "" {
+		http.Error(w, "invalid db name", http.StatusBadRequest)
+		return
+	}
+	if err := InitBoltDB(dbName, ""); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte("OK:" + dbName))
+}
+
 func TilesBolty(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/x-protobuf")
@@ -46,7 +100,7 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 	// https://github.com/SpatialServer/Leaflet.MapboxVectorTile/issues/29
 
 	vars := mux.Vars(r)
-	//dbname := vars["db"]
+	dbname := vars["db"]
 	z := vars["z"]
 	x := vars["x"]
 	y := vars["y"]
@@ -71,8 +125,11 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 
 	// tile data bytes for response
 	var tileData []byte
-	e := GetDB().View(func(tx *bolt.Tx) error {
-
+	db := GetDB(dbname)
+	if db == nil {
+		http.Error(w, "invalid db parameter", http.StatusBadRequest)
+	}
+	e := db.View(func(tx *bolt.Tx) error {
 		bz := tx.Bucket(i32tob(int32(zoomLevel)))
 		if bz == nil { // these are the cases the map is requesting a tile that we haven't made :paw_prints: in yet
 			log.Println("E: bucket by zoom empty")

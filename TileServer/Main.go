@@ -7,19 +7,33 @@ import (
 	"path"
 )
 
+var mbtilesBoltDBPathMaster string
+var mbtilesBoltDBPathDevop string
+var mbtilesBoltDBPathEdge string
+var port string
+
 func main() {
 
-	var mbtilesBoltDBPath string
-	var port string
-
-	flag.StringVar(&mbtilesBoltDBPath, "db", path.Join("./", "tiles.db"), "rel path of bolt db containing vector mbtiles file to serve")
+	flag.StringVar(&mbtilesBoltDBPathMaster, "db", path.Join("./", "tiles.db"), "rel path of bolt db containing vector mbtiles file to serve")
+	flag.StringVar(&mbtilesBoltDBPathDevop, "db-devop", path.Join("./", "tiles-devop.db"), "rel path of bolt db containing vector mbtiles file to serve")
+	flag.StringVar(&mbtilesBoltDBPathEdge, "db-edge", path.Join("./", "tiles-edge.db"), "rel path of bolt db containing vector mbtiles file to serve")
 	flag.StringVar(&port, "port", "8080", "port to serve on")
 	flag.Parse()
 
 	router := NewRouter()
 
-	if bolterr := InitBoltDB(mbtilesBoltDBPath); bolterr == nil {
-		defer GetDB().Close()
+	if bolterr := InitBoltDB("master", mbtilesBoltDBPathMaster); bolterr == nil {
+		defer GetDB("master").Close()
+	} else {
+		log.Println(bolterr)
+	}
+	if bolterr := InitBoltDB("devop", mbtilesBoltDBPathDevop); bolterr == nil {
+		defer GetDB("devop").Close()
+	} else {
+		log.Println(bolterr)
+	}
+	if bolterr := InitBoltDB("edge", mbtilesBoltDBPathEdge); bolterr == nil {
+		defer GetDB("edge").Close()
 	} else {
 		log.Println(bolterr)
 	}

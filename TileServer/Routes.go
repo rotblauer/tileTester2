@@ -12,11 +12,16 @@ type Route struct {
 type Routes []Route
 
 var routes = Routes{
-
 	Route{
 		"Tiles",
 		"GET",
 		"/{db}/{z}/{x}/{y}",
 		TilesBolty,
+	},
+	Route{
+		"DBRefresh",
+		"GET",
+		"/{db}/refresh",
+		RefreshDB,
 	},
 }
