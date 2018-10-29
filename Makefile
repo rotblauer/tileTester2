@@ -23,17 +23,23 @@ migrate: get install ## Runs and explains stuff for setting up a new serving and
 	@echo "5. Profit"
 
 install: ## Install packages: dumpy, tileserver, and catTracks.
-	go build -o ${GOPATH}/bin/dumpy github.com/rotblauer/tileTester2/dump.go
-	go build -o ${GOPATH}/bin/tileserver github.com/rotblauer/tileTester2/TileServer
+	go build -o ${GOPATH}/bin/dumpy ${GOPATH}/src/github.com/rotblauer/tileTester2/dump.go
+	cd ${GOPATH}/src/github.com/rotblauer/tileTester2
+	go build -o ${GOPATH}/bin/tileserver ./TileServer
+	cd -
+# go build -o ${GOPATH}/bin/tileserver ${GOPATH}/src/github.com/rotblauer/tileTester2/TileServer
 	go install github.com/rotblauer/catTracks
 
 runct: ## Run catTracks. Probably this command should be managed thru a systemd service, and only used via make for development.
+	mkdir -p ${TRACKS_DATA}
+	mkdir -p ${TRACKS_DATA}
 	-pkill catTracks
-	catTracks --port 3001 --db-path-master=${TRACKS_DATA}/tracks.db --tracks-gz-path=${TRACKS_DATA}/master.json.gz --devop-gz-path=${TRACKS_DATA}/devop.json.gz --edge-gz-path=${TRACKS_DATA}/edge.json.gz
+	catTracks --port 3001 --db-path-master=${TRACKS_DATA}/tracks.db --db-path-devop=${TRACKS_DATA}/devop.db --db-path-edge=${TRACKS_DATA}/edge.db --tracks-gz-path=${TRACKS_DATA}/master.json.gz --devop-gz-path=${TRACKS_DATA}/devop.json.gz --edge-gz-path=${TRACKS_DATA}/edge.json.gz
 
 runts: ## Run tileserver. Probably this command should be managed thru a systemd service, and only used via make for development.
+	mkdir -p ${TRACKS_DATA}
 	-pkill tileserver
-	tileserver --db=${TRACKS_DATA}/tiles-master.db --devop-db=${TRACKS_DATA}/tiles-devop.db --edge-db=${TRACKS_DATA}/tiles-edge.db
+	tileserver --db=${TRACKS_DATA}/tiles-master.db --db-devop=${TRACKS_DATA}/tiles-devop.db --db-edge=${TRACKS_DATA}/tiles-edge.db
 
 getem/master:
 	-mv ${TRACKS_DATA}/edge.json.gz ${TRACKS_DATA}/devop.json.gz

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	bolt "github.com/coreos/bbolt"
@@ -32,9 +33,21 @@ func GetDB(nameof string) *bolt.DB {
 	return nil
 }
 
+func fileExists(pathto string) bool {
+	_, err := os.Stat(pathto)
+	if err == nil {
+		return true
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	panic(err.Error())
+}
+
 // string arg for da cattrack main to rid dis
 func InitBoltDB(nameof, boltDb string) error {
 	var err error
+	bopts := &bolt.Options{}
 	switch nameof {
 	case "master", "":
 		if db != nil {
@@ -43,7 +56,10 @@ func InitBoltDB(nameof, boltDb string) error {
 		if boltDb == "" {
 			boltDb = masterdbpath
 		}
-		db, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
+		if fileExists(boltDb) {
+			bopts.ReadOnly = true
+		}
+		db, err = bolt.Open(boltDb, 0666, bopts)
 		masterdbpath = boltDb
 	case "devop":
 		if devopdb != nil {
@@ -52,7 +68,10 @@ func InitBoltDB(nameof, boltDb string) error {
 		if boltDb == "" {
 			boltDb = devopdbpath
 		}
-		devopdb, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
+		if fileExists(boltDb) {
+			bopts.ReadOnly = true
+		}
+		devopdb, err = bolt.Open(boltDb, 0666, bopts)
 		devopdbpath = boltDb
 	case "edge":
 		if edgedb != nil {
@@ -61,7 +80,10 @@ func InitBoltDB(nameof, boltDb string) error {
 		if boltDb == "" {
 			boltDb = edgedbpath
 		}
-		edgedb, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
+		if fileExists(boltDb) {
+			bopts.ReadOnly = true
+		}
+		edgedb, err = bolt.Open(boltDb, 0666, bopts)
 		edgedbpath = boltDb
 	}
 	if err != nil {
