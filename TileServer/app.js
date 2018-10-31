@@ -25,9 +25,9 @@ var colors = {
     "Chishiki": "rgb(27,142,29)"
 };
 
-// var dev = false;
+var dev = false;
+// var dev = true;
 // var v = "v1";
-var dev = true;
 var v = "v2";
 
 var tileHost = "http://punktlich.rotblauer.com:8081";
@@ -51,7 +51,7 @@ var metadataURL = trackHost+'/metadata';
 // var pbfurlmaster = 'http://catonmap.info:8080/master/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
 
 var defaultCenter = [38.6270, -90.1994];
-var defaultZoom = 8;
+var defaultZoom = 5;
 var didLogOnce = false;
 
 var pbfurlmaster = tileHost+'/master/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
