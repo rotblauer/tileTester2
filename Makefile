@@ -125,9 +125,9 @@ get: ## Updates project root (eg. dumper)
 	git branch --set-upstream-to=origin/master master
 	go get -v -u github.com/rotblauer/tileTester2/...
 	go get -v -u github.com/rotblauer/catTracks/...
-	git --work-tree=${GOPATH}/src/github.com/rotblauer/trackpoints rev-parse HEAD
-	git --work-tree=${GOPATH}/src/github.com/rotblauer/tileTester2 rev-parse HEAD
-	git --work-tree=${GOPATH}/src/github.com/rotblauer/catTracks rev-parse HEAD
+	git --git-dir=${GOPATH}/src/github.com/rotblauer/trackpoints/.git rev-parse HEAD
+	git --git-dir=${GOPATH}/src/github.com/rotblauer/tileTester2/.git rev-parse HEAD
+	git --git-dir=${GOPATH}/src/github.com/rotblauer/catTracks/.git rev-parse HEAD
 
 rundump: ## Runs database dump -> out.json.gz, which is then pumped to tippecanoe for mbtiles, and that then to tippedcanoetrack.db.
 	go build -o dumper dump.go
