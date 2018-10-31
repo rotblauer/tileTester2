@@ -27,13 +27,13 @@ var colors = {
 
 var dev = false;
 // var dev = true;
-// var v = "v1";
-var v = "v2";
+// var vv = "v1";
+var vv = "v2";
 
 var tileHost = "http://punktlich.rotblauer.com:8081";
 var trackHost = "http://track.areteh.co:3001";
 
-if (v == "v2") {
+if (vv == "v2") {
     tileHost = "http://catonmap.info:8080";
     trackHost = "http://catonmap.info:3001";
 }
@@ -202,16 +202,24 @@ function setMapTileLayer(tile_layer) {
     if (pbfLayer !== null && typeof pbfLayer !== "undefined") {
         map.removeLayer(pbfLayer);
     }
+    if (pbfDevopLayer !== null && typeof pbfDevopLayer !== "undefined") {
+        map.removeLayer(pbfDevopLayer);
+    }
+    if (pbfEdgeLayer !== null && typeof pbfEdgeLayer !== "undefined") {
+        map.removeLayer(pbfEdgeLayer);
+    }
+
     if (current_tile_layer !== null && typeof current_tile_layer !== "undefined") {
         console.log("removing current tile layer");
         map.removeLayer(current_tile_layer);
     }
     current_tile_layer = tile_layer;
     map.addLayer(current_tile_layer);
+
     if (pbfLayer !== null && typeof pbfLayer !== "undefined") {
         map.addLayer(pbfLayer);
     }
-    if (pbfDevopLayer !== null && typeof pbfDevopLayer !== "undefined") {
+  if (pbfDevopLayer !== null && typeof pbfDevopLayer !== "undefined") {
         map.addLayer(pbfDevopLayer);
     }
     if (pbfEdgeLayer !== null && typeof pbfEdgeLayer !== "undefined") {
@@ -650,7 +658,7 @@ var drawLayer = function drawLayer(opts) {
 
     var v = L.vectorGrid;
 
-    pbfLayer = v.protobuf(pbfurlmaster, opts);
+  pbfLayer = v.protobuf(pbfurlmaster, opts);
     pbfLayer.addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
         .on('load', function(e) {
             // console.log('load', e);
