@@ -9,6 +9,7 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/gorilla/mux"
+	"sync"
 )
 
 var (
@@ -16,10 +17,14 @@ var (
 	devopdb                               *bolt.DB
 	edgedb                                *bolt.DB
 	masterdbpath, devopdbpath, edgedbpath string
+	mumaster, mudev, muedge               sync.Mutex
 )
 
 // GetDB is db getter.
-func GetDB(nameof string) *bolt.DB {
+func GetDB(nameof string) (db *bolt.DB) {
+	// defer func() {
+	// 	if !db.Open()
+	// }()
 	switch nameof {
 	case "master", "":
 		return db
@@ -44,46 +49,78 @@ func fileExists(pathto string) bool {
 	panic(err.Error())
 }
 
+func aorb(ab string) string {
+	if ab == "a" {
+		return "b"
+	}
+	return "a"
+}
+
 // string arg for da cattrack main to rid dis
 func InitBoltDB(nameof, boltDb string) error {
+	log.Println("initing boltdb name=", nameof)
 	var err error
 	bopts := &bolt.Options{}
+	defer func() {
+		log.Println("boltdb-refresh/init: path=", boltDb, "name=", nameof)
+	}()
 	switch nameof {
 	case "master", "":
 		if db != nil {
+			log.Println("closing db=", nameof, boltDb)
 			db.Close()
+			log.Println("closed db=", nameof, boltDb)
+			bopts.ReadOnly = true
 		}
 		if boltDb == "" {
 			boltDb = masterdbpath
 		}
-		if fileExists(boltDb) {
-			bopts.ReadOnly = true
-		}
-		db, err = bolt.Open(boltDb, 0666, bopts)
+		// if !fileExists(boltDb) {
+		// 	boltDb = masterdbpath + aorb(ab)
+		// }
+		// if !fileExists(boltDb) {
+		// 	panic(nameof + ":nodb")
+		// }
+		log.Println("opening", nameof, boltDb)
+		db, err = bolt.Open(boltDb, 0660, bopts)
 		masterdbpath = boltDb
 	case "devop":
 		if devopdb != nil {
+			log.Println("closing db=", nameof, boltDb)
 			devopdb.Close()
+			log.Println("closed db=", nameof, boltDb)
+			bopts.ReadOnly = true
 		}
 		if boltDb == "" {
 			boltDb = devopdbpath
 		}
-		if fileExists(boltDb) {
-			bopts.ReadOnly = true
-		}
-		devopdb, err = bolt.Open(boltDb, 0666, bopts)
+		// if !fileExists(boltDb) {
+		// 	boltDb = devopdbpath + aorb(ab)
+		// }
+		// if !fileExists(boltDb) {
+		// 	panic(nameof + ":nodb")
+		// }
+		log.Println("opening", nameof, boltDb)
+		devopdb, err = bolt.Open(boltDb, 0660, bopts)
 		devopdbpath = boltDb
 	case "edge":
 		if edgedb != nil {
+			log.Println("closing db=", nameof, boltDb)
 			edgedb.Close()
+			log.Println("closed db=", nameof, boltDb)
+			bopts.ReadOnly = true
 		}
 		if boltDb == "" {
 			boltDb = edgedbpath
 		}
-		if fileExists(boltDb) {
-			bopts.ReadOnly = true
-		}
-		edgedb, err = bolt.Open(boltDb, 0666, bopts)
+		// if !fileExists(boltDb) {
+		// 	boltDb = edgedbpath + aorb(ab)
+		// }
+		// if !fileExists(boltDb) {
+		// 	panic(nameof + ":nodb")
+		// }
+		log.Println("opening", nameof, boltDb)
+		edgedb, err = bolt.Open(boltDb, 0660, bopts)
 		edgedbpath = boltDb
 	}
 	if err != nil {
@@ -100,18 +137,42 @@ func i32tob(v int32) []byte {
 	return b
 }
 
+func lockdb(nameof string) {
+	switch nameof {
+	case "master":
+		mumaster.Lock()
+	case "devop":
+		mudev.Lock()
+	case "edge":
+		mudev.Lock()
+	}
+}
+func unlockdb(nameof string) {
+	switch nameof {
+	case "master":
+		mumaster.Unlock()
+	case "devop":
+		mudev.Unlock()
+	case "edge":
+		mudev.Unlock()
+	}
+}
+
 func RefreshDB(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	vars := mux.Vars(r)
 	dbName := vars["db"]
+	log.Println("handling refreshdb db=", dbName)
 	if dbName == "" {
 		http.Error(w, "invalid db name", http.StatusBadRequest)
 		return
 	}
-	if err := InitBoltDB(dbName, ""); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// lockdb(dbName)
+	// defer unlockdb(dbName)
+	// if err := InitBoltDB(dbName, ""); err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
 	w.Write([]byte("OK:" + dbName))
 }
 
@@ -147,9 +208,44 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 
 	// tile data bytes for response
 	var tileData []byte
-	db := GetDB(dbname)
+	// lockdb(dbname)
+	// defer unlockdb(dbname)
+	// db, err := bolt.Open(dbp, 0660, &bolt.Options{ReadOnly: true})
+	// db := GetDB(dbname)
+
+	// for _, p := range []string{masterdbpath, devopdbpath, edgedbpath} {
+	// 	if p == "" {
+	// 		InitBoltDB(dbname, "")
+	// 		break
+	// 	}
+	// }
+
+	var dbp string
+	switch dbname {
+	case "master":
+		dbp = masterdbpath
+	case "devop":
+		dbp = devopdbpath
+	case "edge":
+		dbp = edgedbpath
+	default:
+		http.Error(w, "invalid db parameter", http.StatusBadRequest)
+		return
+	}
+
+	log.Println("TILEGET: db/z/x/y path", dbname, z, x, y, dbp)
+
+	InitBoltDB(dbname, "")
+	db, err := bolt.Open(dbp, 0660, &bolt.Options{ReadOnly: true})
+	// db, err := bolt.Open(dbp, 0660, nil)
+	log.Println("opendb")
+	defer db.Close()
 	if db == nil {
 		http.Error(w, "invalid db parameter", http.StatusBadRequest)
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	e := db.View(func(tx *bolt.Tx) error {
 		bz := tx.Bucket(i32tob(int32(zoomLevel)))

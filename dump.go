@@ -130,7 +130,6 @@ func byteToFeature(val []byte) *geojson.Feature {
 }
 
 func dumpBolty(boltDb string, out string, compressLevel int, batchSize int, tilesetname string) error {
-
 	initBoltDB(boltDb)
 	// If the file doesn't exist, create it, or append to the file
 	jsonGzTracks := out + ".json.gz"

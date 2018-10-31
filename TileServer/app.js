@@ -25,16 +25,39 @@ var colors = {
     "Chishiki": "rgb(27,142,29)"
 };
 
-var lastKnownJSONurl = 'http://track.areteh.co:3001/lastknown';
-var metadataURL = 'http://track.areteh.co:3001/metadata';
+// var dev = false;
+// var v = "v1";
+var dev = true;
+var v = "v2";
+
+var tileHost = "http://punktlich.rotblauer.com:8081";
+var trackHost = "http://track.areteh.co:3001";
+
+if (v == "v2") {
+    tileHost = "http://catonmap.info:8080";
+    trackHost = "http://catonmap.info:3001";
+}
+if ( dev ) {
+    tileHost = "http://localhost:8080";
+    trackHost = "http://localhost:3001";
+}
+
+var lastKnownJSONurl = trackHost+'/lastknown';
+var metadataURL = trackHost+'/metadata';
+
 // var url = 'http://punktlich.rotblauer.com:8081/master/{z}/{x}/{y}';
 // var pbfurlmaster = 'http://punktlich.rotblauer.com:8081/anything/{z}/{x}/{y}';
 // var url = 'http://localhost:8080/master/{z}/{x}/{y}';
-// var pbfurlmaster = 'http://catonmap.info:8080/master/{z}/{x}/{y}';
-var pbfurlmaster = 'http://catonmap.info:8080/master/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
+// var pbfurlmaster = 'http://catonmap.info:8080/master/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
+
 var defaultCenter = [38.6270, -90.1994];
 var defaultZoom = 8;
 var didLogOnce = false;
+
+var pbfurlmaster = tileHost+'/master/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
+var pbfurldevop = tileHost+'/devop/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
+var pbfurledge = tileHost+'/edge/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
+
 
 var globalSinceFloor = ""; // actually will be an integer, but will just use +"" to cast that
 
@@ -57,6 +80,8 @@ function setBrowsePosition(s) {
 
 var drawnLayer = "recent";
 var pbfLayer;
+var pbfDevopLayer;
+var pbfEdgeLayer;
 var drawnFeatures = [];
 var map;
 var current_tile_layer;
@@ -228,34 +253,33 @@ var clearHighlight = function() {
     highlight = null;
 };
 
+var speedFn = function(properties, zoom) {
+    if (globalSinceFloor !== "") {
 
+        if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
+            return {};
+        }
+    }
+
+    var color2 = colors[properties.Name] || "rgb(241,66,244)";
+
+    var maxNormalPossibleSpeed = 15; // m/s, no rockets allowed
+    return {
+        stroke: false,
+        fill: true,
+        fillColor: shadeRGBColor(color2, ((properties.Speed / maxNormalPossibleSpeed) % 1.0) / 2),
+        fillOpacity: 0.1,
+        radius: radiusFromSpeed(properties.Speed, zoom),
+        type: "Point"
+    };
+};
 
 var speedTileOptions = {
     rendererFactory: L.canvas.tile,
     // attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://www.mapbox.com/about/maps/">MapBox</a>',
     vectorTileLayerStyles: {
-
-        'catTrack': function(properties, zoom) {
-
-            if (globalSinceFloor !== "") {
-
-                if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
-                    return {};
-                }
-            }
-
-            var color2 = colors[properties.Name] || "rgb(241,66,244)";
-
-            var maxNormalPossibleSpeed = 15; // m/s, no rockets allowed
-            return {
-                stroke: false,
-                fill: true,
-                fillColor: shadeRGBColor(color2, ((properties.Speed / maxNormalPossibleSpeed) % 1.0) / 2),
-                fillOpacity: 0.1,
-                radius: radiusFromSpeed(properties.Speed, zoom),
-                type: "Point"
-            };
-        }
+        'catTrack': speedFn,
+        'catTrackEdge': speedFn
     },
     // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
@@ -346,13 +370,8 @@ function getRelDensity(zoom, n) {
     return relDensity;
 }
 
-var densityTileOptions = {
-    rendererFactory: L.canvas.tile,
-    vectorTileLayerStyles: {
-
-        'catTrack': function(properties, zoom) {
-
-            if (globalSinceFloor !== "") {
+var densityFn = function(properties, zoom) {
+             if (globalSinceFloor !== "") {
                     if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
                     return {};
                 }
@@ -428,7 +447,13 @@ var densityTileOptions = {
                 didLogOnce = true;
             }
             return out;
-        }
+};
+
+var densityTileOptions = {
+    rendererFactory: L.canvas.tile,
+    vectorTileLayerStyles: {
+        'catTrack': densityFn,
+        'catTrackEdge': densityFn
     },
     interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
@@ -492,19 +517,18 @@ var recencyScale = function(props, color) {
     };
 };
 
-var trackExampler = 0;
-var recencyTileOptions = {
-    rendererFactory: L.canvas.tile,
-    vectorTileLayerStyles: {
-
-        'catTrack': function(properties, zoom) {
-
+var n = 0;
+var recencyFn = function(properties, zoom , layer){
             if (globalSinceFloor !== "") {
                 console.log("recent globalSinceFloor", globalSinceFloor);
                     if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
                     return {};
                 }
             }
+    if (n === 0) {
+        console.log("PROPERTIES", properties);
+        n++;
+    }
 
             // if (earliestTrack == null) {
             //     earliestTrack = properties["Time"];
@@ -526,7 +550,7 @@ var recencyTileOptions = {
             var color2 = colors[properties.Name] || "rgb(241,66,244)";
             var time = new Date(properties.Time).getTime();
 
-            return {
+            var out ={
                 stroke: false,
                 fill: true,
                 fillColor: recencyScale(properties, color2).color,
@@ -534,6 +558,22 @@ var recencyTileOptions = {
                 radius: recencyScale(properties, color2).radius,
                 type: "Point"
             };
+            if (layer === "catTrackEdge") {
+                out.fillColor = "dodgerblue";
+            }
+
+            return out;
+};
+
+var trackExampler = 0;
+var recencyTileOptions = {
+    rendererFactory: L.canvas.tile,
+    vectorTileLayerStyles: {
+        'catTrack': function(props, z) {
+            return recencyFn(props, z, "catTrack");
+        },
+        'catTrackEdge': function(props, z) {
+            return recencyFn(props, z, "catTrackEdge");
         }
     },
     // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
@@ -595,14 +635,30 @@ var drawLayer = function drawLayer(opts) {
     if (typeof pbfLayer !== "undefined") {
         map.removeLayer(pbfLayer);
     }
+    if (typeof pbfEdgeLayer !== "undefined") {
+        map.removeLayer(pbfEdgeLayer);
+    }
+    if (typeof pbfDevopLayer !== "undefined") {
+        map.removeLayer(pbfDevopLayer);
+    }
 
     var v = L.vectorGrid;
-    // TODO: add edge layer adder here
-    pbfLayer = v.protobuf(pbfurlmaster, opts)
+
+    pbfLayer = v.protobuf(pbfurlmaster, opts);
     pbfLayer.addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
         .on('load', function(e) {
             // console.log('load', e);
         });
+
+    pbfDevopLayer = v.protobuf(pbfurldevop, opts);
+    pbfDevopLayer.addTo(map).on('load', function(e) {
+        // console.log('loaded pbfdevoplayer');
+    });
+
+    pbfEdgeLayer = v.protobuf(pbfurledge, opts);
+    pbfEdgeLayer.addTo(map).on('load', function(e) {
+        // console.log('loaded pbfedgelayer');
+    });
 };
 
 function delegateDrawLayer(name) {

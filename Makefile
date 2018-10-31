@@ -5,6 +5,7 @@ PUNKTS_UPSTREAM_ROOT=/home/freyabison/punktlich.rotblauer.com
 
 export TRACKS_DATA?=${HOME}/tdata
 export GOPATH?=${HOME}/go
+export CATTS_ENDPOINT?=http://catonmap.info:8080
 
 # getem: clean download update rundump setup server ## Run getem
 
@@ -26,55 +27,94 @@ install: ## Install packages: dumpy, tileserver, and catTracks.
 	go build -o ${GOPATH}/bin/dumpy ${GOPATH}/src/github.com/rotblauer/tileTester2/dump.go
 	cd ${GOPATH}/src/github.com/rotblauer/tileTester2
 	go build -o ${GOPATH}/bin/tileserver ./TileServer
-	cd -
-# go build -o ${GOPATH}/bin/tileserver ${GOPATH}/src/github.com/rotblauer/tileTester2/TileServer
 	go install github.com/rotblauer/catTracks
 
 runct: ## Run catTracks. Probably this command should be managed thru a systemd service, and only used via make for development.
-	mkdir -p ${TRACKS_DATA}
-	mkdir -p ${TRACKS_DATA}
+	mkdir -p ${TRACKS_DATA}/bak
 	-pkill catTracks
-	catTracks --port 3001 --db-path-master=${TRACKS_DATA}/tracks.db --db-path-devop=${TRACKS_DATA}/devop.db --db-path-edge=${TRACKS_DATA}/edge.db --tracks-gz-path=${TRACKS_DATA}/master.json.gz --devop-gz-path=${TRACKS_DATA}/devop.json.gz --edge-gz-path=${TRACKS_DATA}/edge.json.gz
+	catTracks --port 3001 --db-path-master=${TRACKS_DATA}/tracks.db --db-path-devop=${TRACKS_DATA}/devop.db --db-path-edge=${TRACKS_DATA}/edge.db --tracks-gz-path=${TRACKS_DATA}/master.json.gz --devop-gz-path=${TRACKS_DATA}/devop.json.gz --edge-gz-path=${TRACKS_DATA}/edge.json.gz --master-lock=${TRACKS_DATA}/MASTERLOCK --devop-lock=${TRACKS_DATA}/DEVOPLOCK --edge-lock=${TRACKS_DATA}/EDGELOCK --tiles-db-path-master=${TRACKS_DATA}/tiles-master.db --tiles-db-path-devop=${TRACKS_DATA}/tiles-devop.db --tiles-db-path-edge=${TRACKS_DATA}/tiles-edge.db --proc-master --proc-edge
 
 runts: ## Run tileserver. Probably this command should be managed thru a systemd service, and only used via make for development.
-	mkdir -p ${TRACKS_DATA}
+	mkdir -p ${TRACKS_DATA}/bak
 	-pkill tileserver
 	tileserver --db=${TRACKS_DATA}/tiles-master.db --db-devop=${TRACKS_DATA}/tiles-devop.db --db-edge=${TRACKS_DATA}/tiles-edge.db
 
 getem/master:
-	-mv ${TRACKS_DATA}/edge.json.gz ${TRACKS_DATA}/devop.json.gz
-	touch ${TRACKS_DATA}/edge.json.gz
-	-mv ${TRACKS_DATA}/tiles-edge.db ${TRACKS_DATA}/tiles-devop.db
-	curl http://catonmap.info:8080/devop/refresh
+ifneq ("$(wildcard ${TRACKS_DATA}/EDGELOCK)", "")
+	exit 1
+endif
+	touch ${TRACKS_DATA}/EDGELOCK
+ifneq ("$(wildcard ${TRACKS_DATA}/DEVOPLOCK)", "")
+	rm ${TRACKS_DATA}/EDGELOCK
+	exit 1
+endif
+	touch ${TRACKS_DATA}/DEVOPLOCK
+ifneq ("$(wildcard ${TRACKS_DATA}/MASTERLOCK)","")
+	rm ${TRACKS_DATA}/EDGELOCK	${TRACKS_DATA}/DEVOPLOCK
+	exit 1
+endif
+	touch ${TRACKS_DATA}/MASTERLOCK
 
-	rsync -avzLhP ${TRACKS_DATA}/master.json.gz ${TRACKS_DATA}/master.snap.json.gz
+	-mv ${TRACKS_DATA}/edge.json.gz ${TRACKS_DATA}/devop.json.gz
+	> ${TRACKS_DATA}/edge.json.gz
+	rm ${TRACKS_DATA}/EDGELOCK ${TRACKS_DATA}/DEVOPLOCK
+	-mv ${TRACKS_DATA}/tiles-edge.db ${TRACKS_DATA}/tiles-devop.db
+	curl --connect-timeout 1 ${CATTS_ENDPOINT}/devop/refresh
+
+ifeq ("$(wildcard ${TRACKS_DATA}/master.json.gz)","")
+	touch ${TRACKS_DATA}/master.json.gz
+endif
+	-rm ${TRACKS_DATA}/master.snap.json.gz
+	-rsync -avLhP --delete-after ${TRACKS_DATA}/master.json.gz ${TRACKS_DATA}/master.snap.json.gz
+# -cp ${TRACKS_DATA}/master.json.gz ${TRACKS_DATA}/master.snap.json.gz
+	rm ${TRACKS_DATA}/MASTERLOCK
+
 	dumpy --tipponly --out=${TRACKS_DATA}/master.snap --boltout=${TRACKS_DATA}/tiles-master.snap.db --tileset-name=catTrack
 
-	mv ${TRACKS_DATA}/tiles-master.snap.db ${TRACKS_DATA}/tiles-master.db
-	curl http://catonmap.info:8080/master/refresh
+	-mv ${TRACKS_DATA}/tiles-master.snap.db ${TRACKS_DATA}/tiles-master.db
+	curl --connect-timeout 1 ${CATTS_ENDPOINT}/master/refresh
 
 	$(MAKE) --no-print-directory clean
+
+	sleep 5
 
 getem/devop:
-	rsync -avzLhP ${TRACKS_DATA}/devop.json.gz ${TRACKS_DATA}/devop.snap.json.gz
+ifneq ("$(wildcard ${TRACKS_DATA}/DEVOPLOCK)", "")
+	sleep 1
+	exit 1
+endif
+	touch ${TRACKS_DATA}/DEVOPLOCK
+	rsync -avLhP --delete-after ${TRACKS_DATA}/devop.json.gz ${TRACKS_DATA}/devop.snap.json.gz || rm ${TRACKS_DATA}/DEVOPLOCK
+
 	dumpy --tipponly --out=${TRACKS_DATA}/devop.snap --boltout=${TRACKS_DATA}/tiles-devop.snap.db --tileset-name=catTrackDevop
 
-	mv ${TRACKS_DATA}/tiles-devop.snap.db ${TRACKS_DATA}/tiles-devop.db
-	curl http://catonmap.info:8080/devop/refresh
+	-mv ${TRACKS_DATA}/tiles-devop.snap.db ${TRACKS_DATA}/tiles-devop.db
+	curl --connect-timeout 1 ${CATTS_ENDPOINT}/devop/refresh
 
 	$(MAKE) --no-print-directory clean
+
+	sleep 1
 
 getem/edge:
-	rsync -avzLhP ${TRACKS_DATA}/edge.json.gz ${TRACKS_DATA}/edge.snap.json.gz
+# rsync -avLhP  --delete ${TRACKS_DATA}/edge.json.gz ${TRACKS_DATA}/edge.snap.json.gz || rm ${TRACKS_DATA}/EDGELOCK
+ifneq ("$(wildcard ${TRACKS_DATA}/EDGELOCK)", "")
+	sleep 1
+	exit 1
+endif
+	touch ${TRACKS_DATA}/EDGELOCK
+	-cp ${TRACKS_DATA}/edge.json.gz ${TRACKS_DATA}/edge.snap.json.gz
+	rm ${TRACKS_DATA}/EDGELOCK
 	dumpy --tipponly --out=${TRACKS_DATA}/edge.snap --boltout=${TRACKS_DATA}/tiles-edge.snap.db --tileset-name=catTrackEdge
 
-	mv ${TRACKS_DATA}/tiles-edge.snap.db ${TRACKS_DATA}/tiles-edge.db
-	curl http://catonmap.info:8080/edge/refresh
+	-mv ${TRACKS_DATA}/tiles-edge.snap.db ${TRACKS_DATA}/tiles-edge.db
+	curl --connect-timeout 1 ${CATTS_ENDPOINT}/edge/refresh
 
 	$(MAKE) --no-print-directory clean
 
+	sleep 1
+
 clean: ## Clean mbtiles
-	-mv ${TRACKS_DATA}/*.mbtiles ${TRACKS_DATA}/bak/
+	-mv ${TRACKS_DATA}/*mbtiles* ${TRACKS_DATA}/bak/
 
 download: ## Locks and clones upstream db (clone on upstream), then syncs the clone to local.
 	./getems/clone_adjacent_upstream.sh

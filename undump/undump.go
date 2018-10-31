@@ -32,20 +32,7 @@ func dumpInitBoltDB(boltDb string) error {
 	if err != nil {
 		fmt.Println("Could not initialize Bolt database. ", err)
 	}
-	// this bucket isn't even doing anything
-	// else {
-	// 	fmt.Println("Bolt db is initialized at ", boltDb)
-	// 	db.Update(func(tx *bolt.Tx) error {
-	// 		// "tracks" -- this is the default bucket, keyed on time.UnixNano
-	// 		_, e := tx.CreateBucketIfNotExists([]byte(undumpTrackKey))
-	// 		if e != nil {
-	// 			return e
-	// 		} else {
-	// 			fmt.Println("Ensured existance of bucket ", undumpTrackKey)
-	// 		}
-	// 		return e
-	// 	})
-	// }
+
 	return err
 }
 
@@ -102,6 +89,7 @@ func checkCount(rows *sql.Rows) (count int) {
 func MbtilesToBolt(mbtilesPath string, boltPath string) {
 
 	dumpInitBoltDB(boltPath)
+	defer getDB().Close()
 
 	// read all rows from .mbtiles with sqlite3
 	db, err := sql.Open("sqlite3", mbtilesPath) //"./tiles.mbtiles")
@@ -125,7 +113,6 @@ func MbtilesToBolt(mbtilesPath string, boltPath string) {
 	e := getDB().Update(func(tx *bolt.Tx) error {
 		var e error
 		for rows.Next() {
-
 			var zoom_level int32
 			var tile_column int32
 			var tile_row int32
