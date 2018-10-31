@@ -558,9 +558,9 @@ var recencyFn = function(properties, zoom , layer){
                 radius: recencyScale(properties, color2).radius,
                 type: "Point"
             };
-            if (layer === "catTrackEdge") {
-                out.fillColor = "dodgerblue";
-            }
+            // if (layer === "catTrackEdge") {
+            //     out.fillColor = "dodgerblue";
+            // }
 
             return out;
 };
