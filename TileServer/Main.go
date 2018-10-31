@@ -38,22 +38,6 @@ func main() {
 		log.Println(bolterr)
 	}
 
-	// if bolterr := InitBoltDB("master", mbtilesBoltDBPathMaster); bolterr == nil {
-	// 	GetDB("master").Close()
-	// } else {
-	// 	log.Println(bolterr)
-	// }
-	// if bolterr := InitBoltDB("devop", mbtilesBoltDBPathDevop); bolterr == nil {
-	// 	GetDB("devop").Close()
-	// } else {
-	// 	log.Println(bolterr)
-	// }
-	// if bolterr := InitBoltDB("edge", mbtilesBoltDBPathEdge); bolterr == nil {
-	// 	GetDB("edge").Close()
-	// } else {
-	// 	log.Println(bolterr)
-	// }
-
 	log.Println("Serving on :", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 
