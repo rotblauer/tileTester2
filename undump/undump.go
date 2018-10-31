@@ -8,7 +8,7 @@ import (
 	"path"
 
 	"github.com/cheggaaa/pb"
-	bolt "github.com/coreos/bbolt"
+	bolt "github.com/etcd-io/bbolt"
 	_ "github.com/mattn/go-sqlite3"
 )
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	bolt "github.com/coreos/bbolt"
+	bolt "github.com/etcd-io/bbolt"
 	"github.com/gorilla/mux"
 	"sync"
 )

@@ -9,7 +9,7 @@ import (
 	"path"
 	"path/filepath"
 
-	bolt "github.com/coreos/bbolt"
+	bolt "github.com/etcd-io/bbolt"
 	"github.com/rotblauer/trackpoints/trackPoint"
 
 	"os"
