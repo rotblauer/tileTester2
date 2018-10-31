@@ -47,7 +47,7 @@ runct: ## Run catTracks. Probably this command should be managed thru a systemd 
 runts: ## Run tileserver. Probably this command should be managed thru a systemd service, and only used via make for development.
 	mkdir -p ${TRACKS_DATA}/bak
 	-pkill tileserver
-	tileserver --db=${TRACKS_DATA}/tiles-master.db --db-devop=${TRACKS_DATA}/tiles-devop.db --db-edge=${TRACKS_DATA}/tiles-edge.db
+	tileserver --port 8081 --db=${TRACKS_DATA}/tiles-master.db --db-devop=${TRACKS_DATA}/tiles-devop.db --db-edge=${TRACKS_DATA}/tiles-edge.db
 
 getem/master:
 ifneq ("$(wildcard ${TRACKS_DATA}/EDGELOCK)", "")

@@ -38,7 +38,7 @@ if (v == "v2") {
     trackHost = "http://catonmap.info:3001";
 }
 if ( dev ) {
-    tileHost = "http://localhost:8080";
+    tileHost = "http://localhost:8081";
     trackHost = "http://localhost:3001";
 }
 
@@ -210,6 +210,12 @@ function setMapTileLayer(tile_layer) {
     map.addLayer(current_tile_layer);
     if (pbfLayer !== null && typeof pbfLayer !== "undefined") {
         map.addLayer(pbfLayer);
+    }
+    if (pbfDevopLayer !== null && typeof pbfDevopLayer !== "undefined") {
+        map.addLayer(pbfDevopLayer);
+    }
+    if (pbfEdgeLayer !== null && typeof pbfEdgeLayer !== "undefined") {
+        map.addLayer(pbfEdgeLayer);
     }
 }
 
@@ -520,7 +526,7 @@ var recencyScale = function(props, color) {
 var n = 0;
 var recencyFn = function(properties, zoom , layer){
             if (globalSinceFloor !== "") {
-                console.log("recent globalSinceFloor", globalSinceFloor);
+                // console.log("recent globalSinceFloor", globalSinceFloor);
                     if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
                     return {};
                 }

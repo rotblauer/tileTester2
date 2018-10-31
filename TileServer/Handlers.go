@@ -54,7 +54,7 @@ func InitBoltDB(nameof, boltDb string) error {
 			boltDb = masterdbpath
 		}
 		log.Println("opening", nameof, boltDb)
-		db, err = bolt.Open(boltDb, 0660, bopts)
+		// db, err = bolt.Open(boltDb, 0660, bopts)
 		masterdbpath = boltDb
 	case "devop":
 		if devopdb != nil {
@@ -67,7 +67,7 @@ func InitBoltDB(nameof, boltDb string) error {
 			boltDb = devopdbpath
 		}
 		log.Println("opening", nameof, boltDb)
-		devopdb, err = bolt.Open(boltDb, 0660, bopts)
+		// devopdb, err = bolt.Open(boltDb, 0660, bopts)
 		devopdbpath = boltDb
 	case "edge":
 		if edgedb != nil {
@@ -80,7 +80,7 @@ func InitBoltDB(nameof, boltDb string) error {
 			boltDb = edgedbpath
 		}
 		log.Println("opening", nameof, boltDb)
-		edgedb, err = bolt.Open(boltDb, 0660, bopts)
+		// edgedb, err = bolt.Open(boltDb, 0660, bopts)
 		edgedbpath = boltDb
 	}
 	if err != nil {
