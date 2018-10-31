@@ -15,13 +15,23 @@ migrate: get install ## Runs and explains stuff for setting up a new serving and
 	rsync -avzLhP --delete freya:${TRACKS_UPSTREAM_ROOT}/tracks.db.sync ${TRACKS_DATA}/tracks.db
 	dumpy --in=${TRACKS_DATA}/tracks.db --out=${TRACKS_DATA}/master.snap --boltout=${TRACKS_DATA}/tiles-master.snap.db --tileset-name=catTrack # Run the last dump from bolt(tracks.db) -> "out.json.gz"
 	mv ${TRACKS_DATA}/tiles-master.snap.db ${TRACKS_DATA}/tiles-master.db
+# !!--> mv /root/tdata/master.snap.json.gz /root/data/master.json.gz
+# !!--> rsync -avzLhP /root/tdata/master.json.gz freya:/home/freyabison/tracks.areteh.co/master.json.gz
 	@echo "Now:"
 	@echo "1. Run cattracks on this host in own process. Probably this should be run as a systemd service."
 	@echo " > catTracks --port 3001 --db-path-master=${TRACKS_DATA}/tracks.db --tracks-gz-path=${TRACKS_DATA}/master.json.gz --devop-gz-path=${TRACKS_DATA}/devop.json.gz --edge-gz-path=${TRACKS_DATA}/edge.json.gz"
 	@echo "2. SSH to freya and turn catTracks back on, with --forward-url='this host'. This will ensure that dbs and json.gzs are in sync and none are skipped by the migration"
 	@echo "3. In a new thread, turn the tileserver on by running '$ make runts'. Probably this should be run as a systemd service."
-	@echo "4. Each in their own threads, run getem/{master,devop,edge}"
 	@echo "5. Profit"
+
+get: ## Updates project root (eg. dumper)
+	git --work-tree=${GOPATH}/src/github.com/rotblauer/trackpoints --git-dir=${GOPATH}/src/github.com/rotblauer/trackpoints/.git branch --set-upstream-to=origin/master master
+	git branch --set-upstream-to=origin/master master
+	go get -v -u github.com/rotblauer/tileTester2/...
+	go get -v -u github.com/rotblauer/catTracks/...
+	git --git-dir=${GOPATH}/src/github.com/rotblauer/trackpoints/.git rev-parse HEAD
+	git --git-dir=${GOPATH}/src/github.com/rotblauer/tileTester2/.git rev-parse HEAD
+	git --git-dir=${GOPATH}/src/github.com/rotblauer/catTracks/.git rev-parse HEAD
 
 install: ## Install packages: dumpy, tileserver, and catTracks.
 	go build -o ${GOPATH}/bin/dumpy ${GOPATH}/src/github.com/rotblauer/tileTester2/dump.go
@@ -119,15 +129,6 @@ clean: ## Clean mbtiles
 download: ## Locks and clones upstream db (clone on upstream), then syncs the clone to local.
 	./getems/clone_adjacent_upstream.sh
 	rsync -avzLhP --delete freya:${TRACKS_UPSTREAM_ROOT}/tracks.db.sync ./tracks.db
-
-get: ## Updates project root (eg. dumper)
-	git --work-tree=${GOPATH}/src/github.com/rotblauer/trackpoints --git-dir=${GOPATH}/src/github.com/rotblauer/trackpoints/.git branch --set-upstream-to=origin/master master
-	git branch --set-upstream-to=origin/master master
-	go get -v -u github.com/rotblauer/tileTester2/...
-	go get -v -u github.com/rotblauer/catTracks/...
-	git --git-dir=${GOPATH}/src/github.com/rotblauer/trackpoints/.git rev-parse HEAD
-	git --git-dir=${GOPATH}/src/github.com/rotblauer/tileTester2/.git rev-parse HEAD
-	git --git-dir=${GOPATH}/src/github.com/rotblauer/catTracks/.git rev-parse HEAD
 
 rundump: ## Runs database dump -> out.json.gz, which is then pumped to tippecanoe for mbtiles, and that then to tippedcanoetrack.db.
 	go build -o dumper dump.go
