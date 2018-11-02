@@ -29,7 +29,7 @@ var colors = {
     "iPhone": "rgb(27,142,29)",
     "Chishiki": "rgb(27,142,29)",
 
-    "jec": "rgb(255, 128, 51)",
+    "jlc": "rgb(255, 128, 51)",
 
     "kek": "rgb( 0, 222, 20)",
 
