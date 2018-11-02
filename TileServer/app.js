@@ -9,20 +9,33 @@ var colors = {
     "Bigger Papa": color_ia,
     "P2": color_ia,
     "ubp52": color_ia,
+    "iha": color_ia,
 
     "RyePhone": color_jl,
     "Rye8": color_jl,
     "jl": color_jl,
+    "jal": color_jl,
 
     "Big Mamma": "rgb(176,16,221)",
+    "jra": "rgb(176,16,221)",
+
     "Kayleigh's iPhone": "rgb(200,200,0)",
+    "kd": "rgb(200,200,0)",
 
     // matt
     "Twenty7": "rgb(20, 83, 94)",
 
     // chris
     "iPhone": "rgb(27,142,29)",
-    "Chishiki": "rgb(27,142,29)"
+    "Chishiki": "rgb(27,142,29)",
+
+    "jec": "rgb(255, 128, 51)",
+
+    "kek": "rgb( 0, 222, 20)",
+
+    "rja": "rgb( 141, 0, 222 )",
+
+    "coley": "rgb( 0, 176, 35 )"
 };
 
 var dev = false;
