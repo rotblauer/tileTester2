@@ -105,8 +105,6 @@ func byteToFeature(val []byte) *geojson.Feature {
 		log.Fatalln(e)
 	}
 
-	var currentNote note.Note
-
 	// convert to a feature
 	p := geojson.NewPoint(geojson.Coordinate{geojson.Coord(trackPointCurrent.Lng), geojson.Coord(trackPointCurrent.Lat)})
 
@@ -118,13 +116,18 @@ func byteToFeature(val []byte) *geojson.Feature {
 	trimmedProps["UnixTime"] = trackPointCurrent.Time.Unix()
 	trimmedProps["Elevation"] = trackPointCurrent.Elevation
 
-	e := json.Unmarshal([]byte(trackPointCurrent.Notes), &currentNote)
-	if e != nil {
-		trimmedProps["Notes"] = currentNote.CustomNote
-		trimmedProps["Pressure"] = currentNote.Pressure
-		trimmedProps["Activity"] = currentNote.Activity
+	if ns, e := trackPointCurrent.Notes.AsNoteStructured(); e == nil {
+		trimmedProps["Notes"] = ns.CustomNote
+		trimmedProps["Pressure"] = ns.Pressure
+		trimmedProps["Activity"] = ns.Activity
+		if ns.HasValidVisit() {
+			// TODO: ok to use mappy sub interface here?
+			trimmedProps["Visit"] = ns.Visit
+		}
+	} else if nf, e := trackPointCurrent.Notes.AsFingerprint(); e == nil {
+		// maybe do something with identity consolidation?
 	} else {
-		trimmedProps["Notes"] = trackPointCurrent.Notes
+		trimmedProps["Notes"] = trackPointCurrent.Notes.AsNoteString()
 	}
 	return geojson.NewFeature(p, trimmedProps, 1)
 }
