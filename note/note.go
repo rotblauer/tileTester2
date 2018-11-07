@@ -37,6 +37,20 @@ var ErrNilNote = errors.New("nil note")
 
 type NotesField []byte
 
+// // MarshalJSON returns *m as the JSON encoding of m.
+// func (m *NotesField) MarshalJSON() ([]byte, error) {
+// 	return []byte(*m), nil
+// }
+
+// // UnmarshalJSON sets *m to a copy of data.
+// func (m *NotesField) UnmarshalJSON(data []byte) error {
+// 	if m == nil {
+// 		return errors.New("RawString: UnmarshalJSON on nil pointer")
+// 	}
+// 	*m += RawString(data)
+// 	return nil
+// }
+
 type NoteString string
 
 func (nf NotesField) AsNoteString() string {
