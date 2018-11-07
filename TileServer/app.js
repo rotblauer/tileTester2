@@ -1,4 +1,5 @@
 var earliestTrack = null;
+
 // color defaults
 var color_ia = "rgb(255,0,0)"; //"rgb(254,65,26)"; // "rgb(235,41,0)";
 var color_jl = "rgb(0,0,255)"; // "rgb(0,162,235)";
@@ -23,19 +24,21 @@ var colors = {
     "kd": "rgb(200,200,0)",
 
     // matt
-    "Twenty7": "rgb(20, 83, 94)",
+    "Twenty7": "rgb(20, 83, 94)", //darkbluegrey ish
 
     // chris
-    "iPhone": "rgb(27,142,29)",
+    "iPhone": "rgb(27,142,29)", // greenish
     "Chishiki": "rgb(27,142,29)",
 
-    "jlc": "rgb(255, 128, 51)",
+    "jlc": "rgb(255, 128, 51)", //orangish
 
-    "kek": "rgb( 0, 222, 20)",
+    "kek": "rgb( 0, 222, 20)", //brightgreen ish
 
     "rja": "rgb( 141, 0, 222 )",
 
-    "coley": "rgb( 0, 176, 35 )"
+    "coley": "rgb( 0, 176, 35 )", //dark green ish
+
+    "pancho": "rgb(51, 153, 255)"
 };
 
 var dev = false;
@@ -50,13 +53,13 @@ if (vv == "v2") {
     tileHost = "http://catonmap.info:8080";
     trackHost = "http://catonmap.info:3001";
 }
-if ( dev ) {
+if (dev) {
     tileHost = "http://localhost:8081";
     trackHost = "http://localhost:3001";
 }
 
-var lastKnownJSONurl = trackHost+'/lastknown';
-var metadataURL = trackHost+'/metadata';
+var lastKnownJSONurl = trackHost + '/lastknown';
+var metadataURL = trackHost + '/metadata';
 
 // var url = 'http://punktlich.rotblauer.com:8081/master/{z}/{x}/{y}';
 // var pbfurlmaster = 'http://punktlich.rotblauer.com:8081/anything/{z}/{x}/{y}';
@@ -67,12 +70,13 @@ var defaultCenter = [38.6270, -90.1994];
 var defaultZoom = 5;
 var didLogOnce = false;
 
-var pbfurlmaster = tileHost+'/master/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
-var pbfurldevop = tileHost+'/devop/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
-var pbfurledge = tileHost+'/edge/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
-
+var pbfurlmaster = tileHost + '/master/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
+var pbfurldevop = tileHost + '/devop/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
+var pbfurledge = tileHost + '/edge/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
 
 var globalSinceFloor = ""; // actually will be an integer, but will just use +"" to cast that
+
+var visits = [];
 
 function getBrowsePosition() {
     var got = localStorage.getItem("browsePosition");
@@ -141,8 +145,7 @@ function buildViewUrl() {
         "&x=" + lat +
         "&l=" + drawnLayer +
         "&t=" + getCurrentTileLayerName() +
-        "&s=" + globalSinceFloor
-    ;
+        "&s=" + globalSinceFloor;
     return text;
 }
 
@@ -165,17 +168,20 @@ function putViewToUrl() {
         $("body").css("background-color", "white");
     }
 }
+
 map = L.map('map', {
     maxZoom: 20,
     noWrap: true
     // preferCanvas: true
 });
+
 map.on("moveend", function() {
     didLogOnce = false;
     putViewToUrl();
     // $("#url-moved").css("color", "rgb(5, 255, 170)");
     // $("#url-moved").fadeOut(100).fadeIn(100); // .fadeOut(100).fadeIn(100);
 });
+
 map.on("load", function() {
     putViewToUrl();
     $("#url-moved").css("color", "white");
@@ -232,7 +238,7 @@ function setMapTileLayer(tile_layer) {
     if (pbfLayer !== null && typeof pbfLayer !== "undefined") {
         map.addLayer(pbfLayer);
     }
-  if (pbfDevopLayer !== null && typeof pbfDevopLayer !== "undefined") {
+    if (pbfDevopLayer !== null && typeof pbfDevopLayer !== "undefined") {
         map.addLayer(pbfDevopLayer);
     }
     if (pbfEdgeLayer !== null && typeof pbfEdgeLayer !== "undefined") {
@@ -269,7 +275,7 @@ function delegateTileLayer(name) {
 $(".tile-button").on("click", function(e) {
     var id = $(this).attr("id");
     delegateTileLayer(id);
-    putViewToUrl();
+    putViewToUrl(buildViewUrl());
 });
 
 var highlight;
@@ -283,7 +289,7 @@ var clearHighlight = function() {
 var speedFn = function(properties, zoom) {
     if (globalSinceFloor !== "") {
 
-        if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
+        if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
             return {};
         }
     }
@@ -398,82 +404,82 @@ function getRelDensity(zoom, n) {
 }
 
 var densityFn = function(properties, zoom) {
-             if (globalSinceFloor !== "") {
-                    if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
-                    return {};
+    if (globalSinceFloor !== "") {
+        if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
+            return {};
+        }
+    }
+
+    if (properties.hasOwnProperty("Notes") && !didLogOnce) {
+        // alert("there are notesss!!!");
+        didLogOnce = true;
+    }
+
+    // anything above about zoom 14-15 will not be clustered!...
+    if (!properties.clustered) {
+        return {
+            stroke: false,
+            fill: true,
+            fillColor: "#FF10DE", // colors[properties.Name], // "#00A2EB", "#EB2900"
+            weight: 0,
+            radius: 1,
+            opacity: 0.05
+        }
+    }
+
+    // var relAbsoluteDensity = (properties.tippecanoe_feature_density/maxDensity); // maxDensity is max
+    var relAbsoluteDensity = (properties.tippecanoe_feature_density / (maxDensity * (zRangeMin / zoom))); // scale max density by zoom linearly
+    var relAbsoluteDensityPercent = Math.floor(relAbsoluteDensity * 100);
+
+    // var relD = getRelDensity(zoom, properties.tippecanoe_feature_density);
+    // var relDPercent = Math.floor(relD*100);
+
+    var out = {
+        stroke: false,
+        fill: true,
+        fillColor: function() {
+            var factor = properties.sqrt_point_count;
+            factor = factor * (zoom / zRangeMax) * 2;
+            if (zoom <= 8 && zoom > 5) {
+                factor = factor * (zoom / zRangeDiff);
+            }
+            if (zoom <= 5) {
+                factor = properties.point_count * (zoom / zRangeDiff); // / (zoom/(zoom+1-zRangeMin));
+            }
+            var n = percentToRGB(relAbsoluteDensityPercent * factor); // densityColor(properties.tippecanoe_feature_density),
+            return n;
+        }(),
+        // fillColor: percentToRGB(relDPercent), // densityColor(properties.tippecanoe_feature_density),
+        // fillOpacity: 0.05, // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
+        fillOpacity: 0.05 * (zoom / zRangeDiff), // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
+        radius: function() {
+            var n = 0;
+            if (zoom > 14) {
+                n = Math.floor(relAbsoluteDensity * (properties.point_count) * maxRadius);
+            } else {
+                n = Math.floor(relAbsoluteDensity * (properties.point_count) * maxRadius);
+            }
+
+
+            if (n > maxRadius) {
+                n = maxRadius;
+                if (zoom < 5) {
+                    n = zRangeMin / 4 * n;
                 }
+            } else if (n < 1) {
+                n = Math.floor(relAbsoluteDensity * (properties.point_count + (zoom / zRangeDiff)) * maxRadius);
             }
-
-            if (properties.hasOwnProperty("Notes") && !didLogOnce) {
-                // alert("there are notesss!!!");
-                didLogOnce = true;
-            }
-
-            // anything above about zoom 14-15 will not be clustered!...
-            if (!properties.clustered) {
-                return {
-                    stroke: false,
-                    fill: true,
-                    fillColor: "#FF10DE", // colors[properties.Name], // "#00A2EB", "#EB2900"
-                    weight: 0,
-                    radius: 1,
-                    opacity: 0.05
-                }
-            }
-
-            // var relAbsoluteDensity = (properties.tippecanoe_feature_density/maxDensity); // maxDensity is max
-            var relAbsoluteDensity = (properties.tippecanoe_feature_density / (maxDensity * (zRangeMin / zoom))); // scale max density by zoom linearly
-            var relAbsoluteDensityPercent = Math.floor(relAbsoluteDensity * 100);
-
-            // var relD = getRelDensity(zoom, properties.tippecanoe_feature_density);
-            // var relDPercent = Math.floor(relD*100);
-
-            var out = {
-                stroke: false,
-                fill: true,
-                fillColor: function() {
-                    var factor = properties.sqrt_point_count;
-                    factor = factor * (zoom / zRangeMax) * 2;
-                    if (zoom <= 8 && zoom > 5) {
-                        factor = factor * (zoom / zRangeDiff);
-                    }
-                    if (zoom <= 5) {
-                        factor = properties.point_count * (zoom / zRangeDiff); // / (zoom/(zoom+1-zRangeMin));
-                    }
-                    var n = percentToRGB(relAbsoluteDensityPercent * factor); // densityColor(properties.tippecanoe_feature_density),
-                    return n;
-                }(),
-                // fillColor: percentToRGB(relDPercent), // densityColor(properties.tippecanoe_feature_density),
-                // fillOpacity: 0.05, // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
-                fillOpacity: 0.05 * (zoom / zRangeDiff), // (properties.points_count*0.55)/100, // 0.1, //relAbsoluteDensity//0.10 ,
-                radius: function() {
-                    var n = 0;
-                    if (zoom > 14) {
-                        n = Math.floor(relAbsoluteDensity * (properties.point_count) * maxRadius);
-                    } else {
-                        n = Math.floor(relAbsoluteDensity * (properties.point_count) * maxRadius);
-                    }
-
-
-                    if (n > maxRadius) {
-                        n = maxRadius;
-                        if (zoom < 5) {
-                            n = zRangeMin / 4 * n;
-                        }
-                    } else if (n < 1) {
-                        n = Math.floor(relAbsoluteDensity * (properties.point_count + (zoom / zRangeDiff)) * maxRadius);
-                    }
-                    return n;
-                }(), // ~max 100 from maxDensity actual max // +1 ??
-                // radius: Math.floor(relDPercent*maxRadius), // ~max 100 from maxDensity actual max // +1 ??
-                type: "Point"
-            };
-            if (!didLogOnce) {
-                // console.log("example", "props", properties, "zoom");
-                console.log("logOne", "zoom", zoom, "properties", properties, "out", out);
-                didLogOnce = true;
-            }
-            return out;
+            return n;
+        }(), // ~max 100 from maxDensity actual max // +1 ??
+        // radius: Math.floor(relDPercent*maxRadius), // ~max 100 from maxDensity actual max // +1 ??
+        type: "Point"
+    };
+    if (!didLogOnce) {
+        // console.log("example", "props", properties, "zoom");
+        console.log("logOne", "zoom", zoom, "properties", properties, "out", out);
+        didLogOnce = true;
+    }
+    return out;
 };
 
 var densityTileOptions = {
@@ -545,51 +551,62 @@ var recencyScale = function(props, color) {
 };
 
 var n = 0;
-var recencyFn = function(properties, zoom , layer){
-            if (globalSinceFloor !== "") {
-                // console.log("recent globalSinceFloor", globalSinceFloor);
-                    if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor*24*60*60*1000) {
-                    return {};
-                }
-            }
-    if (n === 0) {
-        console.log("PROPERTIES", properties);
-        n++;
+var recencyFn = function(properties, zoom, layer) {
+    if (globalSinceFloor !== "") {
+        // console.log("recent globalSinceFloor", globalSinceFloor);
+        if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
+            return {};
+        }
     }
 
-            // if (earliestTrack == null) {
-            //     earliestTrack = properties["Time"];
-            // } else if (moment(properties["Time"]).isBefore(earliestTrack)) {
-            //     earliestTrack = properties["Time"];
-            //     console.log("earliesttrack", earliestTrack);
-            // #=> earliesttrack 2012-03-24T15:01:44Z
-            // }
+    // if (n === 0) {
+    //     console.log("PROPERTIES", properties);
+    //     // n++;
 
-            if (properties.hasOwnProperty("Notes") && !didLogOnce) {
-                // alert("there are notesss!!!");
-                didLogOnce = true;
-            }
-            if (trackExampler === 0) {
-                console.log("props", properties);
-            }
-            trackExampler++;
 
-            var color2 = colors[properties.Name] || "rgb(241,66,244)";
-            var time = new Date(properties.Time).getTime();
+    //     var notes = JSON.parse(properties["notes"]);
+    //     if (notes.hasOwnProperty("visit")) {
+    //         console.log("notes w/ VV", notes);
+    //         n++
+    //     } else {
+    //         // console.log("nonotes", notes);
+    //     }
+    //     // n++;
+    // }
 
-            var out ={
-                stroke: false,
-                fill: true,
-                fillColor: recencyScale(properties, color2).color,
-                fillOpacity: recencyScale(properties, color2).opacity,
-                radius: recencyScale(properties, color2).radius,
-                type: "Point"
-            };
-            // if (layer === "catTrackEdge") {
-            //     out.fillColor = "dodgerblue";
-            // }
+    // if (earliestTrack == null) {
+    //     earliestTrack = properties["Time"];
+    // } else if (moment(properties["Time"]).isBefore(earliestTrack)) {
+    //     earliestTrack = properties["Time"];
+    //     console.log("earliesttrack", earliestTrack);
+    // #=> earliesttrack 2012-03-24T15:01:44Z
+    // }
 
-            return out;
+    if (properties.hasOwnProperty("Notes") && !didLogOnce) {
+        // alert("there are notesss!!!");
+        didLogOnce = true;
+    }
+    if (trackExampler === 0) {
+        console.log("props", properties);
+    }
+    trackExampler++;
+
+    var color2 = colors[properties.Name] || "rgb(241,66,244)";
+    var time = new Date(properties.Time).getTime();
+
+    var out = {
+        stroke: false,
+        fill: true,
+        fillColor: recencyScale(properties, color2).color,
+        fillOpacity: recencyScale(properties, color2).opacity,
+        radius: recencyScale(properties, color2).radius,
+        type: "Point"
+    };
+    // if (layer === "catTrackEdge") {
+    //     out.fillColor = "dodgerblue";
+    // }
+
+    return out;
 };
 
 var trackExampler = 0;
@@ -671,7 +688,7 @@ var drawLayer = function drawLayer(opts) {
 
     var v = L.vectorGrid;
 
-  pbfLayer = v.protobuf(pbfurlmaster, opts);
+    pbfLayer = v.protobuf(pbfurlmaster, opts);
     pbfLayer.addTo(map) // It would be nice if this could handle the zipper data instead of unxip on sever
         .on('load', function(e) {
             // console.log('load', e);
@@ -735,6 +752,7 @@ function putUrlToView(event) {
     var layer = getQueryVariable("l", pos);
     var tile = getQueryVariable("t", pos);
     var since = getQueryVariable("s", pos);
+    var user = getQueryVariable("u", pos);
     if (z) {
         zoom = +(z) // cast to float
     }
@@ -746,8 +764,8 @@ function putUrlToView(event) {
     }
 
     if (since) {
-        globalSinceFloor = ""+since;
-        $("#sincefloor").val(""+since);
+        globalSinceFloor = "" + since;
+        $("#sincefloor").val("" + since);
     } else {
         $("#sincefloor").val("");
     }
@@ -772,7 +790,7 @@ function putUrlToView(event) {
     } else if (window.location.host.includes("localhost")) {
         document.title = "Development";
     } else {
-        console.log("nope", window.location+"".indexOf("localhost"));
+        console.log("nope", window.location + "".indexOf("localhost"));
     }
     putViewToUrl();
 }
@@ -795,8 +813,8 @@ function getmetadata() {
 
             var div = $("#metadata");
             div.text(numberWithCommas(data["KeyN"]) + " points added in the last " +
-                     moment(data["KeyNUpdated"]).fromNow(true).replace("a ", "").replace("an ", "") + "." + "\n" +
-                     "TileDB last updated " + moment(data["TileDBLastUpdated"]).fromNow() + ".");
+                moment(data["KeyNUpdated"]).fromNow(true).replace("a ", "").replace("an ", "") + "." + "\n" +
+                "TileDB last updated " + moment(data["TileDBLastUpdated"]).fromNow() + ".");
 
             // replace all newlines with html linebreaks
             div.html(div.html().replace(/\n/g, '<br/>'));
@@ -855,8 +873,10 @@ function getAndMakeButtonsForLastKnownCats() {
             onMapMarkers = [];
 
             var sortedByTime = [];
-            $.each(data, function(key, val) { sortedByTime.push(val); });
-            sortedByTime.sort((a,b) => (moment(a["time"]).isBefore(b["time"])) ? 1 : ((moment( b["time"] ).isBefore( a["time"] )) ? -1 : 0));
+            $.each(data, function(key, val) {
+                sortedByTime.push(val);
+            });
+            sortedByTime.sort((a, b) => (moment(a["time"]).isBefore(b["time"])) ? 1 : ((moment(b["time"]).isBefore(a["time"])) ? -1 : 0));
             // console.log("sortedByTime", sortedByTime);
 
             var collectedByUser = {};
@@ -999,15 +1019,15 @@ $("#points-layer-select").on("change", function() {
     var v = $(this).val();
     delegateDrawLayer(v);
     // putViewToUrl(buildViewUrl());
-    putViewToUrl();
-    putUrlToView();
+    putViewToUrl(buildViewUrl());
+    // putUrlToView();
 });
 
 $("#map-layer-select").on("change", function() {
     var v = $(this).val();
     // var id = $(this).attr("id");
     delegateTileLayer(v);
-    putViewToUrl();
+    putViewToUrl(buildViewUrl());
 });
 
 // document.getElementById("recent-layer").onclick = function() {
