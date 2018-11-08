@@ -82,18 +82,33 @@ func (fp NoteFingerprint) Value() []byte {
 }
 
 type NoteStructured struct {
-	Activity          string    `json:"activity"`
-	NumberOfSteps     int       `json:"numberOfSteps"`
-	AverageActivePace float64   `json:"averageActivePace"`
-	CurrentPace       float64   `json:"currentPace"`
-	CurrentCadence    float64   `json:"currentCadence"`
-	Distance          float64   `json:"distance"`
-	CustomNote        string    `json:"customNote"` // FIXME: string or float64?
-	FloorsAscended    int       `json:"floorsAscended"`
-	FloorsDescended   int       `json:"floorsDescended"`
-	CurrentTripStart  time.Time `json:"currentTripStart"`
-	Pressure          float64   `json:"pressure"`
-	Visit             NoteVisit `json:"visit"`
+	Activity          string      `json:"activity"`
+	NumberOfSteps     int         `json:"numberOfSteps"`
+	AverageActivePace float64     `json:"averageActivePace"`
+	CurrentPace       float64     `json:"currentPace"`
+	CurrentCadence    float64     `json:"currentCadence"`
+	Distance          float64     `json:"distance"`
+	CustomNote        string      `json:"customNote"` // FIXME: string or float64?
+	FloorsAscended    int         `json:"floorsAscended"`
+	FloorsDescended   int         `json:"floorsDescended"`
+	CurrentTripStart  time.Time   `json:"currentTripStart"`
+	Pressure          float64     `json:"pressure"`
+	Visit             VisitString `json:"visit"`
+}
+
+type VisitString string
+
+func (vs VisitString) AsVisit() (v NoteVisit, err error) {
+	err = json.Unmarshal([]byte(vs), &v)
+	if err != nil {
+		return
+	}
+	v.ArrivalTime, err = time.Parse(time.RFC3339Nano, v.ArrivalTimeString)
+	if err != nil {
+		return
+	}
+	v.DepartureTime, err = time.Parse(time.RFC3339Nano, v.DepartureTimeString)
+	return
 }
 
 func (nf NotesField) AsNoteStructured() (ns NoteStructured, err error) {
@@ -106,16 +121,32 @@ func (nf NotesField) AsNoteStructured() (ns NoteStructured, err error) {
 }
 
 func (ns NoteStructured) HasVisit() bool {
-	return !ns.Visit.ArrivalTime.IsZero() && !ns.Visit.DepartureTime.IsZero() && ns.Visit.Place != ""
+	v, err := ns.Visit.AsVisit()
+	if err != nil {
+		return false
+	}
+	// if v.ArrivalTime.IsZero() {
+	// 	panic("zero arrivals")
+	// }
+	if v.ArrivalTime.IsZero() && v.DepartureTime.IsZero() {
+		return false
+	}
+	return v.Place != ""
 }
 
 func (ns NoteStructured) HasValidVisit() bool {
-	return ns.HasVisit() && ns.Visit.Valid
+	if !ns.HasVisit() {
+		return false
+	}
+	v, _ := ns.Visit.AsVisit()
+	return v.Valid
 }
 
 type NoteVisit struct {
-	ArrivalTime   time.Time `json:"arrivalDate"`
-	DepartureTime time.Time `json:"arrivalDate"`
-	Place         string    `json:"place"`
-	Valid         bool      `json:"validVisit"`
+	ArrivalTime         time.Time
+	ArrivalTimeString   string `json:"arrivalDate"`
+	DepartureTime       time.Time
+	DepartureTimeString string `json:"departureDate"`
+	Place               string `json:"place"`
+	Valid               bool   `json:"validVisit"`
 }
