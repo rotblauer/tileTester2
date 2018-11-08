@@ -3,6 +3,8 @@ package note
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -146,7 +148,53 @@ type NoteVisit struct {
 	ArrivalTime         time.Time
 	ArrivalTimeString   string `json:"arrivalDate"`
 	DepartureTime       time.Time
-	DepartureTimeString string `json:"departureDate"`
-	Place               string `json:"place"`
-	Valid               bool   `json:"validVisit"`
+	DepartureTimeString string      `json:"departureDate"`
+	Place               PlaceString `json:"place"`
+	Valid               bool        `json:"validVisit"`
+}
+
+func (nv NoteVisit) GetDuration() time.Duration {
+	calend := nv.DepartureTime
+	// seen "departureDate\":\"4001-01-01T00:00:00.000Z\"}
+	if nv.DepartureTime.Year() == 4001 || nv.DepartureTime.After(time.Now().Add(24*365*time.Hour)) {
+		calend = time.Now()
+	}
+	return calend.Sub(nv.ArrivalTime)
+}
+
+// 25 Yeadon Ave, 25 Yeadon Ave, Charleston, SC  29407, United States @ <+32.78044829,-79.98285770> +\\\/- 100.00m, region CLCircularRegion (identifier:'<+32.78044828,-79.98285770> radius 141.76', center:<+32.78044828,-79.98285770>, radius:141.76m)
+type PlaceString string
+
+type Place struct {
+	Identity string
+	Address  string
+	Lat      float64
+	Lng      float64
+	Acc      float64
+	Radius   float64
+}
+
+func (ps PlaceString) AsPlace() (p Place, err error) {
+	// slices will panic if oob
+	commas := strings.Split(string(ps), ",")
+	p.Identity = commas[0]
+	p.Address = strings.Split(string(ps), "@")[0] // TODO: remove 'identity' prefix?
+
+	s1 := strings.Split(string(ps), "<")[1]
+	s1 = strings.Split(s1, ">")[0]
+	ll := strings.Split(s1, ",")
+	lat := strings.TrimPrefix(ll[0], "+")
+	lng := strings.TrimPrefix(ll[1], "+")
+
+	p.Lat, err = strconv.ParseFloat(lat, 64)
+	if err != nil {
+		return
+	}
+	p.Lng, err = strconv.ParseFloat(lng, 64)
+	if err != nil {
+		return
+	}
+
+	// TODO p.Acc, p.Radius
+	return
 }
