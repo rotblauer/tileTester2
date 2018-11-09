@@ -198,3 +198,8 @@ func (ps PlaceString) AsPlace() (p Place, err error) {
 	// TODO p.Acc, p.Radius
 	return
 }
+
+func (ps PlaceString) MustAsPlace() Place {
+	p, _ := ps.AsPlace()
+	return p
+}
