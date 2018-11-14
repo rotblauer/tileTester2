@@ -190,6 +190,8 @@ map.on("load", function() {
     putViewToUrl();
     $("#url-moved").css("color", "white");
 });
+
+map.on("click", clearHighlight);
 // map.on("load", putViewToUrl);
 // Drawing Helpers
 // ********************************************************************************************************************
@@ -755,7 +757,25 @@ var drawLayer = function drawLayer(opts) {
         console.log("clicked", e);
         console.log("clicked elayprops", e.layer.properties);
         var props = e.layer.properties;
-        alert(props.Name + " visited " + props.PlaceIdentity + "\n" + "From " + props.ArrivalTime + " to " + props.DepartureTime);
+        // alert(props.Name + " visited " + props.PlaceIdentity + "\n" + "From " + props.ArrivalTime + " to " + props.DepartureTime);
+        var str = props.Name + " visited " + props.PlaceIdentity +  " from " + new Date(props.ArrivalTime).toLocaleString() + " to " + new Date( props.DepartureTime ).toLocaleString();
+				L.popup()
+					  .setContent(str)
+        // 					.setContent(JSON.stringify(e.layer))
+					  .setLatLng(e.latlng)
+					  .openOn(map);
+				clearHighlight();
+				highlight = e.layer.properties.osm_id;
+				pbfLayer.setFeatureStyle(highlight, {
+					  weight: 2,
+					  color: 'red',
+					  opacity: 1,
+					  fillColor: 'red',
+					  fill: true,
+					  radius: 6,
+					  fillOpacity: 1
+				});
+				L.DomEvent.stop(e);
     });
 
 };
