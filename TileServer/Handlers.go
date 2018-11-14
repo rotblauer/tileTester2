@@ -8,15 +8,14 @@ import (
 
 	bolt "github.com/etcd-io/bbolt"
 	"github.com/gorilla/mux"
-	"sync"
 )
 
 var (
-	db                                    *bolt.DB
-	devopdb                               *bolt.DB
-	edgedb                                *bolt.DB
-	masterdbpath, devopdbpath, edgedbpath string
-	mumaster, mudev, muedge               sync.Mutex
+	db                                                  *bolt.DB
+	devopdb                                             *bolt.DB
+	edgedb                                              *bolt.DB
+	placesdb                                            *bolt.DB
+	masterdbpath, devopdbpath, edgedbpath, placesdbpath string
 )
 
 // GetDB is db getter.
@@ -28,6 +27,8 @@ func GetDB(nameof string) (db *bolt.DB) {
 		return devopdb
 	case "edge":
 		return edgedb
+	case "places":
+		return placesdb
 	default:
 		log.Println("invalid db requested")
 	}
@@ -82,6 +83,20 @@ func InitBoltDB(nameof, boltDb string) error {
 		log.Println("opening", nameof, boltDb)
 		// edgedb, err = bolt.Open(boltDb, 0660, bopts)
 		edgedbpath = boltDb
+
+	case "places":
+		if placesdb != nil {
+			log.Println("closing db=", nameof, boltDb)
+			placesdb.Close()
+			log.Println("closed db=", nameof, boltDb)
+			bopts.ReadOnly = true
+		}
+		if boltDb == "" {
+			boltDb = placesdbpath
+		}
+		log.Println("opening", nameof, boltDb)
+		// epathdgedb, err = bolt.Open(boltDb, 0660, bopts)
+		placesdbpath = boltDb
 	}
 	if err != nil {
 		log.Println("Could not initialize Bolt database. ", err)
@@ -151,6 +166,8 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 		dbp = devopdbpath
 	case "edge":
 		dbp = edgedbpath
+	case "places":
+		dbp = placesdbpath
 	default:
 		http.Error(w, "invalid db parameter", http.StatusBadRequest)
 		return

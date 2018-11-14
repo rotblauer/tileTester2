@@ -150,7 +150,10 @@ type NoteVisit struct {
 	DepartureTime       time.Time
 	DepartureTimeString string      `json:"departureDate"`
 	Place               PlaceString `json:"place"`
-	Valid               bool        `json:"validVisit"`
+	PlaceParsed         Place
+	Valid               bool `json:"validVisit"`
+	ReportedTime        time.Time
+	Duration            time.Duration
 }
 
 func (nv NoteVisit) GetDuration() time.Duration {
