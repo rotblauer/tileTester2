@@ -40,7 +40,7 @@ func main() {
 	} else {
 		log.Println(bolterr)
 	}
-	if bolterr := InitBoltDB("places", mbtilesBoltDBPathEdge); bolterr == nil {
+	if bolterr := InitBoltDB("places", mbtilesBoltDBPathPlaces); bolterr == nil {
 		defer GetDB("places").Close()
 	} else {
 		log.Println(bolterr)
