@@ -73,6 +73,7 @@ var didLogOnce = false;
 var pbfurlmaster = tileHost + '/master/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
 var pbfurldevop = tileHost + '/devop/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
 var pbfurledge = tileHost + '/edge/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
+var pbfurlplaces = tileHost + '/places/{z}/{x}/{y}'; // note that 'tiles' element of uri here can be any value
 
 var globalSinceFloor = ""; // actually will be an integer, but will just use +"" to cast that
 
@@ -96,9 +97,12 @@ function setBrowsePosition(s) {
 }
 
 var drawnLayer = "recent";
+
 var pbfLayer;
 var pbfDevopLayer;
 var pbfEdgeLayer;
+var pbfPlacesLayer;
+
 var drawnFeatures = [];
 var map;
 var current_tile_layer;
@@ -227,6 +231,9 @@ function setMapTileLayer(tile_layer) {
     if (pbfEdgeLayer !== null && typeof pbfEdgeLayer !== "undefined") {
         map.removeLayer(pbfEdgeLayer);
     }
+    if (pbfPlacesLayer !== null && typeof pbfPlacesLayer !== "undefined") {
+        map.removeLayer(pbfPlacesLayer);
+    }
 
     if (current_tile_layer !== null && typeof current_tile_layer !== "undefined") {
         console.log("removing current tile layer");
@@ -244,6 +251,10 @@ function setMapTileLayer(tile_layer) {
     if (pbfEdgeLayer !== null && typeof pbfEdgeLayer !== "undefined") {
         map.addLayer(pbfEdgeLayer);
     }
+    if (pbfPlacesLayer !== null && typeof pbfPlacesLayer !== "undefined") {
+        map.addLayer(pbfPlacesLayer);
+    }
+
 }
 
 function delegateTileLayer(name) {
@@ -550,6 +561,14 @@ var recencyScale = function(props, color) {
     };
 };
 
+function invert(rgb) {
+    rgb = Array.prototype.join.call(arguments).match(/(-?[0-9\.]+)/g);
+    for (var i = 0; i < rgb.length; i++) {
+        rgb[i] = (i === 3 ? 1 : 255) - rgb[i];
+    }
+    return rgb;
+}
+
 var n = 0;
 var recencyFn = function(properties, zoom, layer) {
     if (globalSinceFloor !== "") {
@@ -606,6 +625,25 @@ var recencyFn = function(properties, zoom, layer) {
     //     out.fillColor = "dodgerblue";
     // }
 
+    if (layer === "catTrackPlace") {
+        var placecolori = invert(color2);
+        var placecolor = "";
+        if (placecolori.length === 3) {
+            placecolor = "rgb(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + ")";
+        } else if (placecolori.length === 4) {
+            placecolor = "rgba(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + "," + placecolori[3] + ")";
+        } else {
+            placecolor = color2;
+        }
+        out.fillColor = placecolor,
+        // out.stroke = "cornflowerblue",
+        out.fillOpacity = 0.33;
+        out.radius= 10;
+        out.type= "Point";
+        console.log("place", properties);
+        // alert("got place", layer, properties);
+    }
+
     return out;
 };
 
@@ -618,9 +656,13 @@ var recencyTileOptions = {
         },
         'catTrackEdge': function(props, z) {
             return recencyFn(props, z, "catTrackEdge");
+        },
+        'catTrackPlace': function(props, z) {
+            return recencyFn(props, z, "catTrackPlace");
         }
+
     },
-    // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name + f.properties.Time;
     }
@@ -685,6 +727,9 @@ var drawLayer = function drawLayer(opts) {
     if (typeof pbfDevopLayer !== "undefined") {
         map.removeLayer(pbfDevopLayer);
     }
+    if (typeof pbfPlacesLayer !== "undefined") {
+        map.removeLayer(pbfPlacesLayer);
+    }
 
     var v = L.vectorGrid;
 
@@ -703,6 +748,16 @@ var drawLayer = function drawLayer(opts) {
     pbfEdgeLayer.addTo(map).on('load', function(e) {
         // console.log('loaded pbfedgelayer');
     });
+    pbfPlacesLayer = v.protobuf(pbfurlplaces, opts);
+    pbfPlacesLayer.addTo(map).on('load', function(e) {
+        // console.log('loaded pbfedgelayer');
+    }).on('click', function(e) {
+        console.log("clicked", e);
+        console.log("clicked elayprops", e.layer.properties);
+        var props = e.layer.properties;
+        alert(props.Name + " visited " + props.PlaceIdentity + "\n" + "From " + props.ArrivalTime + " to " + props.DepartureTime);
+    });
+
 };
 
 function delegateDrawLayer(name) {
