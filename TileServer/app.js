@@ -735,6 +735,8 @@ var recencyTileOptions = {
 };
 
 var activityColorLegend = {
+    "": "lightgray",
+    "Unknown": "lightgray",
     "Stationary": "blueviolet",
     "Walking": "dodgerblue",
     "Running": "lightgreen",
@@ -743,14 +745,15 @@ var activityColorLegend = {
 };
 
 function activityFn(props, z, layer) {
-    if (!activityColorLegend[props[ "Activity" ]]) {
+    var c = activityColorLegend[props["Activity"]];
+    if (c === "lightgray") {
         return {};
     }
     var out = {
         stroke: false,
         fill: true,
-        fillColor: activityColorLegend[props["Activity"]] || "lightgray",
-        fillOpacity: activityColorLegend[props["Activity"]] ? 0.9 : 0.1,
+        fillColor: c || "lightgray",
+        fillOpacity: c !== "lightgray" ? 0.9 : 0.1,
         radius: 2,
         type: "Point"
     };
@@ -932,6 +935,9 @@ function delegateDrawLayer(name) {
         legendElement.css("font-weight", "bold");
         legendElement.css("padding-left", "3px");
         legendElement.css("padding-right", "3px");
+        if (v === "lightgray") {
+            legendElement.css("text-decoration", "line-through");
+        }
         alegend.append(legendElement);
     }
 
