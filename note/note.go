@@ -145,6 +145,7 @@ func (ns NoteStructured) HasValidVisit() bool {
 }
 
 type NoteVisit struct {
+	Name                string `json:"name"` // kind of optional
 	ArrivalTime         time.Time
 	ArrivalTimeString   string `json:"arrivalDate"`
 	DepartureTime       time.Time
