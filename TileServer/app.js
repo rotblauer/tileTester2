@@ -563,6 +563,13 @@ var recencyScale = function(props, color) {
     };
 };
 
+var placePinIcon = L.icon({
+    iconUrl: "/map-icon-red.png",
+    iconSize: [32,32],
+    iconAnchor: [16, 32],
+    popupAnchor: [16, 16]
+});
+
 function invert(rgb) {
     rgb = Array.prototype.join.call(arguments).match(/(-?[0-9\.]+)/g);
     for (var i = 0; i < rgb.length; i++) {
@@ -623,27 +630,41 @@ var recencyFn = function(properties, zoom, layer) {
         radius: recencyScale(properties, color2).radius,
         type: "Point"
     };
+
     // if (layer === "catTrackEdge") {
     //     out.fillColor = "dodgerblue";
     // }
 
     if (layer === "catTrackPlace") {
-        var placecolori = invert(color2);
-        var placecolor = "";
-        if (placecolori.length === 3) {
-            placecolor = "rgb(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + ")";
-        } else if (placecolori.length === 4) {
-            placecolor = "rgba(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + "," + placecolori[3] + ")";
-        } else {
-            placecolor = color2;
-        }
-        out.fillColor = placecolor,
-        // out.stroke = "cornflowerblue",
-        out.fillOpacity = 0.33;
-        out.radius= 10;
-        out.type= "Point";
+
+        // var c2 = color2;
+        // var placecolor = c2;
+        // var placecolori = invert(c2);
+        // if (placecolori.length === 3) {
+        //     placecolor = "rgb(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + ")";
+        // } else if (placecolori.length === 4) {
+        //     placecolor = "rgba(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + "," + placecolori[3] + ")";
+        // }
+        // // out.fillColor = placecolor,
+        // // out.stroke = "cornflowerblue",
+        // // asdf asdfasdf
+
+        // // out.stroke = c2;
+        // out.stroke = true;
+        // out.strokeColor = placecolor;
+        // // out.fillColor = placecolor;
+        // // out.fillColor = "gold";
+
+        // // out.fillOpacity = 0.33;
+        // out.fillOpacity = 1;
+        // out.radius= 10;
+        // out.type= "Point";
         console.log("place", properties);
-        // alert("got place", layer, properties);
+        // // alert("got place", layer, properties);
+
+        out.fill= false;
+        out.type = "Icon";
+        out.icon = placePinIcon;
     }
 
     return out;
