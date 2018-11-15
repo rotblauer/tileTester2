@@ -416,7 +416,24 @@ function getRelDensity(zoom, n) {
     return relDensity;
 }
 
-var densityFn = function(properties, zoom) {
+var placePinIcon = L.icon({
+    iconUrl: "/map-icon-red.png",
+    iconSize: [32,32],
+    iconAnchor: [16, 32],
+    popupAnchor: [16, 16]
+});
+
+var arrivedPinIcon = L.icon({
+    // iconUrl: "/green-map-pin.png",
+    // iconUrl: "/green-pin-icon2.png",
+    iconUrl: "/green-pin-icon3.png",
+    // iconSize: [25,36],
+    iconSize: [32,32],
+    iconAnchor: [16,32],
+    popupAnchor: [16,16]
+});
+
+var densityFn = function(layer, properties, zoom) {
     if (globalSinceFloor !== "") {
         if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
             return {};
@@ -429,7 +446,7 @@ var densityFn = function(properties, zoom) {
     }
 
     // anything above about zoom 14-15 will not be clustered!...
-    if (!properties.clustered) {
+    if (!properties.clustered && layer !== "catTrackPlace") {
         return {
             stroke: false,
             fill: true,
@@ -487,10 +504,24 @@ var densityFn = function(properties, zoom) {
         // radius: Math.floor(relDPercent*maxRadius), // ~max 100 from maxDensity actual max // +1 ??
         type: "Point"
     };
+
     if (!didLogOnce) {
         // console.log("example", "props", properties, "zoom");
         console.log("logOne", "zoom", zoom, "properties", properties, "out", out);
         didLogOnce = true;
+    }
+
+    if (layer === "catTrackPlace") {
+        console.log("propes", properties);
+        var year = new Date(properties["DepartureTime"]).getFullYear();
+        console.log("year", year);
+        out.fill= false;
+        out.type = "Icon";
+        out.icon = placePinIcon;
+        if (year >= 4000) {
+            // return {};
+            out.icon = arrivedPinIcon;
+        }
     }
     return out;
 };
@@ -498,8 +529,15 @@ var densityFn = function(properties, zoom) {
 var densityTileOptions = {
     rendererFactory: L.canvas.tile,
     vectorTileLayerStyles: {
-        'catTrack': densityFn,
-        'catTrackEdge': densityFn
+        'catTrack': function(props, zoom) {
+            return densityFn("catTrack", props, zoom);
+        },
+        'catTrackEdge': function(props, zoom) {
+            return densityFn("catTrackEdge", props, zoom);
+        },
+        'catTrackPlace': function(props, zoom) {
+            return densityFn("catTrackPlace", props, zoom);
+        },
     },
     interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
@@ -562,13 +600,6 @@ var recencyScale = function(props, color) {
         color: shadeRGBColor(color, shade)
     };
 };
-
-var placePinIcon = L.icon({
-    iconUrl: "/map-icon-red.png",
-    iconSize: [32,32],
-    iconAnchor: [16, 32],
-    popupAnchor: [16, 16]
-});
 
 function invert(rgb) {
     rgb = Array.prototype.join.call(arguments).match(/(-?[0-9\.]+)/g);
@@ -637,34 +668,31 @@ var recencyFn = function(properties, zoom, layer) {
 
     if (layer === "catTrackPlace") {
 
-        // var c2 = color2;
-        // var placecolor = c2;
-        // var placecolori = invert(c2);
-        // if (placecolori.length === 3) {
-        //     placecolor = "rgb(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + ")";
-        // } else if (placecolori.length === 4) {
-        //     placecolor = "rgba(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + "," + placecolori[3] + ")";
-        // }
-        // // out.fillColor = placecolor,
-        // // out.stroke = "cornflowerblue",
-        // // asdf asdfasdf
+        var c2 = color2;
+        var placecolor = c2;
+        var placecolori = invert(c2);
+        if (placecolori.length === 3) {
+            placecolor = "rgb(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + ")";
+        } else if (placecolori.length === 4) {
+            placecolor = "rgba(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + "," + placecolori[3] + ")";
+        }
+        // out.fillColor = placecolor,
+        // out.stroke = "cornflowerblue",
+        // asdf asdfasdf
 
-        // // out.stroke = c2;
-        // out.stroke = true;
-        // out.strokeColor = placecolor;
-        // // out.fillColor = placecolor;
-        // // out.fillColor = "gold";
+        // out.stroke = c2;
+        out.stroke = true;
+        out.strokeColor = placecolor;
+        // out.fillColor = placecolor;
+        // out.fillColor = "gold";
 
-        // // out.fillOpacity = 0.33;
-        // out.fillOpacity = 1;
-        // out.radius= 10;
-        // out.type= "Point";
-        console.log("place", properties);
+        // out.fillOpacity = 0.33;
+        out.fillOpacity = 1;
+        out.radius= 10;
+        out.type= "Point";
+        // console.log("place", properties);
         // // alert("got place", layer, properties);
 
-        out.fill= false;
-        out.type = "Icon";
-        out.icon = placePinIcon;
     }
 
     return out;
@@ -779,7 +807,18 @@ var drawLayer = function drawLayer(opts) {
         console.log("clicked elayprops", e.layer.properties);
         var props = e.layer.properties;
         // alert(props.Name + " visited " + props.PlaceIdentity + "\n" + "From " + props.ArrivalTime + " to " + props.DepartureTime);
-        var str = props.Name + " visited " + props.PlaceIdentity +  " from " + new Date(props.ArrivalTime).toLocaleString() + " to " + new Date( props.DepartureTime ).toLocaleString();
+        var start = moment(props.ArrivalTime);
+        var end = moment(props.DepartureTime);
+
+        var timeSpent = end.to(start, true);
+
+
+        var str = props.Name + " visited " + props.PlaceIdentity + " for " + timeSpent +  ", from " + new Date(props.ArrivalTime).toLocaleString() + " to " + new Date( props.DepartureTime ).toLocaleString();
+
+        if (end.year() >= 4000) {
+            str = props.Name + " arrived at " + props.PlaceIdentity + " at " + new Date(props.ArrivalTime).toLocaleString();
+        }
+
 				L.popup()
 					  .setContent(str)
         // 					.setContent(JSON.stringify(e.layer))
@@ -787,15 +826,15 @@ var drawLayer = function drawLayer(opts) {
 					  .openOn(map);
 				clearHighlight();
 				highlight = e.layer.properties.osm_id;
-				pbfLayer.setFeatureStyle(highlight, {
-					  weight: 2,
-					  color: 'red',
-					  opacity: 1,
-					  fillColor: 'red',
-					  fill: true,
-					  radius: 6,
-					  fillOpacity: 1
-				});
+				// pbfPlacesLayer.setFeatureStyle(highlight, {
+				// 	  weight: 2,
+				// 	  color: 'red',
+				// 	  opacity: 1,
+				// 	  fillColor: 'red',
+				// 	  fill: true,
+				// 	  radius: 6,
+				// 	  fillOpacity: 1
+				// });
 				L.DomEvent.stop(e);
     });
 
