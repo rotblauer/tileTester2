@@ -438,6 +438,9 @@ var densityFn = function(layer, properties, zoom) {
         if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
             return {};
         }
+        if (new Date().getTime() - new Date(properties["ArrivalTime"]).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
+            return {};
+        }
     }
 
     if (properties.hasOwnProperty("Notes") && !didLogOnce) {
@@ -514,14 +517,14 @@ var densityFn = function(layer, properties, zoom) {
     if (layer === "catTrackPlace") {
         console.log("propes", properties);
         var year = new Date(properties["DepartureTime"]).getFullYear();
+        if (year >= 4000) {
+            return {};
+            // out.icon = arrivedPinIcon;
+        }
         console.log("year", year);
         out.fill= false;
         out.type = "Icon";
         out.icon = placePinIcon;
-        if (year >= 4000) {
-            // return {};
-            out.icon = arrivedPinIcon;
-        }
     }
     return out;
 };
@@ -616,6 +619,9 @@ var recencyFn = function(properties, zoom, layer) {
         if (new Date().getTime() - new Date(properties.Time).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
             return {};
         }
+        if (new Date().getTime() - new Date(properties["ArrivalTime"]).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
+            return {};
+        }
     }
 
     // if (n === 0) {
@@ -668,6 +674,12 @@ var recencyFn = function(properties, zoom, layer) {
 
     if (layer === "catTrackPlace") {
 
+        var year = new Date(properties["DepartureTime"]).getFullYear();
+        if (year >= 4000) {
+            return {};
+            // out.icon = arrivedPinIcon;
+        }
+
         var c2 = color2;
         var placecolor = c2;
         var placecolori = invert(c2);
@@ -680,9 +692,12 @@ var recencyFn = function(properties, zoom, layer) {
         // out.stroke = "cornflowerblue",
         // asdf asdfasdf
 
-        // out.stroke = c2;
         out.stroke = true;
-        out.strokeColor = placecolor;
+        // NOOP WTF
+        // out.stroke = c2;
+        // out.strokeColor = placecolor;
+
+        out.fillColor = placecolor;
         // out.fillColor = placecolor;
         // out.fillColor = "gold";
 
