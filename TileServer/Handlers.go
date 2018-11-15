@@ -179,11 +179,13 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 	db, err := bolt.Open(dbp, 0660, &bolt.Options{ReadOnly: true})
 	// db, err := bolt.Open(dbp, 0660, nil)
 	log.Println("opendb")
-	defer db.Close()
 	if db == nil {
 		http.Error(w, "invalid db parameter", http.StatusBadRequest)
 		return
-	} else if err != nil {
+	} else {
+		defer db.Close()
+	}
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
