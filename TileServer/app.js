@@ -734,6 +734,48 @@ var recencyTileOptions = {
     }
 };
 
+var activityColorLegend = {
+    "Stationary": "blueviolet",
+    "Walking": "dodgerblue",
+    "Running": "lightgreen",
+    "Bike": "gold",
+    "Automotive": "orangered"
+};
+
+function activityFn(props, z, layer) {
+    if (!activityColorLegend[props[ "Activity" ]]) {
+        return {};
+    }
+    var out = {
+        stroke: false,
+        fill: true,
+        fillColor: activityColorLegend[props["Activity"]] || "lightgray",
+        fillOpacity: activityColorLegend[props["Activity"]] ? 0.9 : 0.1,
+        radius: 2,
+        type: "Point"
+    };
+
+    return out;
+}
+
+var activityTileOptions = {
+    rendererFactory: L.canvas.tile,
+    vectorTileLayerStyles: {
+        'catTrack': function(props, z) {
+            return activityFn(props, z, "catTrack");
+        },
+        'catTrackEdge': function(props, z) {
+            return activityFn(props, z, "catTrackEdge");
+        },
+        'catTrackPlace': function(props, z) {
+            return activityFn(props, z, "catTrackPlace");
+        }
+    },
+    getFeatureId: function(f) {
+        return f.properties.name + f.properties.Time;
+    }
+};
+
 function tripLayerHandler(props, color) {
     return {
         opacity: recencyScale(props, color).color, //opacity / 3,
@@ -865,10 +907,35 @@ function delegateDrawLayer(name) {
         drawLayer(densityTileOptions);
     } else if (name === "trip") {
         drawLayer(tripTileOptions);
+    } else if (name === "activity") {
+        drawLayer(activityTileOptions);
     }
     if ($("#points-layer-select").val() !== drawnLayer) {
         $("#points-layer-select").val(drawnLayer);
     }
+
+    var alegend = $("#activity-layer-legend");
+    if (name !== "activity") {
+        alegend.hide();
+        return;
+    }
+    alegend.show();
+    if (alegend.children().length > 0) {
+        return;
+    }
+    for (k in activityColorLegend) {
+        var v = activityColorLegend[k];
+        console.log("activeity", k,  v);
+        var legendElement = $("<span></span>");
+        legendElement.text(k);
+        legendElement.css("color", v);
+        legendElement.css("font-weight", "bold");
+        legendElement.css("padding-left", "3px");
+        legendElement.css("padding-right", "3px");
+        alegend.append(legendElement);
+    }
+
+    // $("#activity-layer-legend")
 }
 
 function getQueryVariable(variable, url) {

@@ -166,6 +166,10 @@
             /* padding-top: 0.5em; */
             /* padding-bottom: 0.5em; */
         }
+     #activity-layer-legend {
+         float: right;
+     }
+
     </style>
 </head>
 
@@ -192,6 +196,7 @@
                 <option value="recent">Points: recency</option>
                 <option value="speed">Points: speed</option>
                 <option value="density">Points: density</option>
+                <option value="activity">Points: activity</option>
             </select>
             <select id="map-layer-select" id="" name="">
                 <option value="tile-light">Map: light</option>
@@ -199,6 +204,20 @@
                 <option value="tile-outdoors">Map: outdoors</option>
                 <option value="tile-sat">Map: satellite</option>
             </select>
+            <div id="activity-layer-legend" display="none;">
+                <!-- <div id="activity-Stationary" class="activity-name-color"> -->
+                <!-- </div> -->
+                <!-- <div id="activity-Walking" class="activity-name-color"> -->
+                <!-- </div> -->
+                <!-- <div id="activity-Running" class="activity-name-color"> -->
+                <!-- </div> -->
+                <!-- <div id="activity-Bike" class="activity-name-color"> -->
+                <!-- </div> -->
+                <!-- <div id="activity-Automotive" class="activity-name-color"> -->
+                <!-- </div> -->
+                </div>
+
+
         </div>
 
         <div id="metadata-holder">
