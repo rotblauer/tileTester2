@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 rsync -avz -L --progress -h\
-    app.js index.html *.png freya:~/punktlich.rotblauer.com/
+    app.js index.html *.png *.ico freya:~/punktlich.rotblauer.com/
 
