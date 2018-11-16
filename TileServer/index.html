@@ -169,6 +169,15 @@
      #activity-layer-legend {
          float: right;
      }
+     #cat-in-frame {
+         position: fixed;
+         z-index: 1000;
+         bottom: 0px;
+         left: 0px;
+     }
+     .link-to-other-place {
+        cursor: pointer;
+     }
 
     </style>
 </head>
@@ -203,6 +212,7 @@
                 <option value="tile-dark">Map: dark</option>
                 <option value="tile-outdoors">Map: outdoors</option>
                 <option value="tile-sat">Map: satellite</option>
+                <option value="tile-caliterr">Map: terrain</option>
             </select>
             <div id="activity-layer-legend" display="none;">
                 <!-- <div id="activity-Stationary" class="activity-name-color"> -->
@@ -233,6 +243,8 @@
         </div>
         <div id="lastknowns-div">
             <span id="lastknowns"></span>
+        </div>
+        <div id="cat-in-frame">
         </div>
 
         <div id="map"></div>

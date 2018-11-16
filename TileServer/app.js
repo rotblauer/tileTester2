@@ -79,6 +79,14 @@ var globalSinceFloor = ""; // actually will be an integer, but will just use +""
 
 var visits = [];
 
+
+var onMapCatMarkers = [];
+
+var catsToVisit = {}; // uuid:name
+var catVisitMarkers = [];
+var vvisits = {};
+var lastAskedVisit;
+
 function getBrowsePosition() {
     var got = localStorage.getItem("browsePosition");
     // console.log("got browse local", got);
@@ -110,6 +118,7 @@ var mb_tile_outdoors_url = "https://api.mapbox.com/styles/v1/rotblauer/cjgejdj91
 var mb_tile_light1_url = "https://api.mapbox.com/styles/v1/rotblauer/ciy7ijqu3001a2rocq88pi8s4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 var mb_tile_sat_url = "https://api.mapbox.com/styles/v1/rotblauer/cjgel0gt300072rmc2s34f2ky/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 var mb_tile_dark_url = "https://api.mapbox.com/styles/v1/rotblauer/cjnlrb8hq0jgh2rozuxxzopgx/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
+var mb_tile_caliterr_url = "https://api.mapbox.com/styles/v1/rotblauer/cjok2q3ao6gfx2rlmioipy394/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoicm90YmxhdWVyIiwiYSI6ImNpeTdidjZxajAwMzEycW1waGdrNmh3NmsifQ.OpXHPqEHK2sTbQ4-pmhAMQ";
 var mb_tile_light1 = L.tileLayer(mb_tile_light1_url, {
     maxZoom: 19
 });
@@ -122,6 +131,10 @@ var mb_tile_sat = L.tileLayer(mb_tile_sat_url, {
 var mb_tile_dark = L.tileLayer(mb_tile_dark_url, {
     maxZoom: 19
 });
+var mb_tile_caliterr = L.tileLayer(mb_tile_caliterr_url, {
+    maxZoom: 19
+});
+
 
 function getCurrentTileLayerName() {
     if (current_tile_layer !== null) {
@@ -133,6 +146,8 @@ function getCurrentTileLayerName() {
             return "tile-sat";
         } else if (current_tile_layer === mb_tile_dark) {
             return "tile-dark";
+        } else if (current_tile_layer === mb_tile_caliterr) {
+            return "tile-caliterr";
         }
     }
     return ""
@@ -182,8 +197,124 @@ map = L.map('map', {
 map.on("moveend", function() {
     didLogOnce = false;
     putViewToUrl();
+
+    $(".other-places-div").each(function(i, t) {
+        $(t).html("");
+    });
     // $("#url-moved").css("color", "rgb(5, 255, 170)");
     // $("#url-moved").fadeOut(100).fadeIn(100); // .fadeOut(100).fadeIn(100);
+    $("#cat-in-frame").html("");
+    for (var i = 0; i < onMapCatMarkers.length; i++) {
+        var layer = onMapCatMarkers[i];
+        if (map.getBounds().contains(layer.getLatLng())) {
+            var viss = [];
+            for (k in vvisits) {
+                var v = vvisits[k];
+                // console.log("k/vvisits", k, v);
+                if (layer.options.title === v.name || colors[layer.options.title] === colors[v.name]) {
+                    if (!map.getBounds().contains(L.latLng(v.PlaceParsed.Lat, v.PlaceParsed.Lng)) && new Date(v.DepartureTime).getFullYear() < 4000 && new Date(v.ArrivalTime).getFullYear() > 1000) {
+                        viss.push(v);
+                    } else {}
+                } else {
+                    console.warn(layer.options.title, "dne", v.name);
+                }
+            }
+            if (viss.length > 0) {
+                var catawarebox = $("<p></p>");
+                catawarebox.text(layer.options.title + " has " + viss.length + " other visits");
+                $("#cat-in-frame").append(catawarebox);
+                var list = $("<div></div>");
+                for (var j = 0; j < viss.length; j++) {
+                    var linker = $("<p class='link link-to-other-place' style='margin-bottom: 0px;'></p>");
+                    linker.html("<img src='/map-icon-red.png' style='height: 1em;'/> " + viss[j].PlaceParsed.Identity + ", " + moment(viss[j].ReportedTime).from(moment()));
+                    var lat = viss[j].PlaceParsed.Lat;
+                    var lng = viss[j].PlaceParsed.Lng;
+                    linker.attr("data-lat", lat);
+                    linker.attr("data-lng", lng);
+                    linker.on("click", function(e) {
+                        map.flyTo([+e.target.dataset.lat, +e.target.dataset.lng], 15);
+                    });
+
+                    // var mapdomr = $("#map")[0].getBoundingClientRect();
+                    // console.log("mapboxd", mapdomr);
+                    // // mapboxd 
+                    // // DOMRect {x: 0, y: 20, width: 1198, height: 872, top: 20, …}
+                    // // bottom: 892
+                    // // height: 872
+                    // // left: 0
+                    // // right: 1198
+                    // // top: 20
+                    // // width: 1198
+                    // // x: 0
+                    // // y: 20
+
+                    // var mapbounds = map.getBounds();
+                    // console.log("mapbounds", mapbounds);
+                    // // mapbounds o.LatLngBounds {_southWest: o.LatLng, _northEast: o.LatLng}_northEast: o.LatLng {lat: 38.647930517779514, lng: -90.25753498077393}_southWest: o.LatLng {lat: 38.63331569814948, lng: -90.28324127197267}__proto__: Object
+                    // // eg. mapbounds._southWest.lat
+
+                    // var mapcenter = map.getCenter();
+                    // console.log("mapcenter", mapcenter);
+                    // // mapcenter 
+                    // // o.LatLng {lat: 38.640170955984765, lng: -90.27109622955322}
+                    // // lat: 38.640170955984765
+                    // // lng: -90.27109622955322
+                    // // __proto__: Object
+
+                    // // map dimensions in degrees
+                    // var mapHdg = mapbounds._northEast.lat - mapbounds._southWest.lat;
+                    // var mapWdg = mapbounds._northEast.lng - mapbounds._southWest.lng;
+
+                    // var mWPx_Dg = mapWdg / mapdomr.width; // pixels/degree
+                    // var mHPx_Dg = mapHdg / mapdomr.height;
+
+
+                    // // diff degrees center to trackpoint
+                    // var dlatdg = mapcenter.lat - lat;
+                    // var dlngdg = mapcenter.lng - lng;
+
+                    // var wantHPxCoord = mHPx_Dg * dlatdg;
+                    // var wantWPxCoord = mWPx_Dg * dlngdg;
+
+                    // console.log("want", wantWPxCoord, wantHPxCoord);
+
+                    // var edgeHPxCoord;
+                    // if (wantHPxCoord < map.top) { edgeHPxCoord = map.top } else if (wantHPxCoord > map.bottom) {edgeHPxCoord = map.bottom};
+
+                    // var edgeWPxCoord = wantWPxCoord < map.left ? map.left : wantWPxCoord;
+                    // edgeWPxCoord = wantWPxCoord > map.right ? map.right : wantWPxCoord;
+
+
+
+                    // linker.css("position", "fixed");
+                    // linker.css("x", edgeWPxCoord + "px");
+                    // linker.css("y", edgeHPxCoord + "px");
+                    // linker.css("z-index", 1000);
+                    // $("body").append(linker);
+                    // console.log("GOT OOB", "x", edgeWPxCoord, "y", edgeHPxCoord, linker);
+
+
+                    // // var triHdg = mapcenter.lat - lat;
+                    // // var triWdg = mapcenter.lng - lng;
+
+                    // // var smtriHdg = mapcenter.lat - mapbounds._southwest.lat;
+                    // // var smtriWdg = mapcenter.lng - mapbounds._
+
+                    list.append(linker);
+                    // find aliasable cat
+                    $(".other-places-div").each(function(e, tar) {
+                        if (colors[tar.id.replace("other-places-", "")] === colors[viss[j].name]) {
+                            $(tar).append(linker);
+                        } else {
+                            console.warn(tar.id, "dneq", viss[j].name);
+                        }
+                    });
+                }
+                // $("#cat-in-frame").append(list);
+                console.log("vvisss not on map curr", viss);
+            }
+        }
+    }
 });
 
 map.on("load", function() {
@@ -267,7 +398,10 @@ function delegateTileLayer(name) {
         setMapTileLayer(mb_tile_outdoors);
     } else if (name === "tile-sat" && current_tile_layer !== mb_tile_sat) {
         setMapTileLayer(mb_tile_sat);
+    } else if (name === "tile-caliterr" && current_tile_layer !== mb_tile_caliterr) {
+        setMapTileLayer(mb_tile_caliterr);
     }
+
     if (name === "tile-dark" && current_tile_layer !== mb_tile_dark) {
         setMapTileLayer(mb_tile_dark);
         $("#metadata-holder").css("background-color", "black");
@@ -418,7 +552,7 @@ function getRelDensity(zoom, n) {
 
 var placePinIcon = L.icon({
     iconUrl: "/map-icon-red.png",
-    iconSize: [32,32],
+    iconSize: [32, 32],
     iconAnchor: [16, 32],
     popupAnchor: [16, 16]
 });
@@ -428,9 +562,9 @@ var arrivedPinIcon = L.icon({
     // iconUrl: "/green-pin-icon2.png",
     iconUrl: "/green-pin-icon3.png",
     // iconSize: [25,36],
-    iconSize: [32,32],
-    iconAnchor: [16,32],
-    popupAnchor: [16,16]
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [16, 16]
 });
 
 var densityFn = function(layer, properties, zoom) {
@@ -449,7 +583,7 @@ var densityFn = function(layer, properties, zoom) {
     }
 
     // anything above about zoom 14-15 will not be clustered!...
-    if (!properties.clustered && layer !== "catTrackPlace") {
+    if (!properties.clustered) {
         return {
             stroke: false,
             fill: true,
@@ -514,18 +648,6 @@ var densityFn = function(layer, properties, zoom) {
         didLogOnce = true;
     }
 
-    if (layer === "catTrackPlace") {
-        console.log("propes", properties);
-        var year = new Date(properties["DepartureTime"]).getFullYear();
-        if (year >= 4000) {
-            return {};
-            // out.icon = arrivedPinIcon;
-        }
-        console.log("year", year);
-        out.fill= false;
-        out.type = "Icon";
-        out.icon = placePinIcon;
-    }
     return out;
 };
 
@@ -542,7 +664,7 @@ var densityTileOptions = {
             return densityFn("catTrackPlace", props, zoom);
         },
     },
-    interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name;
     },
@@ -671,45 +793,6 @@ var recencyFn = function(properties, zoom, layer) {
     // if (layer === "catTrackEdge") {
     //     out.fillColor = "dodgerblue";
     // }
-
-    if (layer === "catTrackPlace") {
-
-        var year = new Date(properties["DepartureTime"]).getFullYear();
-        if (year >= 4000) {
-            return {};
-            // out.icon = arrivedPinIcon;
-        }
-
-        var c2 = color2;
-        var placecolor = c2;
-        var placecolori = invert(c2);
-        if (placecolori.length === 3) {
-            placecolor = "rgb(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + ")";
-        } else if (placecolori.length === 4) {
-            placecolor = "rgba(" + placecolori[0] + "," + placecolori[1] + "," + placecolori[2] + "," + placecolori[3] + ")";
-        }
-        // out.fillColor = placecolor,
-        // out.stroke = "cornflowerblue",
-        // asdf asdfasdf
-
-        out.stroke = true;
-        // NOOP WTF
-        // out.stroke = c2;
-        // out.strokeColor = placecolor;
-
-        out.fillColor = placecolor;
-        // out.fillColor = placecolor;
-        // out.fillColor = "gold";
-
-        // out.fillOpacity = 0.33;
-        out.fillOpacity = 1;
-        out.radius= 10;
-        out.type= "Point";
-        // console.log("place", properties);
-        // // alert("got place", layer, properties);
-
-    }
-
     return out;
 };
 
@@ -728,7 +811,7 @@ var recencyTileOptions = {
         }
 
     },
-    interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
+    // interactive: true, // Make sure that this VectorGrid fires mouse/pointer events
     getFeatureId: function(f) {
         return f.properties.name + f.properties.Time;
     }
@@ -745,6 +828,15 @@ var activityColorLegend = {
 };
 
 function activityFn(props, z, layer) {
+    if (globalSinceFloor !== "") {
+        // console.log("recent globalSinceFloor", globalSinceFloor);
+        if (new Date().getTime() - new Date(props.Time).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
+            return {};
+        }
+        if (new Date().getTime() - new Date(props["ArrivalTime"]).getTime() > +globalSinceFloor * 24 * 60 * 60 * 1000) {
+            return {};
+        }
+    }
     var c = activityColorLegend[props["Activity"]];
     if (c === "lightgray") {
         return {};
@@ -754,9 +846,25 @@ function activityFn(props, z, layer) {
         fill: true,
         fillColor: c || "lightgray",
         fillOpacity: c !== "lightgray" ? 0.9 : 0.1,
+        // radius: 1.5,
         radius: 2,
         type: "Point"
     };
+    // if (layer === "catTrackPlace") {
+    //     // console.log("propes", properties);
+    //     // console.log("year", year);
+    //     // out.fill= false;
+    //     out.type = "Icon";
+    //     out.icon = placePinIcon;
+
+    //     var year = new Date(props["DepartureTime"]).getFullYear();
+    //     if (year >= 4000) {
+    //         return {};
+    //         // out.icon = arrivedPinIcon;
+    //     } else if (year < 1000) {
+    //         return {};
+    //     }
+    // }
 
     return out;
 }
@@ -774,6 +882,7 @@ var activityTileOptions = {
             return activityFn(props, z, "catTrackPlace");
         }
     },
+    interactive: true,
     getFeatureId: function(f) {
         return f.properties.name + f.properties.Time;
     }
@@ -862,40 +971,6 @@ var drawLayer = function drawLayer(opts) {
     pbfPlacesLayer = v.protobuf(pbfurlplaces, opts);
     pbfPlacesLayer.addTo(map).on('load', function(e) {
         // console.log('loaded pbfedgelayer');
-    }).on('click', function(e) {
-        console.log("clicked", e);
-        console.log("clicked elayprops", e.layer.properties);
-        var props = e.layer.properties;
-        // alert(props.Name + " visited " + props.PlaceIdentity + "\n" + "From " + props.ArrivalTime + " to " + props.DepartureTime);
-        var start = moment(props.ArrivalTime);
-        var end = moment(props.DepartureTime);
-
-        var timeSpent = end.to(start, true);
-
-
-        var str = props.Name + " visited " + props.PlaceIdentity + " for " + timeSpent +  ", from " + new Date(props.ArrivalTime).toLocaleString() + " to " + new Date( props.DepartureTime ).toLocaleString();
-
-        if (end.year() >= 4000) {
-            str = props.Name + " arrived at " + props.PlaceIdentity + " at " + new Date(props.ArrivalTime).toLocaleString();
-        }
-
-				L.popup()
-					  .setContent(str)
-        // 					.setContent(JSON.stringify(e.layer))
-					  .setLatLng(e.latlng)
-					  .openOn(map);
-				clearHighlight();
-				highlight = e.layer.properties.osm_id;
-				// pbfPlacesLayer.setFeatureStyle(highlight, {
-				// 	  weight: 2,
-				// 	  color: 'red',
-				// 	  opacity: 1,
-				// 	  fillColor: 'red',
-				// 	  fill: true,
-				// 	  radius: 6,
-				// 	  fillOpacity: 1
-				// });
-				L.DomEvent.stop(e);
     });
 
 };
@@ -928,7 +1003,7 @@ function delegateDrawLayer(name) {
     }
     for (k in activityColorLegend) {
         var v = activityColorLegend[k];
-        console.log("activeity", k,  v);
+        console.log("activeity", k, v);
         var legendElement = $("<span></span>");
         legendElement.text(k);
         legendElement.css("color", v);
@@ -1052,6 +1127,108 @@ function getmetadata() {
 
 }
 
+
+function getCatVisits() {
+    if (catsToVisit.length === 0) {
+        setTimeout(getCatVisits, 1000);
+        return;
+    }
+
+    var cats = "";
+    for (uuid in catsToVisit) {
+        cats += "names=" + catsToVisit[uuid] + "&";
+    }
+
+    $.ajax({
+        type: "GET",
+        url: trackHost + "/visits?" + cats + (lastAskedVisit === null || catVisitMarkers.length === 0 ?
+                "startReportedT=" + moment().add(-30, "days").format() :
+                "startReportedT=" + moment(lastAskedVisit).add(-1, "minute").format()) +
+            "&endI=100&stats=true",
+        dataType: 'json',
+        success: function(data) {
+            console.log("visits", data);
+            lastAskedVisit = moment();
+
+            // remove old visits
+            // for (var i = 0; i < catVisitMarkers.length; i++) {
+            //     var cat = catVisitMarkers[i];
+            //     // cat.setIcon(catIconSmall);
+            //     // cat.setOpacity(1/i);
+            //     map.removeLayer(cat);
+            // }
+            // catVisitMarkers = [];
+
+            $.each(data.visits, function(i, val) {
+                if (!(new Date(val.ArrivalTime).getFullYear() > 1000 && new Date(val.DepartureTime).getFullYear() < 3000)) {
+                    console.log("half-formed visit", val);
+                    return;
+                }
+                if (!vvisits.hasOwnProperty(val.name + val.ReportedTime)) {
+                    vvisits[val.name + val.ReportedTime] = val;
+                } else {
+                    return;
+                }
+                console.log("v", i, val);
+
+                var y = new Date(val["ArrivalTime"]).getFullYear();
+                var l = L.marker([+val.PlaceParsed.Lat, +val.PlaceParsed.Lng], {
+                    icon: y < 4000 && y > 1000 ? placePinIcon : arrivedPinIcon,
+                }).on('click', function(e) {
+                    console.log("clicked", val);
+
+                    var props = val;
+                    // alert(props.Name + " visited " + props.PlaceIdentity + "\n" + "From " + props.ArrivalTime + " to " + props.DepartureTime);
+                    var start = moment(props.ArrivalTime);
+                    var end = moment(props.DepartureTime);
+
+                    var timeSpent = end.to(start, true);
+
+                    var relTime = ", " + moment(props.ArrivalTime).from(moment());
+
+                    var af = moment(props.ArrivalTime);
+                    var df = moment(props.DepartureTime);
+
+                    var str = props.name + " visited " + props.PlaceParsed.Identity + " for " + timeSpent + relTime + ", on " + af.format("dddd, MMMM Do") + ", from " + af.format("LT") + " to " + df.format("LT");
+                    if (end.year() >= 3000) {
+                        str = props.name + " arrived at " + props.PlaceParsed.Identity + relTime + ", on " + af.format("llll");
+                    } else if (start.year() < 1000) {
+                        str = props.name + " left " + props.PlaceParsed.Identity + relTime + ", on " + df.format("llll");
+                    }
+
+                    L.popup()
+                        .setContent(str)
+                        // 					.setContent(JSON.stringify(e.layer))
+                        .setLatLng(e.latlng)
+                        .openOn(map);
+                    clearHighlight();
+                    highlight = e.osm_id;
+                    // pbfPlacesLayer.setFeatureStyle(highlight, {
+                    // 	  weight: 2,
+                    // 	  color: 'red',
+                    // 	  opacity: 1,
+                    // 	  fillColor: 'red',
+                    // 	  fill: true,
+                    // 	  radius: 6,
+                    // 	  fillOpacity: 1
+                    // });
+                    L.DomEvent.stop(e);
+                });
+                map.addLayer(l);
+                catVisitMarkers.push(l);
+            });
+            setTimeout(getCatVisits, 30 * 1000);
+        },
+        error: function(e) {
+            console.error("err getting cat visits", e)
+        }
+
+        // , error:
+    });
+}
+
+setTimeout(getCatVisits, 100);
+
 var catIcon = L.icon({
     iconUrl: 'cat-icon.png',
     // shadowUrl: 'leaf-shadow.png',
@@ -1072,7 +1249,7 @@ var catIconSmall = L.icon({
     // shadowAnchor: [4, 62],  // the same for the shadow
     popupAnchor: [0, -4] // point from which the popup should open relative to the iconAnchor
 });
-var onMapMarkers = [];
+
 
 function getAndMakeButtonsForLastKnownCats() {
     // $("#metadata").hide();
@@ -1087,13 +1264,13 @@ function getAndMakeButtonsForLastKnownCats() {
             $("#lastknowns").html("");
 
             // in case any existing already, remove em
-            for (var i = 0; i < onMapMarkers.length; i++) {
-                var cat = onMapMarkers[i];
+            for (var i = 0; i < onMapCatMarkers.length; i++) {
+                var cat = onMapCatMarkers[i];
                 // cat.setIcon(catIconSmall);
                 // cat.setOpacity(1/i);
                 map.removeLayer(cat);
             }
-            onMapMarkers = [];
+            onMapCatMarkers = [];
 
             var sortedByTime = [];
             $.each(data, function(key, val) {
@@ -1128,6 +1305,11 @@ function getAndMakeButtonsForLastKnownCats() {
                     return;
                 }
 
+                if (!catsToVisit.hasOwnProperty(val["uuid"])) {
+                    catsToVisit[val["uuid"]] = val["name"];
+                }
+                // don't worry about removing visits for old cats yet. that'll happen on page reload unless you stare at maps for daze like i do
+
                 // if (val.hasOwnProperty("notes") && val["notes"] !== "") {
                 //     console.log(key, "steps", JSON.parse(val["notes"]));
                 // }
@@ -1136,10 +1318,12 @@ function getAndMakeButtonsForLastKnownCats() {
                 // if (oVal.length > 1) {
                 //     n += "<sup>" + oVal.length + "</sup>";
                 // }
-                var button = $("<span id='" + key + "' class='lastknownlink' style=''> " + n + ", " + moment(val["time"]).fromNow() + "</span>");
+                var button = $("<div id='" + key + "' class='lastknownlink' style=''> " + n + ", " + moment(val["time"]).fromNow() + "</div>");
                 button.data("lat", val["lat"] + "");
                 button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
+
+                var catotherps = $("<div id='other-places-" + key + "' class='other-places-div'></div>");
 
                 var c = "#21DBEB";
                 if (colors.hasOwnProperty(val["name"])) {
@@ -1149,13 +1333,16 @@ function getAndMakeButtonsForLastKnownCats() {
                     button.css("color", "white");
                 }
                 $("#lastknowns").append(button);
-                $("#lastknowns").append($("<br>"));
+                $("#lastknowns").append(catotherps);
+                // $("#lastknowns").append($("<br>"));
 
                 var l = L.marker([+val["lat"], +val["long"]], {
-                    icon: catIcon
+                    icon: catIcon,
+                    title: val["name"],
+                    alt: val["name"] + "_" + val["uuid"]
                 });
                 map.addLayer(l);
-                onMapMarkers.push(l);
+                onMapCatMarkers.push(l);
 
                 // var mopts = {
                 //     color: c,
