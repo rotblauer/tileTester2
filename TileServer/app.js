@@ -221,10 +221,10 @@ map.on("moveend", function() {
             }
             if (viss.length > 0) {
                 var catawarebox = $("<div></div>");
-                catawarebox.css("margin-left", "1em");
-                catawarebox.css("margin-bottom", "1em");
+                // catawarebox.css("margin-left", "1em");
+                // catawarebox.css("margin-bottom", "1em");
                 catawarebox.css("padding-right", "1em");
-                catawarebox.css("padding-bottom", "1em");
+                catawarebox.css("padding-left", "1em");
 
                 catawarebox.css("text-align", "right");
                 catawarebox.css("background-color", colors[layer.options.title]);
