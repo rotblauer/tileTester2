@@ -427,8 +427,11 @@ $(".tile-button").on("click", function(e) {
 
 var highlight;
 var clearHighlight = function() {
-    if (highlight) {
-        pbfLayer.resetFeatureStyle(highlight);
+    if (highlight !== null) {
+        // pbfLayer.resetFeatureStyle(highlight);
+        // pbfDevopLayer.resetFeatureStyle(highlight);
+        // pbfEdgeLayer.resetFeatureStyle(highlight);
+        // pbfPlacesLayer.resetFeatureStyle(highlight);
     }
     highlight = null;
 };
@@ -1127,50 +1130,11 @@ function getmetadata() {
 
 }
 
+var clusterLayers = []; // by holding layers INSIDE a globally scoped variable, we avoid out-of-scope issues when trying to map..add/map.remove same-scoped variables, eg. if this were just 'var clusterLayer;'
 
-function getCatVisits() {
-    if (catsToVisit.length === 0) {
-        setTimeout(getCatVisits, 1000);
-        return;
-    }
-
-    var cats = "";
-    for (uuid in catsToVisit) {
-        cats += "names=" + catsToVisit[uuid] + "&";
-    }
-
-    $.ajax({
-        type: "GET",
-        url: trackHost + "/visits?" + cats + (lastAskedVisit === null || catVisitMarkers.length === 0 ?
-                "startReportedT=" + moment().add(-30, "days").format() :
-                "startReportedT=" + moment(lastAskedVisit).add(-1, "minute").format()) +
-            "&endI=100&stats=true",
-        dataType: 'json',
-        success: function(data) {
-            console.log("visits", data);
-            lastAskedVisit = moment();
-
-            // remove old visits
-            // for (var i = 0; i < catVisitMarkers.length; i++) {
-            //     var cat = catVisitMarkers[i];
-            //     // cat.setIcon(catIconSmall);
-            //     // cat.setOpacity(1/i);
-            //     map.removeLayer(cat);
-            // }
-            // catVisitMarkers = [];
-
-            $.each(data.visits, function(i, val) {
-                if (!(new Date(val.ArrivalTime).getFullYear() > 1000 && new Date(val.DepartureTime).getFullYear() < 3000)) {
-                    console.log("half-formed visit", val);
-                    return;
-                }
-                if (!vvisits.hasOwnProperty(val.name + val.ReportedTime)) {
-                    vvisits[val.name + val.ReportedTime] = val;
-                } else {
-                    return;
-                }
-                console.log("v", i, val);
-
+// returns L.marker
+function makeVisitMarker(val) {
+ 
                 var y = new Date(val["ArrivalTime"]).getFullYear();
                 var l = L.marker([+val.PlaceParsed.Lat, +val.PlaceParsed.Lng], {
                     icon: y < 4000 && y > 1000 ? placePinIcon : arrivedPinIcon,
@@ -1202,7 +1166,7 @@ function getCatVisits() {
                         .setLatLng(e.latlng)
                         .openOn(map);
                     clearHighlight();
-                    highlight = e.osm_id;
+                    highlight = true;// e.osm_id;
                     // pbfPlacesLayer.setFeatureStyle(highlight, {
                     // 	  weight: 2,
                     // 	  color: 'red',
@@ -1214,9 +1178,57 @@ function getCatVisits() {
                     // });
                     L.DomEvent.stop(e);
                 });
-                map.addLayer(l);
+    return l;
+}
+
+function getCatVisits() {
+    if (catsToVisit.length === 0) {
+        setTimeout(getCatVisits, 1000);
+        return;
+    }
+
+    var cats = "";
+    for (uuid in catsToVisit) {
+        cats += "names=" + catsToVisit[uuid] + "&";
+    }
+
+
+    $.ajax({
+        type: "GET",
+        url: trackHost + "/visits?" + cats + (lastAskedVisit === null || catVisitMarkers.length === 0 ?
+                "startReportedT=" + moment().add(-30, "days").format() :
+                "startReportedT=" + moment(lastAskedVisit).add(-1, "minute").format()) +
+            "&endI=100&stats=true",
+        dataType: 'json',
+        success: function(data) {
+            console.log("visits", data);
+            lastAskedVisit = moment();
+
+            // if (lmc !== null){  map.removeLayer(lmc); };
+            // for (var i = 0; i < clusterLayers; i++) {
+            //     map.remove(clusterLayers[i]);
+            // }
+
+            var lmc = clusterLayers[0] || L.markerClusterGroup();
+
+            $.each(data.visits, function(i, val) {
+
+                if (!(new Date(val.ArrivalTime).getFullYear() > 1000 && new Date(val.DepartureTime).getFullYear() < 3000)) {
+                    console.log("half-formed visit", val);
+                    return;
+                }
+                if (!vvisits.hasOwnProperty(val.name + val.ReportedTime)) {
+                    vvisits[val.name + val.ReportedTime] = val;
+                } else {
+                    return;
+                }
+                console.log("v", i, val);
+                var l = makeVisitMarker(val);
+                // map.addLayer(l);
                 catVisitMarkers.push(l);
+                lmc.addLayer(l);
             });
+            if (clusterLayers.length === 0) map.addLayer(lmc); clusterLayers.push(lmc);
             setTimeout(getCatVisits, 30 * 1000);
         },
         error: function(e) {
@@ -1339,7 +1351,7 @@ function getAndMakeButtonsForLastKnownCats() {
                 var l = L.marker([+val["lat"], +val["long"]], {
                     icon: catIcon,
                     title: val["name"],
-                    alt: val["name"] + "_" + val["uuid"]
+                    alt: val["name"] + "_" + val["uuid"],
                 });
                 map.addLayer(l);
                 onMapCatMarkers.push(l);
