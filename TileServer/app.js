@@ -220,9 +220,27 @@ map.on("moveend", function() {
                 }
             }
             if (viss.length > 0) {
-                var catawarebox = $("<p></p>");
+                var catawarebox = $("<div></div>");
                 catawarebox.css("margin-left", "1em");
-                catawarebox.text(layer.options.title + " has " + viss.length + " other visits out of view");
+                catawarebox.css("margin-bottom", "1em");
+                catawarebox.css("padding-right", "1em");
+                catawarebox.css("padding-bottom", "1em");
+
+                catawarebox.css("text-align", "right");
+                catawarebox.css("background-color", colors[layer.options.title]);
+                catawarebox.css("color", "white");
+                // catawarebox.css("font-weight", "bold");
+
+                var namer = $("<span></span>");
+                // namer.css("background-color", colors[layer.options.title]);
+                namer.text( layer.options.title );
+                catawarebox.append(namer);
+
+                var namerexplan = $("<span></span>");
+                // namerexplan.css("background-color", colors[layer.options.title]);
+                namerexplan.text(" has " + viss.length + " other " + (viss.length > 1 ? "visits" : "visit") + " out of view");
+                catawarebox.append(namerexplan);
+
                 var list = $("<div></div>");
                 for (var j = 0; j < viss.length; j++) {
                     var linker = $("<p class='link link-to-other-place' style='margin-bottom: 0px;'></p>");
@@ -232,7 +250,7 @@ map.on("moveend", function() {
                     linker.attr("data-lat", lat);
                     linker.attr("data-lng", lng);
                     linker.on("click", function(e) {
-                        map.flyTo([+e.target.dataset.lat, +e.target.dataset.lng], 15);
+                        map.flyTo([+e.target.dataset.lat, +e.target.dataset.lng]);
                     });
 
                     // var mapdomr = $("#map")[0].getBoundingClientRect();
@@ -304,7 +322,7 @@ map.on("moveend", function() {
                     // find aliasable cat
                     $(".other-places-div").each(function(e, tar) {
                         if (colors[tar.id.replace("other-places-", "")] === colors[viss[j].name]) {
-                            $(tar).append(linker);
+                            // $(tar).append(linker);
                         } else {
                             console.warn(tar.id, "dneq", viss[j].name);
                         }
