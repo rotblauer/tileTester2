@@ -221,8 +221,8 @@ map.on("moveend", function() {
             }
             if (viss.length > 0) {
                 var catawarebox = $("<p></p>");
-                catawarebox.text(layer.options.title + " has " + viss.length + " other visits");
-                $("#cat-in-frame").append(catawarebox);
+                catawarebox.css("margin-left", "1em");
+                catawarebox.text(layer.options.title + " has " + viss.length + " other visits out of view");
                 var list = $("<div></div>");
                 for (var j = 0; j < viss.length; j++) {
                     var linker = $("<p class='link link-to-other-place' style='margin-bottom: 0px;'></p>");
@@ -310,6 +310,8 @@ map.on("moveend", function() {
                         }
                     });
                 }
+                catawarebox.append(list);
+                $("#cat-in-frame").append(catawarebox);
                 // $("#cat-in-frame").append(list);
                 console.log("vvisss not on map curr", viss);
             }

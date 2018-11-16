@@ -145,6 +145,7 @@ func (ns NoteStructured) HasValidVisit() bool {
 }
 
 type NoteVisit struct {
+	Uuid                string `json:"uuid"` // kind of optional
 	Name                string `json:"name"` // kind of optional
 	ArrivalTime         time.Time
 	ArrivalTimeString   string `json:"arrivalDate"`
