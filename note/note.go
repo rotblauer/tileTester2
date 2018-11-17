@@ -176,6 +176,11 @@ func (nv NoteVisit) GetDuration() time.Duration {
 }
 
 func (visit NoteVisit) GoogleNearbyQ() (res *gm.PlacesSearchResponse, err error) {
+
+	// ios radius for visit is cautious, and google is prolific. thus, optimism. high number = small google radius param
+	// raw radius numbers are typically 140 or 70 meters
+	var divideRadius = 2.0
+
 	res = &gm.PlacesSearchResponse{}
 	u, err := url.Parse("https://maps.googleapis.com/maps/api/place/nearbysearch/json")
 	if err != nil {
@@ -184,13 +189,17 @@ func (visit NoteVisit) GoogleNearbyQ() (res *gm.PlacesSearchResponse, err error)
 	}
 	q := u.Query()
 	q.Set("location", fmt.Sprintf("%.14f,%.14f", visit.PlaceParsed.Lat, visit.PlaceParsed.Lng))
-	if r := visit.PlaceParsed.Radius; r != 0 {
-		q.Set("radius", fmt.Sprintf("%.2f", visit.PlaceParsed.Radius))
-	} else if r = visit.Place.GetRadius(); r != 0 {
-		q.Set("radius", fmt.Sprintf("%.2f", r))
-	} else {
-		q.Set("radius", fmt.Sprintf("%.2f", float64(50)))
+	var r float64
+	r = visit.PlaceParsed.Radius
+	if r == 0 {
+		r = visit.Place.GetRadius()
 	}
+	if r == 0 {
+		r = 50
+	}
+	r = r / divideRadius
+	q.Set("radius", fmt.Sprintf("%.2f", r))
+
 	q.Set("rankby", "prominence") // also distance, tho distance needs name= or type= or somethin
 
 	q.Set("key", os.Getenv("GOOGLE_PLACES_API_KEY"))
