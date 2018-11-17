@@ -1325,7 +1325,7 @@ function getCatVisits() {
         url: trackHost + "/visits?" + cats + (lastAskedVisit === null || catVisitMarkers.length === 0 ?
                 "startReportedT=" + moment().add(-14, "days").format() :
                 "startReportedT=" + moment(lastAskedVisit).add(-1, "minute").format()) +
-            "&endI=100&stats=true&googleNearby=true&googleNearbyPhotos=true",
+            "&endI=100&stats=true&googleNearby=true" + (isSmallScreen() ? "" : "&googleNearbyPhotos=true"),
         dataType: 'json',
         success: function(data) {
             console.log("visits", data);
