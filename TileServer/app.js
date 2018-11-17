@@ -1232,8 +1232,14 @@ function makeVisitMarker(val) {
         }
         str += " (local time)";
 
+        var firstphoto = "";
+        var photoshtml = "";
+        var photoshtmllim = 0;
+        var nearly = "";
+        var nearbylim = 0;
+
         if (val.googleNearby.Results && val.googleNearby.Results.length > 0) {
-            str += "<br><br>";
+            str += "<br>";
             var results = val.googleNearby.Results;
             // types not includes political, route, locality
             var blisttypes = ["political", "route", "locality"];
@@ -1252,10 +1258,34 @@ function makeVisitMarker(val) {
                 }
                 if (blacklisted) continue;
 
-                str += "<img src='" + r.icon + "' style='height: 10px;' />" + " " + r.name + "<br>";
+                try {
+                    if (firstphoto === ""){
+                        firstphoto = "<img src='data:image/png;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='width: 300px;' />";
+                    } else {
+                        // limit detail photos, and don't show dupes
+                        if (photoshtmllim <= 3 && photoshtml.indexOf(val.googleNearbyPhotos[r.photos[0]["photo_reference"]]) < 0) {
+                            photoshtml = photoshtml + "<img src='data:image/png;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='max-width: 75px;' />";
+                            photoshtmllim++;
+                        }
+                    }
+                } catch {
+                    console.error("couldn't load image", r.name);
+                    // str += "<img src='data:image/jpeg;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='width: 200px;' /><br>";
+                }
 
+                if (nearbylim <= 3) {
+                    nearly += "<img src='" + r.icon + "' style='height: 10px;' />" + " " + r.name + "<br>";
+                    nearbylim++;
+                } else {
+                    // break;
+                }
             }
         }
+
+        str = firstphoto + "<br>" + photoshtml + "<p>" + str + "</p>" + "Nearby:<br>" + nearly;
+        //     + str + "<br>";
+        // str += 
+        // str += "<br>" + photoshtml;
 
         L.popup()
             .setContent(str)
@@ -1330,7 +1360,7 @@ function getCatVisits() {
 
             getAndMakeButtonsForLastKnownCats();
 
-            setTimeout(getCatVisits, 30 * 1000);
+            setTimeout(getCatVisits, 60 * 5 * 1000);
         },
         error: function(e) {
             console.error("err getting cat visits", e)
