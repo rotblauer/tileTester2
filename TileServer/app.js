@@ -1193,15 +1193,15 @@ function makeVisitMarker(val) {
 
         var props = val;
         // alert(props.Name + " visited " + props.PlaceIdentity + "\n" + "From " + props.ArrivalTime + " to " + props.DepartureTime);
-        var start = moment(props.ArrivalTime);
-        var end = moment(props.DepartureTime);
+        var start = moment.tz(props.ArrivalTime, tzlookup(+val.PlaceParsed.Lat, +val.PlaceParsed.Lng));
+        var end = moment.tz(props.DepartureTime, tzlookup(+val.PlaceParsed.Lat, +val.PlaceParsed.Lng));
 
         var timeSpent = end.to(start, true);
 
         var relTime = ", " + moment(props.ArrivalTime).from(moment());
 
-        var af = moment(props.ArrivalTime);
-        var df = moment(props.DepartureTime);
+        // var af = moment(props.ArrivalTime);
+        // var df = moment(props.DepartureTime);
 
         // var googlePlaceName = "";
         // if (val.googleNearby.Results && val.googleNearby.Results.length > 0) {
@@ -1224,12 +1224,13 @@ function makeVisitMarker(val) {
         //     str = props.name + " left " + googlePlaceName + props.PlaceParsed.Identity + relTime + ", on " + df.format("llll");
         // }
 
-        var str = props.name + " visited " + props.PlaceParsed.Identity + " for " + timeSpent + relTime + ", on " + af.format("dddd, MMMM Do") + ", from " + af.format("LT") + " to " + df.format("LT");
+        var str = props.name + " visited " + props.PlaceParsed.Identity + " for " + timeSpent + relTime + ", on " + start.format("dddd, MMMM Do") + ", from " + start.format("LT") + " to " + end.format("LT");
         if (end.year() >= 3000) {
-            str = props.name + " arrived at " + props.PlaceParsed.Identity + relTime + ", on " + af.format("llll");
+            str = props.name + " arrived at " + props.PlaceParsed.Identity + relTime + ", on " + start.format("llll");
         } else if (start.year() < 1000) {
-            str = props.name + " left " + props.PlaceParsed.Identity + relTime + ", on " + df.format("llll");
+            str = props.name + " left " + props.PlaceParsed.Identity + relTime + ", on " + end.format("llll");
         }
+        str += " (local time)";
 
         if (val.googleNearby.Results && val.googleNearby.Results.length > 0) {
             str += "<br><br>";

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 rsync -avz -L --progress -h\
-    app.js leafletmarkercluster/*.js leafletmarkercluster/*.css index.html *.png *.ico freya:~/punktlich.rotblauer.com/
+    app.js leafletmarkercluster/*.js tz.js leafletmarkercluster/*.css index.html *.png *.ico freya:~/punktlich.rotblauer.com/
 
