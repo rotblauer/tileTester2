@@ -1,6 +1,7 @@
 package note
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	// // Package image/jpeg is not used explicitly in the code below,
+	// // but is imported for its initialization side-effect, which allows
+	// _ "image/gif"
+	// // image.Decode to understand JPEG formatted images. Uncomment these
+	// _ "image/jpeg"
+	// // two lines to also understand GIF and PNG images:
+	// _ "image/png"
 
 	gm "googlemaps.github.io/maps"
 )
@@ -164,6 +173,7 @@ type NoteVisit struct {
 	ReportedTime        time.Time
 	Duration            time.Duration
 	GoogleNearby        *gm.PlacesSearchResponse `json:"googleNearby,omitempty"`
+	GoogleNearbyPhotos  map[string]string        `json:"googleNearbyPhotos,omitempty"` // photoreference:base64img
 }
 
 func (nv NoteVisit) GetDuration() time.Duration {
@@ -173,6 +183,50 @@ func (nv NoteVisit) GetDuration() time.Duration {
 		calend = time.Now()
 	}
 	return calend.Sub(nv.ArrivalTime)
+}
+
+// map = photoreference:base64 encoded image
+func (v NoteVisit) GoogleNearbyImagesQ() (map[string]string, error) {
+	if v.GoogleNearby == nil {
+		return nil, errors.New("must get visit nearbys first")
+	}
+
+	var err error
+	var ret = make(map[string]string)
+
+	// https://maps.googleapis.com/maps/api/place/photo
+	u, err := url.Parse("https://maps.googleapis.com/maps/api/place/photo")
+	if err != nil {
+		return ret, err
+	}
+	q := u.Query()
+	q.Set("maxwidth", "400")
+	q.Set("key", os.Getenv("GOOGLE_PLACES_API_KEY"))
+
+	for _, nb := range v.GoogleNearby.Results {
+		if len(nb.Photos) == 0 {
+			continue
+		}
+
+		// only FIRST PHOTO for now FIXME
+		ref := nb.Photos[0].PhotoReference
+		q.Set("photoreference", ref)
+
+		u.RawQuery = q.Encode()
+
+		res, err := http.Get(u.String())
+		if err != nil {
+			return ret, err
+		}
+
+		b := []byte{}
+		_, err = res.Body.Read(b)
+		if err != nil {
+			return ret, err
+		}
+		ret[ref] = base64.StdEncoding.EncodeToString(b)
+	}
+	return ret, err
 }
 
 func (visit NoteVisit) GoogleNearbyQ() (res *gm.PlacesSearchResponse, err error) {
