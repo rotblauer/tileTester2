@@ -1203,11 +1203,57 @@ function makeVisitMarker(val) {
         var af = moment(props.ArrivalTime);
         var df = moment(props.DepartureTime);
 
+        // var googlePlaceName = "";
+        // if (val.googleNearby.Results && val.googleNearby.Results.length > 0) {
+        //     var results = val.googleNearby.Results;
+        //     for (var i = 0; i < results.length; i++) {
+        //         var r = results[i];
+        //         // and here's where the magic happens
+        //         // if (r.r.vicinity.substring(0, r.vicinity.indexOf(",")))
+        //         // if (r.vicinity.includes(val.PlaceParsed.Identity)) {
+        //         if (r.vicinity.substring(0, 4) === val.PlaceParsed.Identity.substring(0,4)) {
+        //             googlePlaceName = r.name + " at ";
+        //         }
+        //     }
+        // }
+
+        // var str = props.name + " visited " + googlePlaceName + props.PlaceParsed.Identity + " for " + timeSpent + relTime + ", on " + af.format("dddd, MMMM Do") + ", from " + af.format("LT") + " to " + df.format("LT");
+        // if (end.year() >= 3000) {
+        //     str = props.name + " arrived at " + googlePlaceName + props.PlaceParsed.Identity + relTime + ", on " + af.format("llll");
+        // } else if (start.year() < 1000) {
+        //     str = props.name + " left " + googlePlaceName + props.PlaceParsed.Identity + relTime + ", on " + df.format("llll");
+        // }
+
         var str = props.name + " visited " + props.PlaceParsed.Identity + " for " + timeSpent + relTime + ", on " + af.format("dddd, MMMM Do") + ", from " + af.format("LT") + " to " + df.format("LT");
         if (end.year() >= 3000) {
             str = props.name + " arrived at " + props.PlaceParsed.Identity + relTime + ", on " + af.format("llll");
         } else if (start.year() < 1000) {
             str = props.name + " left " + props.PlaceParsed.Identity + relTime + ", on " + df.format("llll");
+        }
+
+        if (val.googleNearby.Results && val.googleNearby.Results.length > 0) {
+            str += "<br><br>";
+            var results = val.googleNearby.Results;
+            // types not includes political, route, locality
+            var blisttypes = ["political", "route", "locality"];
+            for (var i = 0; i < results.length; i++) {
+                var r = results[i];
+                // vicinity includes comma
+                if (r.vicinity.indexOf(",") < 0) {
+                    continue;
+                }
+                var blacklisted = false;
+                for (var j = 0; j<blisttypes.length; j++) {
+                    var t = blisttypes[j];
+                    if (r.types.indexOf(t) >= 0) {
+                        blacklisted = true;
+                    }
+                }
+                if (blacklisted) continue;
+
+                str += "<img src='" + r.icon + "' style='height: 10px;' />" + " " + r.name + "<br>";
+
+            }
         }
 
         L.popup()
@@ -1246,9 +1292,9 @@ function getCatVisits() {
     $.ajax({
         type: "GET",
         url: trackHost + "/visits?" + cats + (lastAskedVisit === null || catVisitMarkers.length === 0 ?
-                "startReportedT=" + moment().add(-30, "days").format() :
+                "startReportedT=" + moment().add(-14, "days").format() :
                 "startReportedT=" + moment(lastAskedVisit).add(-1, "minute").format()) +
-            "&endI=100&stats=true",
+            "&endI=100&stats=true&googleNearby=true",
         dataType: 'json',
         success: function(data) {
             console.log("visits", data);
