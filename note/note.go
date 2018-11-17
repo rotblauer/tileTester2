@@ -200,6 +200,18 @@ func (ps PlaceString) AsPlace() (p Place, err error) {
 		return
 	}
 
+	r := strings.Split(string(ps), "radius:")[1]
+	log.Println("r1", r)
+
+	r = strings.Split(r, "m")[0]
+	log.Println("r2", r)
+
+	rn, err := strconv.ParseFloat(r, 64)
+	if err != nil {
+		return
+	}
+	p.Radius = rn
+
 	// TODO p.Acc, p.Radius
 	return
 }
