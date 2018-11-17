@@ -182,19 +182,22 @@ func (visit NoteVisit) GoogleNearbyQ() (res *gm.PlacesSearchResponse, err error)
 		log.Println("could not parse google url", err)
 		return res, err
 	}
-	u.Query().Set("location", fmt.Sprintf("%.14f,%.14f", visit.PlaceParsed.Lat, visit.PlaceParsed.Lng))
+	q := u.Query()
+	q.Set("location", fmt.Sprintf("%.14f,%.14f", visit.PlaceParsed.Lat, visit.PlaceParsed.Lng))
 	if r := visit.PlaceParsed.Radius; r != 0 {
-		u.Query().Set("radius", fmt.Sprintf("%.2f", visit.PlaceParsed.Radius))
+		q.Set("radius", fmt.Sprintf("%.2f", visit.PlaceParsed.Radius))
 	} else if r = visit.Place.GetRadius(); r != 0 {
-		u.Query().Set("radius", fmt.Sprintf("%.2f", r))
+		q.Set("radius", fmt.Sprintf("%.2f", r))
 	} else {
-		u.Query().Set("radius", fmt.Sprintf("%.2f", float64(50)))
+		q.Set("radius", fmt.Sprintf("%.2f", float64(50)))
 	}
-	u.Query().Set("rankby", "prominence") // also distance, tho distance needs name= or type= or somethin
+	q.Set("rankby", "prominence") // also distance, tho distance needs name= or type= or somethin
 
-	u.Query().Set("key", os.Getenv("GOOGLE_PLACES_API_KEY"))
+	q.Set("key", os.Getenv("GOOGLE_PLACES_API_KEY"))
 
-	log.Println("query => ", u.String())
+	u.RawQuery = q.Encode()
+
+	// log.Println("query => ", u.String())
 
 	re, err := http.Get(u.String())
 	if err != nil {
