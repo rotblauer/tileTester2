@@ -163,7 +163,7 @@ type NoteVisit struct {
 	Valid               bool `json:"validVisit"`
 	ReportedTime        time.Time
 	Duration            time.Duration
-	GoogleNearby        gm.PlacesSearchResponse `json:"googleNearby,omitempty"`
+	GoogleNearby        *gm.PlacesSearchResponse `json:"googleNearby,omitempty"`
 }
 
 func (nv NoteVisit) GetDuration() time.Duration {
@@ -175,7 +175,8 @@ func (nv NoteVisit) GetDuration() time.Duration {
 	return calend.Sub(nv.ArrivalTime)
 }
 
-func (visit NoteVisit) GoogleNearbyQ() (res gm.PlacesSearchResponse, err error) {
+func (visit NoteVisit) GoogleNearbyQ() (res *gm.PlacesSearchResponse, err error) {
+	res = &gm.PlacesSearchResponse{}
 	u, err := url.Parse("https://maps.googleapis.com/maps/api/place/nearbysearch/json")
 	if err != nil {
 		log.Println("could not parse google url", err)
