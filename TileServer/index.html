@@ -92,9 +92,10 @@
             /* background: dimgray; */
             /* background-color: black; */
             /*font-weight: bold;*/
-            padding: 5px 5px 5px 10px;
+            padding: 5px 10px 5px 10px;
             font-family: helvetica;
             font-size: small;
+            float: right;
             margin: 0;
 
             /*text-align: center;*/
@@ -109,13 +110,13 @@
             font-size: small;
             /* filter: alpha(opacity=50); */
             /* opacity: 0.5; */
-            position: fixed;
-            left: 64px;
+            /* position: fixed; */
+            /* left: 64px; */
             /* right: 0px; */
             /* bottom: 0px; */
             /* height: 30px; */
             /* width: 100%; */
-            z-index: 1000;
+            /* z-index: 1000; */
         }
 
         #metadata {
@@ -171,24 +172,38 @@
             /* padding-top: 0.5em; */
             /* padding-bottom: 0.5em; */
         }
-     #activity-layer-legend {
-         float: right;
-     }
-     #cat-in-frame {
-         position: fixed;
-         z-index: 1000;
-         bottom: 0px;
-         left: 0px;
-     }
-     .link-to-other-place {
-        cursor: pointer;
-     }
 
+        #activity-layer-legend {
+            float: right;
+        }
+
+        #cat-in-frame {
+            position: fixed;
+            z-index: 1000;
+            bottom: 0px;
+            left: 0px;
+        }
+
+        .link-to-other-place {
+            cursor: pointer;
+        }
     </style>
 </head>
 
 <body>
     <div class="box">
+        <div id="metadata-holder">
+            <span id="url-location-holder">
+                <span id="url-location-box">
+                    <a id="url-location" href="">link to this map</a> | <a href="http://www.catstats.rotblauer.com/" style="" target="_">catstats</a> | <a href="http://punktlich.rotblauer.com/install" target="_">iOS: download latest (V.PUSH)</a>
+                </span>
+            </span>
+
+            <span id="lastknowns-holder">
+                <span id="metadata" style="margin: 5px;"></span>
+            </span>
+        </div>
+
         <div id="selectables">
             <select id="sincefloor" name="">
                 <option value="">Since anytime</option>
@@ -208,16 +223,16 @@
             </select>
             <select id="points-layer-select" name="">
                 <option value="recent">Points: recency</option>
-                <option value="speed">Points: speed</option>
-                <option value="density">Points: density</option>
                 <option value="activity">Points: activity</option>
+                <option value="density">Points: density</option>
+                <option value="speed">Points: speed</option>
             </select>
             <select id="map-layer-select" id="" name="">
+                <option value="tile-caliterr">Map: terrain</option>
                 <option value="tile-light">Map: light</option>
                 <option value="tile-dark">Map: dark</option>
                 <option value="tile-outdoors">Map: outdoors</option>
                 <option value="tile-sat">Map: satellite</option>
-                <option value="tile-caliterr">Map: terrain</option>
             </select>
             <div id="activity-layer-legend" display="none;">
                 <!-- <div id="activity-Stationary" class="activity-name-color"> -->
@@ -230,24 +245,15 @@
                 <!-- </div> -->
                 <!-- <div id="activity-Automotive" class="activity-name-color"> -->
                 <!-- </div> -->
-                </div>
+            </div>
 
 
         </div>
 
-        <div id="metadata-holder">
-            <p id="url-location-holder">
-                <span id="url-location-box">
-                    <a id="url-location" href="">link</a> | <a href="http://www.catstats.rotblauer.com/" style="" target="_">catstats</a> | <a href="http://punktlich.rotblauer.com/install" target="_" >download latest(V.P.Q.&P.U)</a>
-                </span>
-            </p>
-
-            <span id="lastknowns-holder">
-                <small id="metadata" style="margin: 5px;"></small>
-            </span>
-        </div>
         <div id="lastknowns-div">
             <span id="lastknowns"></span>
+            <div id="catvisitsextra">
+            </div>
         </div>
         <div id="cat-in-frame">
         </div>
