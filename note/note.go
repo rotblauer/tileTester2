@@ -3,7 +3,11 @@ package note
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"net/http"
+	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -171,6 +175,41 @@ func (nv NoteVisit) GetDuration() time.Duration {
 	return calend.Sub(nv.ArrivalTime)
 }
 
+func (visit NoteVisit) GoogleNearbyQ() (res gm.PlacesSearchResponse, err error) {
+	u, err := url.Parse("https://maps.googleapis.com/maps/api/place/nearbysearch/json")
+	if err != nil {
+		log.Println("could not parse google url", err)
+		return res, err
+	}
+	u.Query().Set("location", fmt.Sprintf("%.14f,%.14f", visit.PlaceParsed.Lat, visit.PlaceParsed.Lng))
+	if r := visit.PlaceParsed.Radius; r != 0 {
+		u.Query().Set("radius", fmt.Sprintf("%.2f", visit.PlaceParsed.Radius))
+	} else if r = visit.Place.GetRadius(); r != 0 {
+		u.Query().Set("radius", fmt.Sprintf("%.2f", r))
+	} else {
+		u.Query().Set("radius", fmt.Sprintf("%.2f", float64(50)))
+	}
+	u.Query().Set("rankby", "prominence") // also distance, tho distance needs name= or type= or somethin
+	u.Query().Set("key", os.Getenv("GOOGLE_PLACES_API_KEY"))
+
+	re, err := http.Get(u.RequestURI())
+	if err != nil {
+		log.Println("error google nearby http req", err)
+		return res, err
+	}
+
+	b := []byte{}
+	_, err = re.Body.Read(b)
+	if err != nil {
+		log.Println("could not read res body", err)
+		return res, err
+	}
+
+	// unmarshal
+	err = json.Unmarshal(b, &res)
+	return
+}
+
 // 25 Yeadon Ave, 25 Yeadon Ave, Charleston, SC  29407, United States @ <+32.78044829,-79.98285770> +\\\/- 100.00m, region CLCircularRegion (identifier:'<+32.78044828,-79.98285770> radius 141.76', center:<+32.78044828,-79.98285770>, radius:141.76m)
 type PlaceString string
 
@@ -181,6 +220,20 @@ type Place struct {
 	Lng      float64
 	Acc      float64
 	Radius   float64
+}
+
+func (ps PlaceString) GetRadius() float64 {
+	r := strings.Split(string(ps), "radius:")[1]
+	log.Println("r1", r)
+
+	r = strings.Split(r, "m")[0]
+	log.Println("r2", r)
+
+	rn, err := strconv.ParseFloat(r, 64)
+	if err != nil {
+		return 0
+	}
+	return rn
 }
 
 func (ps PlaceString) AsPlace() (p Place, err error) {
@@ -204,17 +257,7 @@ func (ps PlaceString) AsPlace() (p Place, err error) {
 		return
 	}
 
-	r := strings.Split(string(ps), "radius:")[1]
-	log.Println("r1", r)
-
-	r = strings.Split(r, "m")[0]
-	log.Println("r2", r)
-
-	rn, err := strconv.ParseFloat(r, 64)
-	if err != nil {
-		return
-	}
-	p.Radius = rn
+	p.Radius = ps.GetRadius()
 
 	// TODO p.Acc, p.Radius
 	return
