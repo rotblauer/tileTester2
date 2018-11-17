@@ -77,8 +77,10 @@ var pbfurlplaces = tileHost + '/places/{z}/{x}/{y}'; // note that 'tiles' elemen
 
 var globalSinceFloor = ""; // actually will be an integer, but will just use +"" to cast that
 
-var visits = [];
+// cat:[lat,lng]
+var lastcatlocations = {};
 
+var visits = [];
 
 var onMapCatMarkers = [];
 
@@ -282,7 +284,7 @@ map.on("moveend", function() {
 
                     // var mapdomr = $("#map")[0].getBoundingClientRect();
                     // console.log("mapboxd", mapdomr);
-                    // // mapboxd 
+                    // // mapboxd
                     // // DOMRect {x: 0, y: 20, width: 1198, height: 872, top: 20, …}
                     // // bottom: 892
                     // // height: 872
@@ -300,7 +302,7 @@ map.on("moveend", function() {
 
                     // var mapcenter = map.getCenter();
                     // console.log("mapcenter", mapcenter);
-                    // // mapcenter 
+                    // // mapcenter
                     // // o.LatLng {lat: 38.640170955984765, lng: -90.27109622955322}
                     // // lat: 38.640170955984765
                     // // lng: -90.27109622955322
@@ -1284,7 +1286,7 @@ function makeVisitMarker(val) {
 
         str = firstphoto + "<br>" + photoshtml + "<p>" + str + "</p>" + "Nearby:<br>" + nearly;
         //     + str + "<br>";
-        // str += 
+        // str +=
         // str += "<br>" + photoshtml;
 
         L.popup()
@@ -1306,6 +1308,29 @@ function makeVisitMarker(val) {
         L.DomEvent.stop(e);
     });
     return l;
+}
+
+// https://stackoverflow.com/questions/18883601/function-to-calculate-distance-between-two-coordinates-shows-wrong
+//This function takes in latitude and longitude of two location and returns the distance between them as the crow flies (in km)
+function calcCrow(lat1, lon1, lat2, lon2)
+{
+    var R = 6371; // km
+    var dLat = toRad(lat2-lat1);
+    var dLon = toRad(lon2-lon1);
+    var lat1 = toRad(lat1);
+    var lat2 = toRad(lat2);
+
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    var d = R * c;
+    return d;
+}
+
+// Converts numeric degrees to radians
+function toRad(Value)
+{
+    return Value * Math.PI / 180;
 }
 
 function getCatVisits() {
@@ -1338,12 +1363,17 @@ function getCatVisits() {
 
             var lmc = clusterLayers[0] || L.markerClusterGroup();
 
+            // let's allow arrival visits only for first (most recent) visit PER CAT
+            var catvisits = {};
+
             $.each(data.visits, function(i, val) {
 
-                if (!(new Date(val.ArrivalTime).getFullYear() > 1000 && new Date(val.DepartureTime).getFullYear() < 3000)) {
+                // FIXME: better logic; not all only-arrivals or only-departures becomes full visits.
+                if (!(new Date(val.ArrivalTime).getFullYear() > 1000 && new Date(val.DepartureTime).getFullYear() < 3000) && catvisits.hasOwnProperty(val.name)) {
                     console.log("half-formed visit", val);
                     return;
                 }
+                catvisits[val.name] = true;
                 if (!vvisits.hasOwnProperty(val.name + val.ReportedTime)) {
                     vvisits[val.name + val.ReportedTime] = val;
                 } else {
@@ -1484,6 +1514,8 @@ function getAndMakeButtonsForLastKnownCats() {
                 button.data("lat", val["lat"] + "");
                 button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
+
+                lastcatlocations[key] = [+val["lat"],+val["long"]];
 
                 var catotherps = $("<div id='other-places-" + key + "' class='other-places-div'></div>");
 
