@@ -192,7 +192,7 @@ func (visit NoteVisit) GoogleNearbyQ() (res gm.PlacesSearchResponse, err error) 
 	u.Query().Set("rankby", "prominence") // also distance, tho distance needs name= or type= or somethin
 	u.Query().Set("key", os.Getenv("GOOGLE_PLACES_API_KEY"))
 
-	re, err := http.Get(u.RequestURI())
+	re, err := http.Get(u.String())
 	if err != nil {
 		log.Println("error google nearby http req", err)
 		return res, err
