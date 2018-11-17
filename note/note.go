@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -219,11 +220,15 @@ func (v NoteVisit) GoogleNearbyImagesQ() (map[string]string, error) {
 			return ret, err
 		}
 
-		b := []byte{}
-		_, err = res.Body.Read(b)
+		b, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return ret, err
 		}
+		err = res.Body.Close()
+		if err != nil {
+			return ret, err
+		}
+
 		ret[ref] = base64.StdEncoding.EncodeToString(b)
 	}
 	return ret, err
