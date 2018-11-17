@@ -218,7 +218,7 @@ map.on("moveend", function() {
     $("#cat-in-frame").html("");
     $(".catware").each(function(i, e) {
         $(e).remove();
-    })
+    });
     for (var i = 0; i < onMapCatMarkers.length; i++) {
         var layer = onMapCatMarkers[i];
         // var txt = $("#" + layer.options.title).html();
@@ -1126,7 +1126,7 @@ function putUrlToView(event) {
     if (tile && tile !== "") {
         delegateTileLayer(tile);
     } else {
-        delegateTileLayer("tile-dark");
+        delegateTileLayer("tile-caliterr");
     }
     if (layer) {
         delegateDrawLayer(layer)
@@ -1327,7 +1327,12 @@ function getAndMakeButtonsForLastKnownCats() {
         success: function(data) {
             // $("#metadata-holder").css("background-color", "black");
             console.log("data getandmakebuttonsforlastknowncats", data);
+
             if (!isSmallScreen()) $("#metadata").show();
+
+            // $(".lastknownlink").each(function(i, e) {
+            //     $(e).remove();
+            // });
             $("#lastknowns").html("");
 
             // in case any existing already, remove em
