@@ -3,9 +3,12 @@ package note
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	gm "googlemaps.github.io/maps"
 )
 
 // private func objectifyNote(n: Note) -> NSMutableDictionary? {
@@ -156,6 +159,7 @@ type NoteVisit struct {
 	Valid               bool `json:"validVisit"`
 	ReportedTime        time.Time
 	Duration            time.Duration
+	GoogleNearby        gm.PlacesSearchResponse `json:"googleNearby,omitempty"`
 }
 
 func (nv NoteVisit) GetDuration() time.Duration {
