@@ -363,7 +363,7 @@ map.on("moveend", function() {
                 $("#lastknowns").append(catawarebox);
                 // $("#cat-in-frame").append(catawarebox);
                 // $("#cat-in-frame").append(list);
-                console.log("vvisss not on map curr", viss);
+                // console.log("vvisss not on map curr", viss);
             }
         }
     }
@@ -1267,7 +1267,6 @@ function makeVisitMarker(val) {
             str += "<br>";
             var results = val.googleNearby.Results;
             // types not includes political, route, locality
-            // var blisttypes = ["political", "route", "locality"];
             var blisttypes = ["locality"];
             for (var i = 0; i < results.length; i++) {
                 var r = results[i];
@@ -1287,16 +1286,16 @@ function makeVisitMarker(val) {
                 try {
                     if (firstphoto === "") {
                         // firstphoto = "<img src='data:image/png;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='width: 300px;' />";
-                        firstphoto = "<img src='" + trackHost + "/googleNearbyPhotos?photoreference=" + encodeURIComponent( r.photos[0]["photo_reference"] ) + "' style='width: 300px;' />";
+                        firstphoto = "<img src='" + trackHost + "/googleNearbyPhotos?photoreference=" + encodeURIComponent(r.photos[0]["photo_reference"]) + "' style='width: 300px;' />";
                     } else {
                         // limit detail photos, and don't show dupes
                         if (photoshtmllim <= 3 && photoshtml.indexOf(r.photos[0]["photo_reference"]) < 0) {
                             // photoshtml = photoshtml + "<img src='data:image/png;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='max-width: 75px;' />";
-                            photoshtml = photoshtml + "<img src='" + trackHost + "/googleNearbyPhotos?photoreference=" + encodeURIComponent( r.photos[0]["photo_reference"] ) + "' style='max-width: 75px;' />";
+                            photoshtml = photoshtml + "<img src='" + trackHost + "/googleNearbyPhotos?photoreference=" + encodeURIComponent(r.photos[0]["photo_reference"]) + "' style='max-width: 75px;' />";
                             photoshtmllim++;
                         }
                     }
-                } catch(err) {
+                } catch (err) {
                     console.error("err photo", err);
                     // console.debug("val", val);
                     // console.debug("photos", val.googleNearbyPhotos);
@@ -1307,13 +1306,41 @@ function makeVisitMarker(val) {
                     //     console.error("couldn't load image", r.name, val.googleNearbyPhotos[r.photos[0]["photo_reference"]], err2);
                     // }
                 }
-
+                
+                var blisttypes2 = ["route", "atm"];
                 if (nearbylim <= 3) {
-                    nearly += "<img src='" + r.icon + "' style='height: 10px;' />" + " " + r.name + "<br>";
+                    var n = r.name;
+                    var ok = true;
+                    for (var k = 0; k < blisttypes2.length; k++) {
+                        if (r.types.indexOf(blisttypes2[k]) >= 0) {
+                            ok = false;
+                        }
+                    }
+                    if (ok) {
+                        n = "<a target='_' href='https://www.google.com/search?q=" + encodeURIComponent( r.name.replace(/\'/g, "") ) + " " + r.types[0].replace(/_/g, " ") + "+" + r.vicinity + "'>" + n + "</a>";
+                    }
+                    nearly += "<img src='" + r.icon + "' style='height: 10px;' />" + " " + n + "<br>";
                     nearbylim++;
                 } else {
                     // break;
                 }
+
+                // if (nearbylim <= 3) {
+                //     var n = r.name;
+                //     var ok = true;
+                //     for (var i = 0; i < blisttypes2.length; i++) {
+                //         if (r.types.indexOf(blisttypes2[i]) >= 0) {
+                //             ok = false;
+                //         }
+                //     }
+                //     if (ok) {
+                //         n = "<a target='_' href='https://www.google.com/search?q=" + r.name + " " + r.types[0].replace("_", " ") + "+" + r.vicinity + "'>" + n + "</a>";
+                //     }
+                //     nearly += "<img src='" + r.icon + "' style='height: 10px;' />" + " " + n + "<br>";
+                //     nearbylim++;
+                // } else {
+                //     // break;
+                // }
             }
         }
 
@@ -1545,8 +1572,8 @@ function getAndMakeButtonsForLastKnownCats() {
                 button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
 
-                var btitle= $("<p></p>");
-                btitle.text(isinmapsymbol + n + ", " + moment(val["time"]).fromNow() );
+                var btitle = $("<p></p>");
+                btitle.text(isinmapsymbol + n + ", " + moment(val["time"]).fromNow());
                 btitle.css("margin-bottom", "0");
                 button.append(btitle);
 
@@ -1558,7 +1585,7 @@ function getAndMakeButtonsForLastKnownCats() {
 
                     var subtitle = "";
                     var no = JSON.parse(val.notes);
-                    subtitle += "" + no.activity + ", pace: " + no.currentPace.toFixed(2) + " altitude: " + val.elevation.toFixed(0) + "m<br>" + no.numberOfSteps + " steps, distance: " + ( no.distance/1 ).toFixed(0) + "m since " + moment(no.currentTripStart).from(moment());
+                    subtitle += "" + no.activity + ", pace: " + no.currentPace.toFixed(2) + " altitude: " + val.elevation.toFixed(0) + "m<br>" + no.numberOfSteps + " steps, distance: " + (no.distance / 1).toFixed(0) + "m since " + moment(no.currentTripStart).from(moment());
                     bsubtitle.html(subtitle);
                     button.append(bsubtitle);
                     bsubtitle.hide();
