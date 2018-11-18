@@ -245,7 +245,7 @@ map.on("moveend", function() {
                         viss.push(v);
                     } else {}
                 } else {
-                    console.warn(layer.options.title, "dne", v.name);
+                    // console.warn(layer.options.title, "dne", v.name);
                 }
             }
             if (viss.length > 0) {
@@ -355,7 +355,7 @@ map.on("moveend", function() {
                         if (colors[tar.id.replace("other-places-", "")] === colors[viss[j].name]) {
                             // $(tar).append(linker);
                         } else {
-                            console.warn(tar.id, "dneq", viss[j].name);
+                            // console.warn(tar.id, "dneq", viss[j].name);
                         }
                     });
                 }
@@ -1296,8 +1296,8 @@ function makeVisitMarker(val) {
                     }
                 } catch(err) {
                     console.error("err photo", err);
-                    console.debug("val", val);
-                    console.debug("photos", val.googleNearbyPhotos);
+                    // console.debug("val", val);
+                    // console.debug("photos", val.googleNearbyPhotos);
                     // try {
 
                     //     str += "<img src='data:image/jpeg;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='width: 200px;' /><br>";
@@ -1315,7 +1315,7 @@ function makeVisitMarker(val) {
             }
         }
 
-        str = firstphoto + "<br>" + photoshtml + "<p>" + str + "</p>" + "Nearby:<br>" + nearly;
+        str = firstphoto + (firstphoto.length > 0 ? "<br>" : "") + photoshtml + "<p>" + str + "</p>" + "Nearby:<br>" + nearly;
         //     + str + "<br>";
         // str +=
         // str += "<br>" + photoshtml;
@@ -1520,7 +1520,8 @@ function getAndMakeButtonsForLastKnownCats() {
                 //     console.log(key, "steps", JSON.parse(val["notes"]));
                 // }
 
-                var n = val["name"];
+                // var n = val["name"];
+                var n = key;
                 // if (oVal.length > 1) {
                 //     n += "<sup>" + oVal.length + "</sup>";
                 // }
@@ -1537,48 +1538,52 @@ function getAndMakeButtonsForLastKnownCats() {
                 // isinmapsymbol = "";
                 // }
 
-                var button = $("<div id='" + key + "' class='lastknownlink' style=''>" + isinmapsymbol + n + ", " + moment(val["time"]).fromNow() + "</div>");
+                var button = $("<div id='" + key + "' class='lastknownlink' style=''></div>");
                 button.data("lat", val["lat"] + "");
                 button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
 
+                var btitle= $("<p></p>");
+                btitle.text(isinmapsymbol + n + ", " + moment(val["time"]).fromNow() );
+                btitle.css("margin-bottom", "0");
+                button.append(btitle);
+
+                if (val.notes !== "") {
+                    var bsubtitle = $("<p></p>");
+                    bsubtitle.css("font-size", "0.8em");
+                    bsubtitle.css("margin-bottom", "0");
+                    bsubtitle.addClass("catsubtitle");
+
+                    var subtitle = "";
+                    var no = JSON.parse(val.notes);
+                    subtitle += "" + no.activity + ", pace: " + no.currentPace.toFixed(2) + " altitude: " + val.elevation.toFixed(0) + "m<br>" + no.numberOfSteps + " steps, distance: " + ( no.distance/1 ).toFixed(0) + "m since " + moment(no.currentTripStart).from(moment());
+                    bsubtitle.html(subtitle);
+                    button.append(bsubtitle);
+                    bsubtitle.hide();
+                }
                 lastcatlocations[key] = [+val["lat"], +val["long"]];
 
+                // posterior other cat places div for cat/s in map (out of view visits)
                 var catotherps = $("<div id='other-places-" + key + "' class='other-places-div'></div>");
 
                 var c = "#21DBEB";
                 if (colors.hasOwnProperty(val["name"])) {
                     c = colors[val["name"]];
                     button.css("background-color", c);
-                    // c = shadeRGBColor(c, 0.5);
                     button.css("color", "white");
                 }
                 $("#lastknowns").append(button);
                 $("#lastknowns").append(catotherps);
-                // $("#lastknowns").append($("<br>"));
 
                 map.addLayer(l);
                 onMapCatMarkers.push(l);
 
-                // var mopts = {
-                //     color: c,
-                //     weight: 2,
-                //     // fillColor: '#EB38D3',
-                //     fillOpacity: 0,
-                //     radius: 150
-                // }
-
-                // var circle = L.circle([+val["lat"], +val["long"]], mopts).addTo(map);
-                // circle.bindPopup(JSON.stringify(val));
-
                 $(document).on('click', '.lastknownlink', function(e) {
-                    // console.log("$this", $(this));
                     var lat = $(this).data("lat");
                     var lng = $(this).data("long");
-                    // console.log(lat, lng);
                     map.setView([+lat, +lng]);
-                    // what you want to happen when mouseover and mouseout
-                    // occurs on elements that match '.dosomething'
+                    $(".catsubtitle").hide();
+                    $(this).find(".catsubtitle").show();
                 });
             });
             getmetadata();
