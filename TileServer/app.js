@@ -1286,11 +1286,13 @@ function makeVisitMarker(val) {
 
                 try {
                     if (firstphoto === "") {
-                        firstphoto = "<img src='data:image/png;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='width: 300px;' />";
+                        // firstphoto = "<img src='data:image/png;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='width: 300px;' />";
+                        firstphoto = "<img src='" + trackHost + "/googleNearbyPhotos?photoreference=" + encodeURIComponent( r.photos[0]["photo_reference"] ) + "' style='width: 300px;' />";
                     } else {
                         // limit detail photos, and don't show dupes
-                        if (photoshtmllim <= 3 && photoshtml.indexOf(val.googleNearbyPhotos[r.photos[0]["photo_reference"]]) < 0) {
-                            photoshtml = photoshtml + "<img src='data:image/png;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='max-width: 75px;' />";
+                        if (photoshtmllim <= 3 && photoshtml.indexOf(r.photos[0]["photo_reference"]) < 0) {
+                            // photoshtml = photoshtml + "<img src='data:image/png;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='max-width: 75px;' />";
+                            photoshtml = photoshtml + "<img src='" + trackHost + "/googleNearbyPhotos?photoreference=" + encodeURIComponent( r.photos[0]["photo_reference"] ) + "' style='max-width: 75px;' />";
                             photoshtmllim++;
                         }
                     }
@@ -1382,7 +1384,7 @@ function getCatVisits() {
         url: trackHost + "/visits?" + cats + (lastAskedVisit === null || catVisitMarkers.length === 0 ?
                 "startReportedT=" + moment().add(-14, "days").format() :
                 "startReportedT=" + moment(lastAskedVisit).add(-1, "minute").format()) +
-            "&endI=100&stats=true&googleNearby=true" + "&googleNearbyPhotos=true",
+            "&endI=100&stats=true&googleNearby=true", // + "&googleNearbyPhotos=true",
         dataType: 'json',
         success: function(data) {
             console.log("visits", data);
