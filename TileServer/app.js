@@ -1,5 +1,8 @@
 var earliestTrack = null;
 
+var latestiOSVersion = "V.VersionV2";
+$("#latest-version-ios").text(latestiOSVersion);
+
 // color defaults
 var color_ia = "rgb(255,0,0)"; //"rgb(254,65,26)"; // "rgb(235,41,0)";
 var color_jl = "rgb(0,0,255)"; // "rgb(0,162,235)";
@@ -208,34 +211,23 @@ map = L.map('map', {
 map.on("moveend", function() {
     didLogOnce = false;
     putViewToUrl();
-
     if (isSmallScreen()) {
         // don't take up screen space talking about more unseen points if the screen is kind of small already
         return;
     }
-
     $(".other-places-div").each(function(i, t) {
         $(t).html("");
     });
-    // $("#url-moved").css("color", "rgb(5, 255, 170)");
-    // $("#url-moved").fadeOut(100).fadeIn(100); // .fadeOut(100).fadeIn(100);
     $("#cat-in-frame").html("");
     $(".catware").each(function(i, e) {
         $(e).remove();
     });
+    $(".catware").remove();
     for (var i = 0; i < onMapCatMarkers.length; i++) {
         var layer = onMapCatMarkers[i];
         // var txt = $("#" + layer.options.title).html();
         if (!map.getBounds().contains(layer.getLatLng())) {
-            // if (typeof txt !== "undefined" && txt.indexOf("-") === 0) {
-            //     $("#" + layer.options.title).html(txt.slice(1));
-            // } else {
-            //     console.error("huh", layer.options.title, txt);
-            // }
         } else {
-            // if (typeof txt != "undefined" && txt.indexOf("-") < 0) {
-            //     $("#" + layer.options.title).html("-" + txt);
-            // }
             var viss = [];
             for (k in vvisits) {
                 var v = vvisits[k];
@@ -284,86 +276,19 @@ map.on("moveend", function() {
                         map.flyTo([+e.target.dataset.lat, +e.target.dataset.lng]);
                     });
 
-                    // var mapdomr = $("#map")[0].getBoundingClientRect();
-                    // console.log("mapboxd", mapdomr);
-                    // // mapboxd
-                    // // DOMRect {x: 0, y: 20, width: 1198, height: 872, top: 20, …}
-                    // // bottom: 892
-                    // // height: 872
-                    // // left: 0
-                    // // right: 1198
-                    // // top: 20
-                    // // width: 1198
-                    // // x: 0
-                    // // y: 20
-
-                    // var mapbounds = map.getBounds();
-                    // console.log("mapbounds", mapbounds);
-                    // // mapbounds o.LatLngBounds {_southWest: o.LatLng, _northEast: o.LatLng}_northEast: o.LatLng {lat: 38.647930517779514, lng: -90.25753498077393}_southWest: o.LatLng {lat: 38.63331569814948, lng: -90.28324127197267}__proto__: Object
-                    // // eg. mapbounds._southWest.lat
-
-                    // var mapcenter = map.getCenter();
-                    // console.log("mapcenter", mapcenter);
-                    // // mapcenter
-                    // // o.LatLng {lat: 38.640170955984765, lng: -90.27109622955322}
-                    // // lat: 38.640170955984765
-                    // // lng: -90.27109622955322
-                    // // __proto__: Object
-
-                    // // map dimensions in degrees
-                    // var mapHdg = mapbounds._northEast.lat - mapbounds._southWest.lat;
-                    // var mapWdg = mapbounds._northEast.lng - mapbounds._southWest.lng;
-
-                    // var mWPx_Dg = mapWdg / mapdomr.width; // pixels/degree
-                    // var mHPx_Dg = mapHdg / mapdomr.height;
-
-
-                    // // diff degrees center to trackpoint
-                    // var dlatdg = mapcenter.lat - lat;
-                    // var dlngdg = mapcenter.lng - lng;
-
-                    // var wantHPxCoord = mHPx_Dg * dlatdg;
-                    // var wantWPxCoord = mWPx_Dg * dlngdg;
-
-                    // console.log("want", wantWPxCoord, wantHPxCoord);
-
-                    // var edgeHPxCoord;
-                    // if (wantHPxCoord < map.top) { edgeHPxCoord = map.top } else if (wantHPxCoord > map.bottom) {edgeHPxCoord = map.bottom};
-
-                    // var edgeWPxCoord = wantWPxCoord < map.left ? map.left : wantWPxCoord;
-                    // edgeWPxCoord = wantWPxCoord > map.right ? map.right : wantWPxCoord;
-
-
-
-                    // linker.css("position", "fixed");
-                    // linker.css("x", edgeWPxCoord + "px");
-                    // linker.css("y", edgeHPxCoord + "px");
-                    // linker.css("z-index", 1000);
-                    // $("body").append(linker);
-                    // console.log("GOT OOB", "x", edgeWPxCoord, "y", edgeHPxCoord, linker);
-
-
-                    // // var triHdg = mapcenter.lat - lat;
-                    // // var triWdg = mapcenter.lng - lng;
-
-                    // // var smtriHdg = mapcenter.lat - mapbounds._southwest.lat;
-                    // // var smtriWdg = mapcenter.lng - mapbounds._
-
                     list.append(linker);
                     // find aliasable cat
-                    $(".other-places-div").each(function(e, tar) {
-                        if (colors[tar.id.replace("other-places-", "")] === colors[viss[j].name]) {
-                            // $(tar).append(linker);
-                        } else {
-                            // console.warn(tar.id, "dneq", viss[j].name);
-                        }
-                    });
+                    // $(".other-places-div").each(function(e, tar) {
+                    //     if (colors[tar.id.replace("other-places-", "")] === colors[viss[j].name]) {
+                    //         // $(tar).append(linker);
+                    //     } else {
+                    //         // console.warn(tar.id, "dneq", viss[j].name);
+                    //     }
+                    // });
                 }
+                $(".catware").remove();
                 catawarebox.append(list);
-                $("#lastknowns").append(catawarebox);
-                // $("#cat-in-frame").append(catawarebox);
-                // $("#cat-in-frame").append(list);
-                // console.log("vvisss not on map curr", viss);
+                $("#other-places-"+layer.options.title).append(catawarebox) ;
             }
         }
     }
@@ -1431,7 +1356,7 @@ function getCatVisits() {
 
                 // FIXME: better logic; not all only-arrivals or only-departures becomes full visits.
                 if (!(new Date(val.ArrivalTime).getFullYear() > 1000 && new Date(val.DepartureTime).getFullYear() < 3000) && catvisits.hasOwnProperty(val.name)) {
-                    console.log("half-formed visit", val);
+                    // console.log("half-formed visit", val);
                     return;
                 }
                 catvisits[val.name] = true;
@@ -1562,6 +1487,7 @@ function getAndMakeButtonsForLastKnownCats() {
                 });
 
                 var isinmapsymbol = "";
+                var updatewarning = "";
                 // var isinmapsymbol = "-";
                 // if (!map.getBounds().contains(l.getLatLng())) {
                 // isinmapsymbol = "";
@@ -1572,8 +1498,21 @@ function getAndMakeButtonsForLastKnownCats() {
                 button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
 
+                if (!val.hasOwnProperty("version") || val["version"] !== latestiOSVersion) {
+                    updatewarning = $("<span></span>");
+                    updatewarning.css("background-color", "yellow");
+                    updatewarning.css("color", "black");
+                    updatewarning.css("margin-right", "1em");
+                    updatewarning.css("padding-right", "0.5em");
+                    updatewarning.css("padding-left", "0.5em");
+
+                    updatewarning.text("old iOS version");
+                    updatewarning = updatewarning.prop("outerHTML");
+                    button.data("ood", true); // out of date
+                }
+
                 var btitle = $("<p></p>");
-                btitle.text(isinmapsymbol + n + ", " + moment(val["time"]).fromNow());
+                btitle.html(isinmapsymbol + updatewarning + n + ", " + moment(val["time"]).fromNow());
                 btitle.css("margin-bottom", "0");
                 button.append(btitle);
 
@@ -1585,7 +1524,7 @@ function getAndMakeButtonsForLastKnownCats() {
 
                     var subtitle = "";
                     var no = JSON.parse(val.notes);
-                    subtitle += "" + no.activity + ", pace: " + no.currentPace.toFixed(2) + " altitude: " + val.elevation.toFixed(0) + "m<br>" + no.numberOfSteps + " steps, distance: " + (no.distance / 1).toFixed(0) + "m since " + moment(no.currentTripStart).from(moment());
+                    subtitle += "" + no.activity + ", altitude: " + val.elevation.toFixed(0) + "m<br>" + no.numberOfSteps + " steps, distance: " + (no.distance / 1).toFixed(0) + "m since " + moment(no.currentTripStart).from(moment());
                     bsubtitle.html(subtitle);
                     button.append(bsubtitle);
                     bsubtitle.hide();
@@ -1613,6 +1552,13 @@ function getAndMakeButtonsForLastKnownCats() {
                     map.setView([+lat, +lng]);
                     $(".catsubtitle").hide();
                     $(this).find(".catsubtitle").show();
+                    if ($(this).data("ood")) {
+                        $("#install-ios-link").css("font-size", "3em");
+                    } else {
+                        $("#install-ios-link").css("font-size", "1em");
+                    }
+                    // $(".catware").remove();
+                    // $(".other-places-div").remove();
                 });
             });
             getmetadata();
