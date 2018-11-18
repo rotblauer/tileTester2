@@ -274,16 +274,6 @@ func (visit NoteVisit) GoogleNearbyQ() (res *gm.PlacesSearchResponse, err error)
 	}
 
 	err = json.NewDecoder(re.Body).Decode(&res)
-	// b := []byte{}
-	// _, err = re.Body.Read(b)
-	// if err != nil {
-	// 	log.Println("could not read res body", err)
-	// 	return res, err
-	// }
-	// re.Body.Close()
-
-	// // unmarshal
-	// err = json.Unmarshal(b, &res)
 	return
 }
 
