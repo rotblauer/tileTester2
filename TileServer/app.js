@@ -167,12 +167,14 @@ function buildViewUrl() {
     var lng = latlng.lng;
     var z = map.getZoom();
     var wl = window.location.origin;
+    var vv = $("#visits-checkbox").is(":checked") ? "yes" : "no";
     var text = wl + "?z=" + z +
         "&y=" + lng +
         "&x=" + lat +
         "&l=" + drawnLayer +
         "&t=" + getCurrentTileLayerName() +
-        "&s=" + globalSinceFloor;
+        "&s=" + globalSinceFloor +
+        "&v=" + vv;
     return text;
 }
 
@@ -1093,6 +1095,13 @@ function getQueryVariable(variable, url) {
     return (false);
 }
 
+function isVisitsOn(val) {
+    if (typeof val === "undefined" || val == null || val.toLowerCase() === "no") {
+        return false;
+    }
+    return true;
+}
+
 function putUrlToView(event) {
     console.log("putting view from url");
     // use default is no query in url
@@ -1106,6 +1115,7 @@ function putUrlToView(event) {
     var tile = getQueryVariable("t", pos);
     var since = getQueryVariable("s", pos);
     var user = getQueryVariable("u", pos);
+    var visitsOn = getQueryVariable("v", pos)
     if (z) {
         zoom = +(z) // cast to float
     }
@@ -1116,12 +1126,24 @@ function putUrlToView(event) {
         center[0] = +(x)
     }
 
+    if (!visitsOn) {
+        visitsOn = "yes";
+    }
+    if (isVisitsOn(visitsOn)) {
+        $("#visits-checkbox").attr("checked", true);
+        getCatVisits();
+    } else {
+        visitsOn = "no";
+        $("#visits-checkbox").attr("checked", false);
+    }
+
     if (since) {
         globalSinceFloor = "" + since;
         $("#sincefloor").val("" + since);
     } else {
         $("#sincefloor").val("");
     }
+
 
     console.log("putUrlToView", center, zoom);
     map.setView(center, zoom);
@@ -1252,7 +1274,7 @@ function makeVisitMarker(val) {
                     continue;
                 }
                 var blacklisted = false;
-                for (var j = 0; j<blisttypes.length; j++) {
+                for (var j = 0; j < blisttypes.length; j++) {
                     var t = blisttypes[j];
                     if (r.types.indexOf(t) >= 0) {
                         blacklisted = true;
@@ -1261,7 +1283,7 @@ function makeVisitMarker(val) {
                 if (blacklisted) continue;
 
                 try {
-                    if (firstphoto === ""){
+                    if (firstphoto === "") {
                         firstphoto = "<img src='data:image/png;base64," + val.googleNearbyPhotos[r.photos[0]["photo_reference"]] + "' style='width: 300px;' />";
                     } else {
                         // limit detail photos, and don't show dupes
@@ -1312,28 +1334,29 @@ function makeVisitMarker(val) {
 
 // https://stackoverflow.com/questions/18883601/function-to-calculate-distance-between-two-coordinates-shows-wrong
 //This function takes in latitude and longitude of two location and returns the distance between them as the crow flies (in km)
-function calcCrow(lat1, lon1, lat2, lon2)
-{
+function calcCrow(lat1, lon1, lat2, lon2) {
     var R = 6371; // km
-    var dLat = toRad(lat2-lat1);
-    var dLon = toRad(lon2-lon1);
+    var dLat = toRad(lat2 - lat1);
+    var dLon = toRad(lon2 - lon1);
     var lat1 = toRad(lat1);
     var lat2 = toRad(lat2);
 
-    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     var d = R * c;
     return d;
 }
 
 // Converts numeric degrees to radians
-function toRad(Value)
-{
+function toRad(Value) {
     return Value * Math.PI / 180;
 }
 
 function getCatVisits() {
+
+    if (!$("#visits-checkbox").is(":checked")) return;
+
     if (catsToVisit.length === 0) {
         setTimeout(getCatVisits, 1000);
         return;
@@ -1350,7 +1373,7 @@ function getCatVisits() {
         url: trackHost + "/visits?" + cats + (lastAskedVisit === null || catVisitMarkers.length === 0 ?
                 "startReportedT=" + moment().add(-14, "days").format() :
                 "startReportedT=" + moment(lastAskedVisit).add(-1, "minute").format()) +
-            "&endI=100&stats=true&googleNearby=true" + (isSmallScreen() ? "" : "&googleNearbyPhotos=true"),
+            "&endI=100&stats=true&googleNearby=true" + (isSmallScreen() || true ? "" : "&googleNearbyPhotos=true"),
         dataType: 'json',
         success: function(data) {
             console.log("visits", data);
@@ -1379,7 +1402,7 @@ function getCatVisits() {
                 } else {
                     return;
                 }
-                console.log("v", i, val);
+                // console.log("v", i, val);
                 var l = makeVisitMarker(val);
                 // map.addLayer(l);
                 catVisitMarkers.push(l);
@@ -1388,7 +1411,6 @@ function getCatVisits() {
             if (clusterLayers.length === 0) map.addLayer(lmc);
             clusterLayers.push(lmc);
 
-            getAndMakeButtonsForLastKnownCats();
 
             setTimeout(getCatVisits, 60 * 5 * 1000);
         },
@@ -1400,8 +1422,7 @@ function getCatVisits() {
     });
 }
 
-// setTimeout(getCatVisits, 100);
-getCatVisits();
+// getCatVisits();
 
 var catIcon = L.icon({
     iconUrl: 'cat-icon.png',
@@ -1470,15 +1491,12 @@ function getAndMakeButtonsForLastKnownCats() {
             // console.log("collectedByUser", collectedByUser);
 
             $.each(collectedByUser, function(key, val) {
-                console.log("1key", key, "val", val);
                 // ignore the old ones
 
                 // override because we used colors as alias for identity, now we want names back to avoid refactoring
                 var oVal = val;
                 val = val[0];
                 key = val["name"]; // key was color
-
-                console.log("2key", key, "val", val);
 
                 if (moment(val["time"]).add(3, 'days').isBefore(moment())) {
                     return;
@@ -1515,7 +1533,7 @@ function getAndMakeButtonsForLastKnownCats() {
                 button.data("long", val["long"] + "");
                 button.css("z-index", 10000);
 
-                lastcatlocations[key] = [+val["lat"],+val["long"]];
+                lastcatlocations[key] = [+val["lat"], +val["long"]];
 
                 var catotherps = $("<div id='other-places-" + key + "' class='other-places-div'></div>");
 
@@ -1588,6 +1606,8 @@ function getAndMakeButtonsForLastKnownCats() {
 
 }
 
+getAndMakeButtonsForLastKnownCats();
+
 if (isSmallScreen()) $("#metadata").hide();
 
 $("#sincefloor").change(function() {
@@ -1612,6 +1632,26 @@ $("#goview").change(function() {
     } else if (v === "hokkaido") {
         map.setView([42.77322729247907, 142.20153808593753], 8);
     }
+});
+
+$("#visits-checkbox").on("change", function() {
+    var on = $(this).is(":checked");
+    console.log("vc change", on);
+    var visitsOn = "yes";
+    if (!on) {
+        visitsOn = "no";
+    }
+
+    if (isVisitsOn(visitsOn)) {
+        // $("#visits-checkbox").attr("checked", true);
+        if (clusterLayers.length > 0) {
+            map.addLayer(clusterLayers[0]);
+        }
+        getCatVisits();
+    } else {
+        map.removeLayer(clusterLayers[0]);
+    }
+    putViewToUrl(buildViewUrl());
 });
 
 $("#points-layer-select").on("change", function() {
