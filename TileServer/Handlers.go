@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	bolt "github.com/etcd-io/bbolt"
 	"github.com/gorilla/mux"
@@ -122,10 +123,16 @@ func RefreshDB(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid db name", http.StatusBadRequest)
 		return
 	}
+	if err := InitBoltDB(dbName, ""); err != nil {
+		log.Println("err refresh/initdb", err)
+	}
 	w.Write([]byte("OK:" + dbName))
 }
 
 func TilesBolty(w http.ResponseWriter, r *http.Request) {
+	tpstart := time.Now()
+	defer log.Println("tb took", time.Since(tpstart))
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/x-protobuf")
 	w.Header().Set("Content-Encoding", "gzip") // set response header for encoding (browsers may do the ungzipping)
@@ -175,14 +182,18 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("TILEGET: db/z/x/y path", dbname, z, x, y, dbp)
 
-	InitBoltDB(dbname, "") // dunno why
-	db, err := bolt.Open(dbp, 0660, &bolt.Options{ReadOnly: true})
+	// InitBoltDB(dbname, "") // dunno why
+	// db, err := bolt.Open(dbp, 0660, &bolt.Options{ReadOnly: true})
 	// db, err := bolt.Open(dbp, 0660, nil)
-	log.Println("opendb")
+	var err error
+	db = GetDB(dbname)
 	if db == nil {
-		http.Error(w, "invalid db parameter", http.StatusBadRequest)
-		return
-	} else {
+		log.Println("opendb", dbname)
+		db, err = bolt.Open(dbp, 0660, &bolt.Options{ReadOnly: true})
+		// http.Error(w, "invalid db parameter", http.StatusBadRequest)
+		// return
+	}
+	if db != nil {
 		defer db.Close()
 	}
 	if err != nil {
