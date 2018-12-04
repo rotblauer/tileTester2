@@ -7,20 +7,19 @@ import (
 	"fmt"
 	"log"
 	"path"
-	"path/filepath"
+	"strings"
 
 	bolt "github.com/etcd-io/bbolt"
-	"github.com/rotblauer/trackpoints/trackPoint"
 
 	"os"
-	"os/exec"
 
 	"github.com/kpawlik/geojson"
-	"github.com/rotblauer/tileTester2/note"
-	"github.com/rotblauer/tileTester2/undump"
 
 	"compress/gzip"
 	"runtime/pprof"
+
+	"github.com/rotblauer/catTracks/catTracks"
+	"github.com/rotblauer/trackpoints/trackPoint"
 )
 
 var (
@@ -38,8 +37,8 @@ func getDB() *bolt.DB {
 func initBoltDB(boltDb string) error {
 
 	var err error
-	db, err = bolt.Open(boltDb, 0666, nil)
-	// db, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
+	// db, err = bolt.Open(boltDb, 0666, nil)
+	db, err = bolt.Open(boltDb, 0666, &bolt.Options{ReadOnly: true})
 	// &bolt.Options{}
 	// db.NoFreelistSync = true
 	// db.NoGrowSync = true
@@ -99,43 +98,14 @@ func CloseGZ(f F) {
 	f.f.Close()
 }
 
-func byteToFeature(val []byte) *geojson.Feature {
-	var trackPointCurrent trackPoint.TrackPoint
-	if e := json.Unmarshal(val, &trackPointCurrent); e != nil {
-		log.Fatalln(e)
-	}
-
-	// convert to a feature
-	p := geojson.NewPoint(geojson.Coordinate{geojson.Coord(trackPointCurrent.Lng), geojson.Coord(trackPointCurrent.Lat)})
-
-	//currently need speed, name,time
-	trimmedProps := make(map[string]interface{})
-	trimmedProps["Speed"] = trackPointCurrent.Speed
-	trimmedProps["Name"] = trackPointCurrent.Name
-	trimmedProps["Time"] = trackPointCurrent.Time
-	trimmedProps["UnixTime"] = trackPointCurrent.Time.Unix()
-	trimmedProps["Elevation"] = trackPointCurrent.Elevation
-
-	if ns, e := note.NotesField(trackPointCurrent.Notes).AsNoteStructured(); e == nil {
-		trimmedProps["Notes"] = ns.CustomNote
-		trimmedProps["Pressure"] = ns.Pressure
-		trimmedProps["Activity"] = ns.Activity
-		if ns.HasValidVisit() {
-			// TODO: ok to use mappy sub interface here?
-			trimmedProps["Visit"] = ns.Visit
-		}
-	} else if _, e := note.NotesField(trackPointCurrent.Notes).AsFingerprint(); e == nil {
-		// maybe do something with identity consolidation?
-	} else {
-		trimmedProps["Notes"] = note.NotesField(trackPointCurrent.Notes).AsNoteString()
-	}
-	return geojson.NewFeature(p, trimmedProps, 1)
-}
-
 func dumpBolty(boltDb string, out string, compressLevel int, batchSize int, tilesetname string) error {
 	initBoltDB(boltDb)
+
 	// If the file doesn't exist, create it, or append to the file
-	jsonGzTracks := out + ".json.gz"
+	jsonGzTracks := out
+	if !strings.HasSuffix(out, ".json.gz") {
+		jsonGzTracks = jsonGzTracks + ".json.gz"
+	}
 
 	f := CreateGZ(jsonGzTracks, compressLevel)
 	count := 0
@@ -150,7 +120,7 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int, tile
 			f.je.Encode(feature)
 			count++
 			if count%batchSize == 0 {
-				fmt.Print(".")
+				fmt.Println(count, "points")
 			}
 		}
 		done <- true
@@ -158,22 +128,26 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int, tile
 
 	go func() {
 		err := getDB().View(func(tx *bolt.Tx) error {
+
 			var err error
+
 			b := tx.Bucket([]byte(trackKey))
 			if b == nil {
 				panic("no bucket under key=" + trackKey + " err=" + err.Error())
 			}
+
 			c := b.Cursor()
 
 			// get all trackpoints
 			for k, tp := c.First(); k != nil; k, tp = c.Next() {
-				featureChan <- byteToFeature(tp)
+				t := trackPoint.TrackPoint{}
+				err = json.Unmarshal(tp, &t)
+				if err != nil {
+					return err
+				}
+				featureChan <- catTracks.TrackToFeature(t)
 			}
 
-			//for speedier test test testing
-			//for _, tp := c.First(); count < batchSize; _, tp = c.Next() {
-			//	featureChan <- byteToFeature(tp)
-			//}
 			return err
 		})
 
@@ -186,33 +160,10 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int, tile
 	<-done
 
 	CloseGZ(f)
-	return runTippe(out, jsonGzTracks, tilesetname)
-}
-
-func runTippe(out, in string, tilesetname string) error {
-	tippCmd, tippargs, tipperr := getTippyProcess(out, in, tilesetname)
-	if tipperr != nil {
-		return tipperr
-	}
-
-	fmt.Println(">", tippCmd, tippargs)
-	tippmycanoe := exec.Command(tippCmd, tippargs...)
-	tippmycanoe.Stdout = os.Stdout
-	tippmycanoe.Stderr = os.Stderr
-
-	err := tippmycanoe.Start()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
-		os.Exit(1)
-	}
-
-	return tippmycanoe.Wait()
+	return nil
 }
 
 func main() {
-
-	//#brew install tippecanoe && brew upgrade tippecanoe
-
 	var boltDb string
 	var out string
 	var boldDBOut string
@@ -234,7 +185,6 @@ func main() {
 	flag.Parse()
 
 	if cpuprofile != "" {
-
 		fmt.Println("CPU profile heading to ", cpuprofile)
 		f, err := os.Create(cpuprofile)
 		if err != nil {
@@ -244,82 +194,8 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	fmt.Println("Dump: Migrating boltdb trackpoints -> geojson/+mbtiles, boltdb:", boltDb, "out:", out+".json/+.mbtiles")
-	if !tipponly {
-		e := dumpBolty(boltDb, out, compressLevel, batchSize, tilesetName)
-		if e != nil {
-			fmt.Println("error dumping orignial bolty", e)
-		}
-	} else {
-		jsonGzTracks := out + ".json.gz"
-		if err := runTippe(out, jsonGzTracks, tilesetName); err != nil {
-			log.Fatal(err)
-		}
+	e := dumpBolty(boltDb, out, compressLevel, batchSize, tilesetName)
+	if e != nil {
+		fmt.Println("error dumping orignial bolty", e)
 	}
-
-	fmt.Println("Dump: Migrating .mbtiles file back into a bolt db: ", boldDBOut)
-
-	absoluteOut, err := filepath.Abs(out + ".mbtiles")
-	if err != nil {
-		fmt.Printf("err: %v", err)
-		return
-	}
-	undump.MbtilesToBolt(absoluteOut, boldDBOut)
-}
-
-func getTippyProcess(out string, in string, tilesetname string) (tippCmd string, tippargs []string, err error) {
-	//tippy process
-	//Mapping extremely dense point data with vector tiles
-	//https://www.mapbox.com/blog/vector-density/
-	//-z19 -d11 -g3
-	//"--no-tile-size-limit"
-	//-as or --drop-densest-as-needed: If a tile is too large, try to reduce it to under 500K by increasing the minimum spacing between features. The discovered spacing applies to the entire zoom level.
-	//-ag or --calculate-feature-density: Add a new attribute, tippecanoe_feature_density, to each feature, to record how densely features are spaced in that area of the tile. You can use this attribute in the style to produce a glowing effect where points are densely packed. It can range from 0 in the sparsest areas to 255 in the densest.
-	//-pk or --no-tile-size-limit: Don't limit tiles to 500K bytes
-	//-pf or --no-feature-limit: Don't limit tiles to 200,000 features
-	//-pd or --force-feature-limit: Dynamically drop some fraction of features from large tiles to keep them under the 500K size limit. It will probably look ugly at the tile boundaries. (This is like -ad but applies to each tile individually, not to the entire zoom level.) You probably don't want to use this.
-	//-r rate or --drop-rate=rate: Rate at which dots are dropped at zoom levels below basezoom (default 2.5). If you use -rg, it will guess a drop rate that will keep at most 50,000 features in the densest tile. You can also specify a marker-width with -rgwidth to allow fewer features in the densest tile to compensate for the larger marker, or -rfnumber to allow at most number features in the densest tile.
-	//-z zoom or --maximum-zoom=zoom: Don't copy tiles from higher zoom levels than the specified zoom
-	//-g gamma or --gamma=_gamma_: Rate at which especially dense dots are dropped (default 0, for no effect). A gamma of 2 reduces the number of dots less than a pixel apart to the square root of their original number.
-	//-n name or --name=name: Set the tileset name
-	//-ao or --reorder: Reorder features to put ones with the same properties in sequence, to try to get them to coalesce. You probably want to use this if you use --coalesce.
-	//-aC or --cluster-densest-as-needed: If a tile is too large, try to reduce its size by increasing the minimum spacing between features, and leaving one placeholder feature from each group. The remaining feature will be given a "cluster": true attribute to indicate that it represents a cluster, a "point_count" attribute to indicate the number of features that were clustered into it, and a "sqrt_point_count" attribute to indicate the relative width of a feature to represent the cluster. If
-	//- the features being clustered are points, the representative feature will be located at the average of the original points' locations; otherwise, one of the original features will be left as the representative
-	//-M bytes or --maximum-tile-bytes=bytes: Use the specified number of bytes as the maximum compressed tile size instead of 500K.
-	//-O features or --maximum-tile-features=features: Use the specified number of features as the maximum in a tile instead of 200,000.
-	//-f or --force: Delete the mbtiles file if it already exists instead of giving an error
-	//
-	//WARNINGS:
-	//Highest supported zoom with detail 14 is 18
-
-	tippCmd = "/usr/local/bin/tippecanoe"
-	tippargs = []string{
-		"-ag",
-		"-M", "1000000",
-		"-O", "200000",
-		"--cluster-densest-as-needed",
-		"-g", "0.1",
-		"--full-detail", "14",
-		"--minimum-detail", "12",
-		"-rg",
-		"-rf100000",
-		"--minimum-zoom", "3",
-		"--maximum-zoom", "20",
-		"-l", tilesetname, // TODO: what's difference layer vs name?
-		"-n", tilesetname,
-		"-o", out + ".mbtiles",
-		"--force", "-P", in, "--reorder",
-	}
-
-	// 'in' should be an existing file
-	_, err = os.Stat(in)
-	if err != nil {
-		return
-	}
-
-	// Use alternate tippecanoe path if 'bash -c which tippecanoe' returns something without error and different than default
-	if b, e := exec.Command("bash -c", "which", "tippecanoe").Output(); e == nil && string(b) != tippCmd {
-		tippCmd = string(b)
-	}
-	return
 }

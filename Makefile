@@ -9,6 +9,13 @@ export CATTS_ENDPOINT?=http://catonmap.info:8080
 
 # getem: clean download update rundump setup server ## Run getem
 
+updump: ## updump dumps the points collected in tracks.db to master.json.gz
+	-systemctl stop catTracks.service
+	dumpy --in=${TRACKS_DATA}/tracks.db --out=${TRACKS_DATA}/master.snap # Run the last dump from bolt(tracks.db) -> "out.json.gz"
+	mv ${TRACKS_DATA}/master.snap.json.gz ${TRACKS_DATA}/master.json.gz
+# rsync -avzLhP /root/tdata/master.json.gz freya:/home/freyabison/tracks.areteh.co/master.json.gz
+	-systemctl start catTracks.service
+
 migrate: get install ## Runs and explains stuff for setting up a new serving and tipping host.
 	mkdir -p ${TRACKS_DATA}/bak
 	./getems/clone_once.sh # Doesn't turn freya back on.
