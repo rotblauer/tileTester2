@@ -11,7 +11,7 @@ export CATTS_ENDPOINT?=http://catonmap.info:8080
 
 updump: ## updump dumps the points collected in tracks.db to master.json.gz
 	-systemctl stop catTracks.service
-  cp ${TRACKS_DATA}/master.json.gz ${TRACKS_DATA}/master.json.gz.bak
+	cp ${TRACKS_DATA}/master.json.gz ${TRACKS_DATA}/master.json.gz.bak
 	dumpy --in=${TRACKS_DATA}/tracks.db --out=${TRACKS_DATA}/master.snap # Run the last dump from bolt(tracks.db) -> "out.json.gz"
 	mv ${TRACKS_DATA}/master.snap.json.gz ${TRACKS_DATA}/master.json.gz
 # rsync -avzLhP /root/tdata/master.json.gz freya:/home/freyabison/tracks.areteh.co/master.json.gz
