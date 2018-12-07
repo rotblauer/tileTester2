@@ -115,7 +115,7 @@ type NoteStructured struct {
 	Visit             VisitString `json:"visit"`
 	HeartRateS        string      `json:"heartRateS"`
 	HeartRateRawS     string      `json:"heartRateRawS"`
-	HeartRateType     string      `json:"heartRateType"`
+	// HeartRateType     string      `json:"heartRateType"`
 }
 
 type VisitString string
