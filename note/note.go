@@ -113,6 +113,9 @@ type NoteStructured struct {
 	CurrentTripStart  time.Time   `json:"currentTripStart"`
 	Pressure          float64     `json:"pressure"`
 	Visit             VisitString `json:"visit"`
+	HeartRateS        string      `json:"heartRateS"`
+	HeartRateRawS     string      `json:"heartRateRawS"`
+	HeartRateType     string      `json:"heartRateType"`
 }
 
 type VisitString string
@@ -137,6 +140,17 @@ func (nf NotesField) AsNoteStructured() (ns NoteStructured, err error) {
 	}
 	err = json.Unmarshal(nf, &ns)
 	return
+}
+
+func (ns NoteStructured) HeartRateI() float64 {
+	if ns.HeartRateS == "" {
+		return -1
+	}
+	f, err := strconv.ParseFloat(strings.Split(ns.HeartRateS, " ")[0], 64)
+	if err != nil {
+		return -2
+	}
+	return f
 }
 
 func (ns NoteStructured) HasVisit() bool {
