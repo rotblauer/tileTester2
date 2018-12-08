@@ -139,7 +139,7 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int, tile
 			c := b.Cursor()
 
 			// get all trackpoints
-			for k, tp := c.First(); k != nil; k, tp = c.Next() {
+			for k, tp := c.Last(); k != nil; k, tp = c.Prev() {
 				t := trackPoint.TrackPoint{}
 				err = json.Unmarshal(tp, &t)
 				if err != nil {
