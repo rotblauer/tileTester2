@@ -140,7 +140,7 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int, tile
 
 			// get all trackpoints
 			for k, tp := c.Last(); k != nil; k, tp = c.Prev() {
-				t := trackPoint.TrackPoint{}
+				t := &trackPoint.TrackPoint{}
 				err = json.Unmarshal(tp, &t)
 				if err != nil {
 					return err
