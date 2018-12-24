@@ -101,21 +101,33 @@ func (fp NoteFingerprint) Value() []byte {
 }
 
 type NoteStructured struct {
-	Activity          string      `json:"activity"`
-	NumberOfSteps     int         `json:"numberOfSteps"`
-	AverageActivePace float64     `json:"averageActivePace"`
-	CurrentPace       float64     `json:"currentPace"`
-	CurrentCadence    float64     `json:"currentCadence"`
-	Distance          float64     `json:"distance"`
-	CustomNote        string      `json:"customNote"` // FIXME: string or float64?
-	FloorsAscended    int         `json:"floorsAscended"`
-	FloorsDescended   int         `json:"floorsDescended"`
-	CurrentTripStart  time.Time   `json:"currentTripStart"`
-	Pressure          float64     `json:"pressure"`
-	Visit             VisitString `json:"visit"`
-	HeartRateS        string      `json:"heartRateS"`
-	HeartRateRawS     string      `json:"heartRateRawS"`
-	// HeartRateType     string      `json:"heartRateType"`
+	Activity          string        `json:"activity"`
+	NumberOfSteps     int           `json:"numberOfSteps"`
+	AverageActivePace float64       `json:"averageActivePace"`
+	CurrentPace       float64       `json:"currentPace"`
+	CurrentCadence    float64       `json:"currentCadence"`
+	Distance          float64       `json:"distance"`
+	CustomNote        string        `json:"customNote"` // FIXME: string or float64?
+	FloorsAscended    int           `json:"floorsAscended"`
+	FloorsDescended   int           `json:"floorsDescended"`
+	CurrentTripStart  time.Time     `json:"currentTripStart"`
+	Pressure          float64       `json:"pressure"`
+	Visit             VisitString   `json:"visit"`
+	HeartRateS        string        `json:"heartRateS"`
+	HeartRateRawS     string        `json:"heartRateRawS"`
+	BatteryStatus     BatteryStatus `json:"batteryStatus"`
+	NetworkInfo       NetworkInfo   `json:"networkInfo"`
+}
+
+type NetworkInfo struct {
+	SSID     string `json:"ssid"`
+	SSIDData string `json:"ssidData"`
+	BSSID    string `json:"bssid"`
+}
+
+type BatteryStatus struct {
+	Level  float64 `json:"level"`
+	Status string  `json:"status"`
 }
 
 type VisitString string
