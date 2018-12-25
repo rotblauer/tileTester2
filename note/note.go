@@ -167,6 +167,14 @@ func (nf NotesField) AsNoteStructured() (ns NoteStructured, err error) {
 	return
 }
 
+func (ns NoteStructured) MustAsString() string {
+	b, err := json.Marshal(ns)
+	if err != nil {
+		log.Fatal(err) // FIXME yikes
+	}
+	return string(b)
+}
+
 func (ns NoteStructured) HeartRateI() float64 {
 	if ns.HeartRateS == "" {
 		return -1
