@@ -117,6 +117,16 @@ type NoteStructured struct {
 	HeartRateRawS     string        `json:"heartRateRawS"`
 	BatteryStatus     BatteryStatus `json:"batteryStatus"`
 	NetworkInfo       NetworkInfo   `json:"networkInfo"`
+	ImgB64            string        `json:"imgb64"`
+	ImgS3             string        `json:"imgS3"`
+}
+
+func (ns NoteStructured) HasRawImage() bool {
+	return ns.ImgB64 != ""
+}
+
+func (ns NoteStructured) HasS3Image() bool {
+	return ns.ImgS3 != ""
 }
 
 type NetworkInfo struct {
