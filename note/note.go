@@ -101,25 +101,28 @@ func (fp NoteFingerprint) Value() []byte {
 }
 
 type NoteStructured struct {
-	Activity          string        `json:"activity"`
-	NumberOfSteps     int           `json:"numberOfSteps"`
-	AverageActivePace float64       `json:"averageActivePace"`
-	CurrentPace       float64       `json:"currentPace"`
-	CurrentCadence    float64       `json:"currentCadence"`
-	Distance          float64       `json:"distance"`
-	CustomNote        string        `json:"customNote"` // FIXME: string or float64?
-	FloorsAscended    int           `json:"floorsAscended"`
-	FloorsDescended   int           `json:"floorsDescended"`
-	CurrentTripStart  time.Time     `json:"currentTripStart"`
-	Pressure          float64       `json:"pressure"`
-	Visit             VisitString   `json:"visit"`
-	HeartRateS        string        `json:"heartRateS"`
-	HeartRateRawS     string        `json:"heartRateRawS"`
-	BatteryStatus     BatteryStatus `json:"batteryStatus"`
-	NetworkInfo       NetworkInfo   `json:"networkInfo"`
-	ImgB64            string        `json:"imgb64"`
-	ImgS3             string        `json:"imgS3"`
+	Activity          string              `json:"activity"`
+	NumberOfSteps     int                 `json:"numberOfSteps"`
+	AverageActivePace float64             `json:"averageActivePace"`
+	CurrentPace       float64             `json:"currentPace"`
+	CurrentCadence    float64             `json:"currentCadence"`
+	Distance          float64             `json:"distance"`
+	CustomNote        string              `json:"customNote"` // FIXME: string or float64?
+	FloorsAscended    int                 `json:"floorsAscended"`
+	FloorsDescended   int                 `json:"floorsDescended"`
+	CurrentTripStart  time.Time           `json:"currentTripStart"`
+	Pressure          float64             `json:"pressure"`
+	Visit             VisitString         `json:"visit"`
+	HeartRateS        string              `json:"heartRateS"`
+	HeartRateRawS     string              `json:"heartRateRawS"`
+	BatteryStatus     BatteryStatusString `json:"batteryStatus"`
+	NetworkInfo       NetworkInfoString   `json:"networkInfo"`
+	ImgB64            string              `json:"imgb64"`
+	ImgS3             string              `json:"imgS3"`
 }
+
+type NetworkInfoString string
+type BatteryStatusString string
 
 func (ns NoteStructured) HasRawImage() bool {
 	return ns.ImgB64 != ""
