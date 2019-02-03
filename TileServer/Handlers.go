@@ -225,6 +225,7 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 	if tileData == nil {
 		log.Println("td war nil", z, x, y)
 		w.Write(nil)
+		return
 	}
 	w.Write(tileData)
 }
