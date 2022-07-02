@@ -8,8 +8,8 @@ import (
 	"path"
 
 	"github.com/cheggaaa/pb"
-	bolt "github.com/etcd-io/bbolt"
 	_ "github.com/mattn/go-sqlite3"
+	bolt "go.etcd.io/bbolt"
 )
 
 var (
@@ -92,7 +92,7 @@ func MbtilesToBolt(mbtilesPath string, boltPath string) {
 	defer getDB().Close()
 
 	// read all rows from .mbtiles with sqlite3
-	db, err := sql.Open("sqlite3", mbtilesPath) //"./tiles.mbtiles")
+	db, err := sql.Open("sqlite3", mbtilesPath) // "./tiles.mbtiles")
 	if err != nil {
 		fmt.Print(err.Error())
 
@@ -118,7 +118,7 @@ func MbtilesToBolt(mbtilesPath string, boltPath string) {
 			var tile_row int32
 			var tile_data []byte
 
-			rows.Scan(&zoom_level, &tile_column, &tile_row, &tile_data) //tile_data blob)
+			rows.Scan(&zoom_level, &tile_column, &tile_row, &tile_data) // tile_data blob)
 			// insertToBolt(zoom_level, tile_column, tile_row, tile_data)
 
 			// bucket:mbTracks -> bucket:z

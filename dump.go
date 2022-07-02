@@ -12,11 +12,11 @@ import (
 	"runtime/pprof"
 	"strings"
 
-	bolt "github.com/etcd-io/bbolt"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/kpawlik/geojson"
 
-	"github.com/rotblauer/catTrackslib/catTracks"
+	"github.com/rotblauer/catTrackslib"
 	"github.com/rotblauer/trackpoints/trackPoint"
 )
 
@@ -143,7 +143,7 @@ func dumpBolty(boltDb string, out string, compressLevel int, batchSize int, tile
 				if err != nil {
 					return err
 				}
-				featureChan <- catTracks.TrackToFeature(t)
+				featureChan <- catTrackslib.TrackToFeature(t)
 			}
 
 			return err

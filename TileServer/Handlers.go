@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	bolt "github.com/etcd-io/bbolt"
 	"github.com/gorilla/mux"
+	bolt "go.etcd.io/bbolt"
 )
 
 var (
@@ -144,7 +144,7 @@ func TilesBolty(w http.ResponseWriter, r *http.Request) {
 	x := vars["x"]
 	y := vars["y"]
 
-	//dafuc
+	// dafuc
 	zoomLevel, e1 := strconv.ParseUint(z, 10, 32)
 	if e1 != nil {
 		log.Println(e1.Error())
