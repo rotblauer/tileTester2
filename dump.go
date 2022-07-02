@@ -1,24 +1,22 @@
 package main
 
-//dump a bolty db to trackpoints
+// dump a bolty db to trackpoints
 import (
+	"compress/gzip"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"path"
+	"runtime/pprof"
 	"strings"
 
 	bolt "github.com/etcd-io/bbolt"
 
-	"os"
-
 	"github.com/kpawlik/geojson"
 
-	"compress/gzip"
-	"runtime/pprof"
-
-	"github.com/rotblauer/catTracks/catTracks"
+	"github.com/rotblauer/catTrackslib/catTracks"
 	"github.com/rotblauer/trackpoints/trackPoint"
 )
 
